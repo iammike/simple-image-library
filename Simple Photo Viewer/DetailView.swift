@@ -10,31 +10,65 @@ import Photos
 
 struct DetailView: View {
     let asset: PHAsset
+    @Binding var isPresented: Bool
+    @State private var image: UIImage? = nil
 
     var body: some View {
-        if asset.mediaType == .image {
-            GeometryReader { geometry in
-                Image(uiImage: getImage(for: asset))
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+        ZStack(alignment: .topTrailing) {
+            if let image = image {
+                GeometryReader { geometry in
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+                Button(action: {
+                    self.isPresented = false
+                }) {
+                    Image(systemName: "xmark")
+                        .foregroundColor(.black)
+                        .padding()
+                        .background(Color.white)
+                        .clipShape(Circle())
+                }
+            } else {
+                ProgressView()
+                    .scaleEffect(1.5, anchor: .center)
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .frame(width: 80, height: 80)
+                    .background(Color.gray.opacity(0.5))
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    .padding()
+
+
             }
-        } else if asset.mediaType == .video {
-            VideoPlayerView(asset: asset)
+
+            
+        }
+        .onAppear {
+            loadImage()
         }
     }
 
-    private func getImage(for asset: PHAsset) -> UIImage {
+    private func loadImage() {
+        getImage(for: asset) { downloadedImage in
+            self.image = downloadedImage
+        }
+    }
+
+    private func getImage(for asset: PHAsset, completion: @escaping (UIImage?) -> Void) {
         let manager = PHImageManager.default()
-        let option = PHImageRequestOptions()
-        option.isSynchronous = true
-        var image = UIImage()
-        manager.requestImage(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: option, resultHandler: { (result, _) in
-            if let result = result {
-                image = result
+        let options = PHImageRequestOptions()
+        options.isSynchronous = false
+        options.isNetworkAccessAllowed = true
+        options.deliveryMode = .highQualityFormat
+
+        manager.requestImage(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { (result, _) in
+            DispatchQueue.main.async {
+                completion(result)
             }
-        })
-        return image
+        }
     }
 }
