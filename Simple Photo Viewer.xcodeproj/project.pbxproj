@@ -11,6 +11,10 @@
 		EF6CA37D2B5EBEE0005CBF53 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */; };
 		EF6CA37F2B5EBEE2005CBF53 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EF6CA37E2B5EBEE2005CBF53 /* Assets.xcassets */; };
 		EF6CA3832B5EBEE2005CBF53 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EF6CA3822B5EBEE2005CBF53 /* Preview Assets.xcassets */; };
+		EF6CA38A2B5EC0F8005CBF53 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6CA3892B5EC0F8005CBF53 /* VideoPlayerView.swift */; };
+		EF6CA38C2B5EC204005CBF53 /* ThumbnailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6CA38B2B5EC204005CBF53 /* ThumbnailView.swift */; };
+		EF6CA38E2B5EC229005CBF53 /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6CA38D2B5EC229005CBF53 /* DetailView.swift */; };
+		EF6CA3902B5EC41C005CBF53 /* AudioSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6CA38F2B5EC41C005CBF53 /* AudioSession.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +24,10 @@
 		EF6CA37E2B5EBEE2005CBF53 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EF6CA3802B5EBEE2005CBF53 /* Simple_Photo_Viewer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Simple_Photo_Viewer.entitlements; sourceTree = "<group>"; };
 		EF6CA3822B5EBEE2005CBF53 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		EF6CA3892B5EC0F8005CBF53 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
+		EF6CA38B2B5EC204005CBF53 /* ThumbnailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailView.swift; sourceTree = "<group>"; };
+		EF6CA38D2B5EC229005CBF53 /* DetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
+		EF6CA38F2B5EC41C005CBF53 /* AudioSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSession.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +62,10 @@
 			children = (
 				EF6CA37A2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift */,
 				EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */,
+				EF6CA38D2B5EC229005CBF53 /* DetailView.swift */,
+				EF6CA3892B5EC0F8005CBF53 /* VideoPlayerView.swift */,
+				EF6CA38B2B5EC204005CBF53 /* ThumbnailView.swift */,
+				EF6CA38F2B5EC41C005CBF53 /* AudioSession.swift */,
 				EF6CA37E2B5EBEE2005CBF53 /* Assets.xcassets */,
 				EF6CA3802B5EBEE2005CBF53 /* Simple_Photo_Viewer.entitlements */,
 				EF6CA3812B5EBEE2005CBF53 /* Preview Content */,
@@ -140,7 +152,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				EF6CA37D2B5EBEE0005CBF53 /* ContentView.swift in Sources */,
+				EF6CA38C2B5EC204005CBF53 /* ThumbnailView.swift in Sources */,
 				EF6CA37B2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift in Sources */,
+				EF6CA38E2B5EC229005CBF53 /* DetailView.swift in Sources */,
+				EF6CA38A2B5EC0F8005CBF53 /* VideoPlayerView.swift in Sources */,
+				EF6CA3902B5EC41C005CBF53 /* AudioSession.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -274,6 +290,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app requires access to the photo library.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -312,6 +329,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app requires access to the photo library.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
