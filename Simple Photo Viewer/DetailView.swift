@@ -20,6 +20,7 @@ struct DetailView: View {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
+                        .shadow(radius: 10)
                         .frame(width: geometry.size.width, height: geometry.size.height)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
@@ -31,7 +32,7 @@ struct DetailView: View {
                         .padding()
                         .background(Color.white)
                         .clipShape(Circle())
-                }
+                }.padding()
             } else {
                 ProgressView()
                     .scaleEffect(1.5, anchor: .center)

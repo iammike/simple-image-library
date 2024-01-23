@@ -12,19 +12,22 @@ struct ThumbnailView: View {
     let asset: PHAsset
 
     var body: some View {
-            Image(uiImage: getThumbnail(for: asset))
-                .resizable()
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+        Image(uiImage: getThumbnail(for: asset))
+            .resizable()
+            .scaledToFill() // Changed to scaledToFill
+            .frame(width: 200, height: 200)
+//            .background(Color.white) // Explicit background color
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray, lineWidth: 1)) // Optional: Add a border to clearly see the rounded corners
     }
+
 
     private func getThumbnail(for asset: PHAsset) -> UIImage {
         let manager = PHImageManager.default()
         let option = PHImageRequestOptions()
         option.isSynchronous = true
         var thumbnail = UIImage()
-        manager.requestImage(for: asset, targetSize: CGSize(width: 100, height: 100), contentMode: .aspectFit, options: option, resultHandler: { (result, _) in
+        manager.requestImage(for: asset, targetSize: CGSize(width: 200, height: 200), contentMode: .aspectFit, options: option, resultHandler: { (result, _) in
             if let result = result {
                 thumbnail = result
             }

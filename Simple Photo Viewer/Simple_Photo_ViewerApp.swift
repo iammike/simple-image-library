@@ -10,9 +10,6 @@ import SwiftUI
 @main
 struct Simple_Photo_ViewerApp: App {
     
-    init() {
-        configureAudioSession()
-    }
     var body: some Scene {
         WindowGroup {
             ContentView()
