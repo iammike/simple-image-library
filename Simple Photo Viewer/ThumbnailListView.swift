@@ -12,21 +12,20 @@ struct ThumbnailListView: View {
     @ObservedObject var viewModel: ViewModel
     @Binding var selectedAsset: PHAsset?
     @Binding var isDetailViewPresented: Bool
-
-    // Define the minimum width for each thumbnail
-    let minThumbnailWidth: CGFloat = 200 // Adjust this value as needed
-
+    
+    let minThumbnailWidth: CGFloat = 200
+    
     var body: some View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: minThumbnailWidth))]) {
-                ForEach(viewModel.uniqueAssets, id: \.id) { uniqueAsset in
-                    ThumbnailView(asset: uniqueAsset.asset)
+                ForEach(viewModel.images, id: \.localIdentifier) { asset in
+                    ThumbnailView(asset: asset)
                         .onTapGesture {
-                            self.selectedAsset = uniqueAsset.asset
+                            self.selectedAsset = asset
                             self.isDetailViewPresented = true
                         }
                         .onAppear {
-                            if viewModel.uniqueAssets.last?.id == uniqueAsset.id {
+                            if let lastAsset = viewModel.images.last, lastAsset == asset {
                                 viewModel.loadMorePhotos()
                             }
                         }

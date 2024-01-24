@@ -14,7 +14,6 @@ class ViewModel: ObservableObject {
     @Published var selectedAlbumIdentifier: String?
     @Published var hasPhotoLibraryAccess: Bool = false
     @Published var photoLibraryAccessHasBeenChecked: Bool = false
-    @Published var uniqueAssets: [UniqueAsset] = []
     
     private var fetchOffset = 0
     private let fetchLimit = 50
@@ -56,7 +55,6 @@ class ViewModel: ObservableObject {
     private func clearCachedData() {
         self.albums.removeAll()
         self.images.removeAll()
-        self.uniqueAssets.removeAll()
     }
     
     private func processPhotoLibraryAccess(status: PHAuthorizationStatus) {
@@ -126,7 +124,7 @@ class ViewModel: ObservableObject {
         let upperBound = min(fetchOffset + fetchLimit, count)
         assets.enumerateObjects(at: IndexSet(fetchOffset..<upperBound)) { asset, _, _ in
             DispatchQueue.main.async {
-                self.uniqueAssets.append(UniqueAsset(asset: asset))
+                self.images.append(asset)
             }
         }
 
@@ -159,7 +157,7 @@ class ViewModel: ObservableObject {
         selectedAlbumIdentifier = album.localIdentifier
         currentAlbum = album
         fetchOffset = 0
-        uniqueAssets = []
+        images = []
         loadMorePhotosFromAlbum(album)
     }
     
@@ -167,7 +165,6 @@ class ViewModel: ObservableObject {
         DispatchQueue.main.async {
             // Reset state for photo fetching
             self.fetchOffset = 0
-            self.uniqueAssets.removeAll()
             self.images.removeAll()
             self.loadMorePhotos()
         }

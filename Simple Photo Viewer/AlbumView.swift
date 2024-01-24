@@ -20,7 +20,9 @@ struct AlbumView: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    viewModel.selectAlbum(album)
+                    if viewModel.selectedAlbumIdentifier != album.localIdentifier {
+                        viewModel.selectAlbum(album)
+                    }
                 }
                 .padding()
                 .background(viewModel.selectedAlbumIdentifier == album.localIdentifier ? Color.blue.opacity(0.3) : Color.clear)
@@ -29,3 +31,4 @@ struct AlbumView: View {
         }
     }
 }
+

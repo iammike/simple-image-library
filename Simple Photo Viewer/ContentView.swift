@@ -16,7 +16,6 @@ struct ContentView: View {
     var body: some View {
         Group {
             if viewModel.hasPhotoLibraryAccess {
-                // Main content
                 ZStack {
                     NavigationView {
                         AlbumView(viewModel: viewModel)
@@ -30,7 +29,6 @@ struct ContentView: View {
                     }
                 }
             } else if viewModel.photoLibraryAccessHasBeenChecked {
-                // Access denied or limited
                 Text("Full Access to the photo library is required. Please enable access in Settings.")
             } else {
                 ProgressView()
