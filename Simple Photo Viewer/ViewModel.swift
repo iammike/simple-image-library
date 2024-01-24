@@ -130,14 +130,12 @@ class ViewModel: ObservableObject {
 
         fetchOffset += min(fetchLimit, count - fetchOffset)
     }
-
     
     func loadMorePhotos() {
         if let currentAlbum = currentAlbum {
             loadMorePhotosFromAlbum(currentAlbum)
         }
     }
-
     
     func getImage(for asset: PHAsset, completion: @escaping (UIImage?) -> Void) {
         let manager = PHImageManager.default()
