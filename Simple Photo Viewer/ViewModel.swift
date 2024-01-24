@@ -23,7 +23,7 @@ class ViewModel: ObservableObject {
     init() {
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        fetchOptions.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
+        fetchOptions.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
         allPhotos = PHAsset.fetchAssets(with: fetchOptions)
         checkPhotoLibraryAccess()
     }
@@ -71,18 +71,12 @@ class ViewModel: ObservableObject {
     func fetchAlbums() {
         let fetchOptions = PHFetchOptions()
         
-        let userAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
-        let smartAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: fetchOptions)
+        let allAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
+        let allSmartAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: fetchOptions)
         
-        func albumContainsImages(_ album: PHAssetCollection) -> Bool {
-            let imageFetchOptions = PHFetchOptions()
-            imageFetchOptions.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
-            let imageCount = PHAsset.fetchAssets(in: album, options: imageFetchOptions).count
-            return imageCount > 0
-        }
-        
-        let userAlbums = userAlbumsFetchResult.objects(at: IndexSet(0..<userAlbumsFetchResult.count)).filter(albumContainsImages)
-        let smartAlbums = smartAlbumsFetchResult.objects(at: IndexSet(0..<smartAlbumsFetchResult.count)).filter(albumContainsImages)
+        let allAlbums = (allAlbumsFetchResult.objects(at: IndexSet(0..<allAlbumsFetchResult.count)) +
+                         allSmartAlbumsFetchResult.objects(at: IndexSet(0..<allSmartAlbumsFetchResult.count)))
+                         .filter(albumContainsImagesAndVideos)
         
         func latestAssetDate(in album: PHAssetCollection) -> Date? {
             let assetsFetchOptions = PHFetchOptions()
@@ -92,28 +86,23 @@ class ViewModel: ObservableObject {
             return assets.firstObject?.creationDate
         }
         
-        let sortedUserAlbums = userAlbums.sorted {
+        let sortedAlbums = allAlbums.sorted {
             latestAssetDate(in: $0) ?? Date.distantPast > latestAssetDate(in: $1) ?? Date.distantPast
         }
-        
-        let sortedSmartAlbums = smartAlbums.sorted {
-            latestAssetDate(in: $0) ?? Date.distantPast > latestAssetDate(in: $1) ?? Date.distantPast
-        }
-        
-        let allAlbums = sortedSmartAlbums + sortedUserAlbums
         
         DispatchQueue.main.async {
-            self.albums = allAlbums
-            if self.currentAlbum == nil, let firstAlbum = allAlbums.first {
+            self.albums = sortedAlbums
+            if self.currentAlbum == nil, let firstAlbum = sortedAlbums.first {
                 self.selectAlbum(firstAlbum)
             }
         }
     }
+
     
     private func loadMorePhotosFromAlbum(_ album: PHAssetCollection) {
         let options = PHFetchOptions()
         options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        options.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
+        options.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
         
         let assets = PHAsset.fetchAssets(in: album, options: options)
         let count = assets.count
@@ -127,7 +116,6 @@ class ViewModel: ObservableObject {
                 self.images.append(asset)
             }
         }
-
         fetchOffset += min(fetchLimit, count - fetchOffset)
     }
     
@@ -149,6 +137,13 @@ class ViewModel: ObservableObject {
                 completion(result)
             }
         }
+    }
+    
+    private func albumContainsImagesAndVideos(_ album: PHAssetCollection) -> Bool {
+        let fetchOptions = PHFetchOptions()
+        fetchOptions.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
+        let assetCount = PHAsset.fetchAssets(in: album, options: fetchOptions).count
+        return assetCount > 0
     }
     
     func selectAlbum(_ album: PHAssetCollection) {

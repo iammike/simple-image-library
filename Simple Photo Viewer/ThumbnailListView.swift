@@ -12,23 +12,25 @@ struct ThumbnailListView: View {
     @ObservedObject var viewModel: ViewModel
     @Binding var selectedAsset: PHAsset?
     @Binding var isDetailViewPresented: Bool
-    
+
     let minThumbnailWidth: CGFloat = 200
-    
+
     var body: some View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: minThumbnailWidth))]) {
                 ForEach(viewModel.images, id: \.localIdentifier) { asset in
-                    ThumbnailView(asset: asset)
-                        .onTapGesture {
-                            self.selectedAsset = asset
-                            self.isDetailViewPresented = true
-                        }
-                        .onAppear {
-                            if let lastAsset = viewModel.images.last, lastAsset == asset {
-                                viewModel.loadMorePhotos()
+                    ZStack {
+                        ThumbnailView(asset: asset)
+                            .onTapGesture {
+                                self.selectedAsset = asset
+                                self.isDetailViewPresented = true
                             }
+                    }
+                    .onAppear {
+                        if let lastAsset = viewModel.images.last, lastAsset == asset {
+                            viewModel.loadMorePhotos()
                         }
+                    }
                 }
             }
             .padding()
