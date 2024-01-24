@@ -17,21 +17,26 @@ struct AlbumView: View {
                 viewModel.loadAllPhotos()
             }) {
                 Text("All Photos")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                    .padding()
+                    .background(viewModel.selectedAlbumIdentifier == nil ? Color.blue.opacity(0.3) : Color.clear)
+                    .cornerRadius(10)
             }
-            .listRowBackground(viewModel.selectedAlbumIdentifier == nil ? Color.blue.opacity(0.3) : Color.clear)
 
             ForEach(viewModel.albums, id: \.localIdentifier) { album in
                 HStack {
                     Text(album.localizedTitle ?? "Unknown Album")
                     Spacer()
                 }
-                .contentShape(Rectangle()) // Make the whole row tappable
+                .contentShape(Rectangle())
                 .onTapGesture {
                     viewModel.selectAlbum(album)
                 }
-                .listRowBackground(viewModel.selectedAlbumIdentifier == album.localIdentifier ? Color.blue.opacity(0.3) : Color.clear)
+                .padding()
+                .background(viewModel.selectedAlbumIdentifier == album.localIdentifier ? Color.blue.opacity(0.3) : Color.clear)
+                .cornerRadius(10)
             }
         }
     }
 }
-

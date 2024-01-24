@@ -19,14 +19,14 @@ struct ThumbnailListView: View {
     var body: some View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: minThumbnailWidth))]) {
-                ForEach(viewModel.images, id: \.self) { asset in
-                    ThumbnailView(asset: asset)
+                ForEach(viewModel.uniqueAssets, id: \.id) { uniqueAsset in
+                    ThumbnailView(asset: uniqueAsset.asset)
                         .onTapGesture {
-                            self.selectedAsset = asset
+                            self.selectedAsset = uniqueAsset.asset
                             self.isDetailViewPresented = true
                         }
                         .onAppear {
-                            if viewModel.images.last == asset {
+                            if viewModel.uniqueAssets.last?.id == uniqueAsset.id {
                                 viewModel.loadMorePhotos()
                             }
                         }
@@ -36,33 +36,3 @@ struct ThumbnailListView: View {
         }
     }
 }
-
-
-
-// Columnar
-//struct ThumbnailListView: View {
-//    @ObservedObject var viewModel: ViewModel
-//    @Binding var selectedAsset: PHAsset?
-//    @Binding var isDetailViewPresented: Bool
-//
-//    var body: some View {
-//        ScrollView {
-//            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]) {
-//                ForEach(viewModel.images, id: \.self) { asset in
-//                    ThumbnailView(asset: asset)
-//                        .onTapGesture {
-//                            self.selectedAsset = asset
-//                            self.isDetailViewPresented = true
-//                        }
-//
-//                        .onAppear {
-//                            if viewModel.images.last == asset {
-//                                viewModel.loadMorePhotos()
-//                            }
-//                        }
-//                }
-//            }
-//            .padding()
-//        }
-//    }
-//}

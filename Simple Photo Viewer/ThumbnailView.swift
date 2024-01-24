@@ -9,30 +9,41 @@ import SwiftUI
 import Photos
 
 struct ThumbnailView: View {
+    @State private var thumbnailImage: UIImage? = nil
     let asset: PHAsset
 
     var body: some View {
-        Image(uiImage: getThumbnail(for: asset))
-            .resizable()
-            .scaledToFill() // Changed to scaledToFill
-            .frame(width: 200, height: 200)
-//            .background(Color.white) // Explicit background color
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray, lineWidth: 1)) // Optional: Add a border to clearly see the rounded corners
+        Group {
+            if let image = thumbnailImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 200, height: 200)
+            } else {
+                Rectangle() // Placeholder if image is not yet loaded
+                    .frame(width: 200, height: 200)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray, lineWidth: 1))
+        .onAppear {
+            loadThumbnailImage()
+        }
     }
 
-
-    private func getThumbnail(for asset: PHAsset) -> UIImage {
+    private func loadThumbnailImage() {
         let manager = PHImageManager.default()
-        let option = PHImageRequestOptions()
-        option.isSynchronous = true
-        var thumbnail = UIImage()
-        manager.requestImage(for: asset, targetSize: CGSize(width: 200, height: 200), contentMode: .aspectFit, options: option, resultHandler: { (result, _) in
-            if let result = result {
-                thumbnail = result
+        let options = PHImageRequestOptions()
+        options.isSynchronous = false // Asynchronous request
+        options.deliveryMode = .opportunistic
+        options.resizeMode = .exact
+
+        manager.requestImage(for: asset, targetSize: CGSize(width: 200, height: 200), contentMode: .aspectFill, options: options) { image, _ in
+            DispatchQueue.main.async {
+                self.thumbnailImage = image
             }
-        })
-        return thumbnail
+        }
     }
 }
+
 
