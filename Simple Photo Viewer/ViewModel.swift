@@ -71,11 +71,12 @@ class ViewModel: ObservableObject {
     func fetchAlbums() {
         let fetchOptions = PHFetchOptions()
         
-        let userAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
-        let smartAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: fetchOptions)
+        let allAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
+        let allSmartAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: fetchOptions)
         
-        let userAlbums = userAlbumsFetchResult.objects(at: IndexSet(0..<userAlbumsFetchResult.count)).filter(albumContainsImagesAndVideos)
-        let smartAlbums = smartAlbumsFetchResult.objects(at: IndexSet(0..<smartAlbumsFetchResult.count)).filter(albumContainsImagesAndVideos)
+        let allAlbums = (allAlbumsFetchResult.objects(at: IndexSet(0..<allAlbumsFetchResult.count)) +
+                         allSmartAlbumsFetchResult.objects(at: IndexSet(0..<allSmartAlbumsFetchResult.count)))
+                         .filter(albumContainsImagesAndVideos)
         
         func latestAssetDate(in album: PHAssetCollection) -> Date? {
             let assetsFetchOptions = PHFetchOptions()
@@ -85,23 +86,18 @@ class ViewModel: ObservableObject {
             return assets.firstObject?.creationDate
         }
         
-        let sortedUserAlbums = userAlbums.sorted {
+        let sortedAlbums = allAlbums.sorted {
             latestAssetDate(in: $0) ?? Date.distantPast > latestAssetDate(in: $1) ?? Date.distantPast
         }
-        
-        let sortedSmartAlbums = smartAlbums.sorted {
-            latestAssetDate(in: $0) ?? Date.distantPast > latestAssetDate(in: $1) ?? Date.distantPast
-        }
-        
-        let allAlbums = sortedSmartAlbums + sortedUserAlbums
         
         DispatchQueue.main.async {
-            self.albums = allAlbums
-            if self.currentAlbum == nil, let firstAlbum = allAlbums.first {
+            self.albums = sortedAlbums
+            if self.currentAlbum == nil, let firstAlbum = sortedAlbums.first {
                 self.selectAlbum(firstAlbum)
             }
         }
     }
+
     
     private func loadMorePhotosFromAlbum(_ album: PHAssetCollection) {
         let options = PHFetchOptions()
@@ -120,7 +116,6 @@ class ViewModel: ObservableObject {
                 self.images.append(asset)
             }
         }
-
         fetchOffset += min(fetchLimit, count - fetchOffset)
     }
     

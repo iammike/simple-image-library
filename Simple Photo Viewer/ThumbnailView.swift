@@ -19,13 +19,13 @@ struct ThumbnailView: View {
                     .resizable()
                     .scaledToFill()
                     .frame(width: 200, height: 200)
+                    .overlay(videoOverlay)
             } else {
                 Rectangle()
                     .overlay(
                         Image(systemName: "icloud.slash")
                             .foregroundStyle(Color.gray)
                     )
-                    
                     .frame(width: 200, height: 200)
             }
         }
@@ -36,6 +36,32 @@ struct ThumbnailView: View {
         }
     }
     
+    @ViewBuilder
+    private var videoOverlay: some View {
+        if asset.mediaType == .video {
+            ZStack {
+                Image(systemName: "play.circle")
+                    .resizable()
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(.white.opacity(0.9))
+                
+                VStack(alignment: .trailing) {
+                    HStack {
+                        Spacer()
+                        Text(videoDurationText)
+                            .font(.footnote)
+                            .foregroundColor(.white)
+                            .padding(5)
+                            .background(.black.opacity(0.3))
+                            .cornerRadius(5)
+                    }
+                    Spacer()
+                }
+            }
+            .padding()
+        }
+    }
+
     private func loadThumbnailImage() {
         let manager = PHImageManager.default()
         let options = PHImageRequestOptions()
@@ -49,6 +75,11 @@ struct ThumbnailView: View {
             }
         }
     }
+    
+    private var videoDurationText: String {
+        let durationInSeconds = Int(round(asset.duration))
+        let minutes = durationInSeconds / 60
+        let seconds = durationInSeconds % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
 }
-
-

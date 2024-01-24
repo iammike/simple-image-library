@@ -44,7 +44,7 @@ struct DetailView: View {
                 .background(Color.gray.opacity(0.7))
                 .clipShape(Circle())
         }
-        .padding([.top, .trailing], asset.mediaType == .video ? 50 : 20) // Adjust padding based on media type
+        .padding([.top, .trailing], asset.mediaType == .video ? 50 : 20) // video player has a sound control in top right
     }
 
     private var loadingView: some View {

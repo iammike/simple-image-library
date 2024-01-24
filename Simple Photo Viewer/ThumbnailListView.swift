@@ -25,15 +25,6 @@ struct ThumbnailListView: View {
                                 self.selectedAsset = asset
                                 self.isDetailViewPresented = true
                             }
-
-                        if asset.mediaType == .video {
-                            // Overlay a play button for videos
-                            Image(systemName: "play.circle")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 40, height: 40)
-                                .foregroundColor(.white)
-                        }
                     }
                     .onAppear {
                         if let lastAsset = viewModel.images.last, lastAsset == asset {
