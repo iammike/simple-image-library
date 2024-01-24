@@ -24,22 +24,24 @@ struct ContentView: View {
                     }
 
                     if isDetailViewPresented, let selectedAsset = selectedAsset {
-                        DetailView(asset: selectedAsset, isPresented: $isDetailViewPresented)
+                        DetailView(viewModel: viewModel, asset: selectedAsset, isPresented: $isDetailViewPresented)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .background(Color.black.opacity(0.4).edgesIgnoringSafeArea(.all))
+                            .background(Color.black.opacity(0.7).edgesIgnoringSafeArea(.all))
                     }
                 }
             } else if viewModel.photoLibraryAccessHasBeenChecked {
                 // Access denied or limited
                 Text("Full Access to the photo library is required. Please enable access in Settings.")
             } else {
-                // Access check in progress
-                Text("Loading...")
+                ProgressView()
+                    .scaleEffect(1.5, anchor: .center)
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .frame(width: 80, height: 80)
+                    .background(Color.gray.opacity(0.5))
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    .padding()
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-            viewModel.photoLibraryAccessHasBeenChecked = false
-            viewModel.checkPhotoLibraryAccess()
         }
     }
 }

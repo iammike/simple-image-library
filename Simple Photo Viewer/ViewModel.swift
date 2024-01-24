@@ -8,61 +8,25 @@
 import SwiftUI
 import Photos
 
-class ViewModel: NSObject, ObservableObject, PHPhotoLibraryChangeObserver {
+class ViewModel: ObservableObject {
     @Published var images: [PHAsset] = []
     @Published var albums: [PHAssetCollection] = []
     @Published var selectedAlbumIdentifier: String?
     @Published var hasPhotoLibraryAccess: Bool = false
     @Published var photoLibraryAccessHasBeenChecked: Bool = false
     @Published var uniqueAssets: [UniqueAsset] = []
-
+    
     private var fetchOffset = 0
-    private let fetchLimit = 100
+    private let fetchLimit = 50
     private var currentAlbum: PHAssetCollection?
     private var allPhotos: PHFetchResult<PHAsset>
-
-    override init() {
+    
+    init() {
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
         fetchOptions.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
         allPhotos = PHAsset.fetchAssets(with: fetchOptions)
-
-        super.init()
-        PHPhotoLibrary.shared().register(self)
         checkPhotoLibraryAccess()
-    }
-    
-    deinit {
-        PHPhotoLibrary.shared().unregisterChangeObserver(self)
-    }
-    
-    private func checkForNewPhotos() {
-        let fetchOptions = PHFetchOptions()
-        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        fetchOptions.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
-
-        let latestPhotos = PHAsset.fetchAssets(with: fetchOptions)
-        DispatchQueue.main.async {
-            let newPhotos = latestPhotos.objects(at: IndexSet(0..<latestPhotos.count))
-            let newUniqueAssets = newPhotos.map { UniqueAsset(asset: $0) }
-
-            // Avoid adding duplicates
-            for newAsset in newUniqueAssets {
-                if !self.uniqueAssets.contains(where: { $0.asset.localIdentifier == newAsset.asset.localIdentifier }) {
-                    self.uniqueAssets.append(newAsset)
-                }
-            }
-        }
-    }
-    
-    
-    func photoLibraryDidChange(_ changeInstance: PHChange) {
-        if let currentAlbum = currentAlbum,
-           let _ = changeInstance.changeDetails(for: currentAlbum) {
-            DispatchQueue.main.async {
-                self.selectAlbum(currentAlbum)
-            }
-        }
     }
     
     func checkPhotoLibraryAccess() {
@@ -74,26 +38,23 @@ class ViewModel: NSObject, ObservableObject, PHPhotoLibraryChangeObserver {
         DispatchQueue.main.async {
             switch status {
             case .authorized:
-                // Full access granted
                 self.hasPhotoLibraryAccess = true
+                print("Starting album fetch...")
                 self.fetchAlbums()
-                self.setupPhotoAccessGranted()
-                print("Authorized access found")
-
+                print("Finishing album fetch...")
+                
             case .limited, .denied, .restricted, .notDetermined:
-                // Limited access or no access
                 self.hasPhotoLibraryAccess = false
                 self.clearCachedData()
-
+                
             @unknown default:
-                // Handle future cases
                 self.hasPhotoLibraryAccess = false
                 self.clearCachedData()
             }
             self.photoLibraryAccessHasBeenChecked = true
         }
     }
-
+    
     private func clearCachedData() {
         self.albums.removeAll()
         self.images.removeAll()
@@ -111,46 +72,54 @@ class ViewModel: NSObject, ObservableObject, PHPhotoLibraryChangeObserver {
         }
     }
     
-    private func setupPhotoAccessGranted() {
-        fetchAlbums()
-        loadAllPhotos()
-    }
-
     func fetchAlbums() {
-        let options = PHFetchOptions()
-        options.sortDescriptors = [NSSortDescriptor(key: "localizedTitle", ascending: true)]
-
-        let userAlbums = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: options)
-        let smartAlbums = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: options)
-
-        let allAlbums = [userAlbums, smartAlbums].flatMap { $0.objects(at: IndexSet(0..<$0.count)) }
-
-        albums = allAlbums.filter { album in
-            let assetCount = PHAsset.fetchAssets(in: album, options: nil).count
-            return assetCount > 0
+        let fetchOptions = PHFetchOptions()
+        
+        let userAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
+        let smartAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: fetchOptions)
+        
+        func albumContainsImages(_ album: PHAssetCollection) -> Bool {
+            let imageFetchOptions = PHFetchOptions()
+            imageFetchOptions.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
+            let imageCount = PHAsset.fetchAssets(in: album, options: imageFetchOptions).count
+            return imageCount > 0
+        }
+        
+        let userAlbums = userAlbumsFetchResult.objects(at: IndexSet(0..<userAlbumsFetchResult.count)).filter(albumContainsImages)
+        let smartAlbums = smartAlbumsFetchResult.objects(at: IndexSet(0..<smartAlbumsFetchResult.count)).filter(albumContainsImages)
+        
+        func latestAssetDate(in album: PHAssetCollection) -> Date? {
+            let assetsFetchOptions = PHFetchOptions()
+            assetsFetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+            assetsFetchOptions.fetchLimit = 1
+            let assets = PHAsset.fetchAssets(in: album, options: assetsFetchOptions)
+            return assets.firstObject?.creationDate
+        }
+        
+        let sortedUserAlbums = userAlbums.sorted {
+            latestAssetDate(in: $0) ?? Date.distantPast > latestAssetDate(in: $1) ?? Date.distantPast
+        }
+        
+        let sortedSmartAlbums = smartAlbums.sorted {
+            latestAssetDate(in: $0) ?? Date.distantPast > latestAssetDate(in: $1) ?? Date.distantPast
+        }
+        
+        let allAlbums = sortedSmartAlbums + sortedUserAlbums
+        
+        DispatchQueue.main.async {
+            self.albums = allAlbums
+            if self.currentAlbum == nil, let firstAlbum = allAlbums.first {
+                self.selectAlbum(firstAlbum)
+            }
         }
     }
     
-    func loadAllPhotos() {
-        selectedAlbumIdentifier = nil
-        currentAlbum = nil
-        fetchOffset = 0
-        uniqueAssets = []
-        loadMorePhotos()
-    }
-
-    func loadInitialPhotos() {
-        images = []
-        fetchOffset = 0
-        fetchPhotos()
-    }
-    
     private func loadMorePhotosFromAlbum(_ album: PHAssetCollection) {
-        let fetchOptions = PHFetchOptions()
-        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        fetchOptions.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
+        let options = PHFetchOptions()
+        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        options.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
         
-        let assets = PHAsset.fetchAssets(in: album, options: fetchOptions)
+        let assets = PHAsset.fetchAssets(in: album, options: options)
         let count = assets.count
         guard fetchOffset < count else {
             return // No more photos to fetch
@@ -162,67 +131,50 @@ class ViewModel: NSObject, ObservableObject, PHPhotoLibraryChangeObserver {
                 self.uniqueAssets.append(UniqueAsset(asset: asset))
             }
         }
-        
-        fetchOffset += fetchLimit
     }
-
+    
     func loadMorePhotos() {
         if let currentAlbum = currentAlbum {
             loadMorePhotosFromAlbum(currentAlbum)
-        } else {
-            loadMorePhotosFromAll()
         }
-    }
-    
-    private func loadMorePhotosFromAll() {
-        let count = allPhotos.count
-        guard fetchOffset < count else {
-            return // No more photos to fetch
-        }
-
         let upperBound = min(fetchOffset + fetchLimit, allPhotos.count)
         allPhotos.enumerateObjects(at: IndexSet(fetchOffset..<upperBound)) { asset, _, _ in
             DispatchQueue.main.async {
                 self.uniqueAssets.append(UniqueAsset(asset: asset))
             }
         }
-
         fetchOffset += fetchLimit
     }
-
-    private func fetchPhotos() {
-        guard let album = currentAlbum else {
-            fetchFromAllPhotos()
-            return
-        }
-
-        let fetchOptions = PHFetchOptions()
-        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        fetchOptions.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
-        let assets = PHAsset.fetchAssets(in: album, options: fetchOptions)
-
-        let upperBound = min(fetchOffset + fetchLimit, assets.count)
-        assets.enumerateObjects(at: IndexSet(fetchOffset..<upperBound)) { asset, _, _ in
+    
+    func getImage(for asset: PHAsset, completion: @escaping (UIImage?) -> Void) {
+        let manager = PHImageManager.default()
+        let options = PHImageRequestOptions()
+        options.isSynchronous = false
+        options.isNetworkAccessAllowed = true
+        options.deliveryMode = .highQualityFormat
+        
+        manager.requestImage(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { (result, _) in
             DispatchQueue.main.async {
-                self.images.append(asset)
+                completion(result)
             }
         }
     }
-
-    private func fetchFromAllPhotos() {
-        let upperBound = min(fetchOffset + fetchLimit, allPhotos.count)
-        allPhotos.enumerateObjects(at: IndexSet(fetchOffset..<upperBound)) { asset, _, _ in
-            DispatchQueue.main.async {
-                self.images.append(asset)
-            }
-        }
-    }
-
+    
     func selectAlbum(_ album: PHAssetCollection) {
         selectedAlbumIdentifier = album.localIdentifier
         currentAlbum = album
         fetchOffset = 0
         uniqueAssets = []
         loadMorePhotosFromAlbum(album)
+    }
+    
+    func refreshThumbnails() {
+        DispatchQueue.main.async {
+            // Reset state for photo fetching
+            self.fetchOffset = 0
+            self.uniqueAssets.removeAll()
+            self.images.removeAll()
+            self.loadMorePhotos()
+        }
     }
 }

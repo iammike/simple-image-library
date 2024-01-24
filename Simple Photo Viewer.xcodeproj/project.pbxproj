@@ -20,7 +20,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		EF6CA3772B5EBEE0005CBF53 /* LE Viewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "LE Viewer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EF6CA3772B5EBEE0005CBF53 /* Simple Photo Viewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Simple Photo Viewer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF6CA37A2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Simple_Photo_ViewerApp.swift; sourceTree = "<group>"; };
 		EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		EF6CA37E2B5EBEE2005CBF53 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -56,7 +56,7 @@
 		EF6CA3782B5EBEE0005CBF53 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				EF6CA3772B5EBEE0005CBF53 /* LE Viewer.app */,
+				EF6CA3772B5EBEE0005CBF53 /* Simple Photo Viewer.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -90,9 +90,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		EF6CA3762B5EBEE0005CBF53 /* LE Viewer */ = {
+		EF6CA3762B5EBEE0005CBF53 /* Simple Photo Viewer */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = EF6CA3862B5EBEE2005CBF53 /* Build configuration list for PBXNativeTarget "LE Viewer" */;
+			buildConfigurationList = EF6CA3862B5EBEE2005CBF53 /* Build configuration list for PBXNativeTarget "Simple Photo Viewer" */;
 			buildPhases = (
 				EF6CA3732B5EBEE0005CBF53 /* Sources */,
 				EF6CA3742B5EBEE0005CBF53 /* Frameworks */,
@@ -102,9 +102,9 @@
 			);
 			dependencies = (
 			);
-			name = "LE Viewer";
+			name = "Simple Photo Viewer";
 			productName = "Simple Photo Viewer";
-			productReference = EF6CA3772B5EBEE0005CBF53 /* LE Viewer.app */;
+			productReference = EF6CA3772B5EBEE0005CBF53 /* Simple Photo Viewer.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -122,7 +122,7 @@
 					};
 				};
 			};
-			buildConfigurationList = EF6CA3722B5EBEE0005CBF53 /* Build configuration list for PBXProject "LE Viewer" */;
+			buildConfigurationList = EF6CA3722B5EBEE0005CBF53 /* Build configuration list for PBXProject "Simple Photo Viewer" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -135,7 +135,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				EF6CA3762B5EBEE0005CBF53 /* LE Viewer */,
+				EF6CA3762B5EBEE0005CBF53 /* Simple Photo Viewer */,
 			);
 		};
 /* End PBXProject section */
@@ -298,6 +298,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "LE Viewer";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app requires access to the photo library.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -338,6 +340,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "LE Viewer";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app requires access to the photo library.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -368,7 +372,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		EF6CA3722B5EBEE0005CBF53 /* Build configuration list for PBXProject "LE Viewer" */ = {
+		EF6CA3722B5EBEE0005CBF53 /* Build configuration list for PBXProject "Simple Photo Viewer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				EF6CA3842B5EBEE2005CBF53 /* Debug */,
@@ -377,7 +381,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		EF6CA3862B5EBEE2005CBF53 /* Build configuration list for PBXNativeTarget "LE Viewer" */ = {
+		EF6CA3862B5EBEE2005CBF53 /* Build configuration list for PBXNativeTarget "Simple Photo Viewer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				EF6CA3872B5EBEE2005CBF53 /* Debug */,

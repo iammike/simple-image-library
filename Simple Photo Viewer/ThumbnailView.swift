@@ -11,7 +11,7 @@ import Photos
 struct ThumbnailView: View {
     @State private var thumbnailImage: UIImage? = nil
     let asset: PHAsset
-
+    
     var body: some View {
         Group {
             if let image = thumbnailImage {
@@ -20,7 +20,12 @@ struct ThumbnailView: View {
                     .scaledToFill()
                     .frame(width: 200, height: 200)
             } else {
-                Rectangle() // Placeholder if image is not yet loaded
+                Rectangle()
+                    .overlay(
+                        Image(systemName: "icloud.slash")
+                            .foregroundStyle(Color.gray)
+                    )
+                    
                     .frame(width: 200, height: 200)
             }
         }
@@ -30,14 +35,14 @@ struct ThumbnailView: View {
             loadThumbnailImage()
         }
     }
-
+    
     private func loadThumbnailImage() {
         let manager = PHImageManager.default()
         let options = PHImageRequestOptions()
-        options.isSynchronous = false // Asynchronous request
+        options.isSynchronous = false
         options.deliveryMode = .opportunistic
         options.resizeMode = .exact
-
+        
         manager.requestImage(for: asset, targetSize: CGSize(width: 200, height: 200), contentMode: .aspectFill, options: options) { image, _ in
             DispatchQueue.main.async {
                 self.thumbnailImage = image

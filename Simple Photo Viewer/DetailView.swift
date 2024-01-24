@@ -9,6 +9,7 @@ import SwiftUI
 import Photos
 
 struct DetailView: View {
+    @ObservedObject var viewModel: ViewModel
     let asset: PHAsset
     @Binding var isPresented: Bool
     @State private var image: UIImage? = nil
@@ -42,11 +43,7 @@ struct DetailView: View {
                     .foregroundColor(.white)
                     .cornerRadius(10)
                     .padding()
-
-
             }
-
-            
         }
         .onAppear {
             loadImage()
@@ -54,22 +51,8 @@ struct DetailView: View {
     }
 
     private func loadImage() {
-        getImage(for: asset) { downloadedImage in
+        viewModel.getImage(for: asset) { downloadedImage in
             self.image = downloadedImage
-        }
-    }
-
-    private func getImage(for asset: PHAsset, completion: @escaping (UIImage?) -> Void) {
-        let manager = PHImageManager.default()
-        let options = PHImageRequestOptions()
-        options.isSynchronous = false
-        options.isNetworkAccessAllowed = true
-        options.deliveryMode = .highQualityFormat
-
-        manager.requestImage(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { (result, _) in
-            DispatchQueue.main.async {
-                completion(result)
-            }
         }
     }
 }

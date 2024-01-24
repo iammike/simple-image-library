@@ -34,5 +34,8 @@ struct ThumbnailListView: View {
             }
             .padding()
         }
+        .refreshable {
+            viewModel.refreshThumbnails()
+        }
     }
 }
