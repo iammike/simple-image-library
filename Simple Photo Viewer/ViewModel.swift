@@ -39,9 +39,7 @@ class ViewModel: ObservableObject {
             switch status {
             case .authorized:
                 self.hasPhotoLibraryAccess = true
-                print("Starting album fetch...")
                 self.fetchAlbums()
-                print("Finishing album fetch...")
                 
             case .limited, .denied, .restricted, .notDetermined:
                 self.hasPhotoLibraryAccess = false
@@ -131,20 +129,17 @@ class ViewModel: ObservableObject {
                 self.uniqueAssets.append(UniqueAsset(asset: asset))
             }
         }
+
+        fetchOffset += min(fetchLimit, count - fetchOffset)
     }
+
     
     func loadMorePhotos() {
         if let currentAlbum = currentAlbum {
             loadMorePhotosFromAlbum(currentAlbum)
         }
-        let upperBound = min(fetchOffset + fetchLimit, allPhotos.count)
-        allPhotos.enumerateObjects(at: IndexSet(fetchOffset..<upperBound)) { asset, _, _ in
-            DispatchQueue.main.async {
-                self.uniqueAssets.append(UniqueAsset(asset: asset))
-            }
-        }
-        fetchOffset += fetchLimit
     }
+
     
     func getImage(for asset: PHAsset, completion: @escaping (UIImage?) -> Void) {
         let manager = PHImageManager.default()
