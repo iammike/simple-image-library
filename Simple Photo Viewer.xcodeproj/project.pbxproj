@@ -68,16 +68,16 @@
 		EF6CA3792B5EBEE0005CBF53 /* Simple Photo Viewer */ = {
 			isa = PBXGroup;
 			children = (
-				EF6CA37A2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift */,
-				EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */,
+				EFCDF8BD2B614CA90007C3BB /* AccessDeniedView.swift */,
 				EFCDF8B52B60260C0007C3BB /* AlbumView.swift */,
+				EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */,
 				EF6CA38D2B5EC229005CBF53 /* DetailView.swift */,
+				EFCDF8BF2B614CBC0007C3BB /* LoadingView.swift */,
 				EFCDF8BB2B614C280007C3BB /* MainContentView.swift */,
 				EFCDF8B32B60259B0007C3BB /* ThumbnailListView.swift */,
 				EF6CA38B2B5EC204005CBF53 /* ThumbnailView.swift */,
-				EFCDF8BD2B614CA90007C3BB /* AccessDeniedView.swift */,
 				EFCDF8B72B6026620007C3BB /* ViewModel.swift */,
-				EFCDF8BF2B614CBC0007C3BB /* LoadingView.swift */,
+				EF6CA37A2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift */,
 				EF6CA37E2B5EBEE2005CBF53 /* Assets.xcassets */,
 				EF6CA3802B5EBEE2005CBF53 /* Simple_Photo_Viewer.entitlements */,
 				EF6CA3812B5EBEE2005CBF53 /* Preview Content */,
