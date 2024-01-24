@@ -36,6 +36,9 @@ struct DetailView: View {
 
     private var closeButton: some View {
         Button(action: {
+            if let player = player, asset.mediaType == .video {
+                player.pause()
+            }
             self.isPresented = false
         }) {
             Image(systemName: "xmark")
@@ -44,7 +47,7 @@ struct DetailView: View {
                 .background(Color.gray.opacity(0.7))
                 .clipShape(Circle())
         }
-        .padding([.top, .trailing], asset.mediaType == .video ? 50 : 20) // video player has a sound control in top right
+        .padding([.top, .trailing], asset.mediaType == .video ? 50 : 20)
     }
 
     private var loadingView: some View {
