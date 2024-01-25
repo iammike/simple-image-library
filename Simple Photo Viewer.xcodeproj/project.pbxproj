@@ -30,6 +30,7 @@
 		EF6CA3822B5EBEE2005CBF53 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		EF6CA38B2B5EC204005CBF53 /* ThumbnailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailView.swift; sourceTree = "<group>"; };
 		EF6CA38D2B5EC229005CBF53 /* DetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
+		EFA87E852B62AA2C00F1D761 /* Simple-Photo-Viewer-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Simple-Photo-Viewer-Info.plist"; sourceTree = SOURCE_ROOT; };
 		EFCDF8B32B60259B0007C3BB /* ThumbnailListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailListView.swift; sourceTree = "<group>"; };
 		EFCDF8B52B60260C0007C3BB /* AlbumView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumView.swift; sourceTree = "<group>"; };
 		EFCDF8B72B6026620007C3BB /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
@@ -68,6 +69,7 @@
 		EF6CA3792B5EBEE0005CBF53 /* Simple Photo Viewer */ = {
 			isa = PBXGroup;
 			children = (
+				EFA87E852B62AA2C00F1D761 /* Simple-Photo-Viewer-Info.plist */,
 				EFCDF8BD2B614CA90007C3BB /* AccessDeniedView.swift */,
 				EFCDF8B52B60260C0007C3BB /* AlbumView.swift */,
 				EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */,
@@ -306,6 +308,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Simple-Photo-Viewer-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "LE Viewer";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app requires access to the photo library.";
@@ -348,6 +351,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Simple-Photo-Viewer-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "LE Viewer";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app requires access to the photo library.";
