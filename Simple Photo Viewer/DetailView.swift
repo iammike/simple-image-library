@@ -15,23 +15,44 @@ struct DetailView: View {
     @Binding var isPresented: Bool
     @State private var image: UIImage? = nil
     @State private var player: AVPlayer? = nil
+    @State private var showCloseButton = false
+    @State private var hideTimerWorkItem: DispatchWorkItem?
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            Group {
-                if asset.mediaType == .video {
-                    videoPlayerView
-                } else {
-                    imageView
-                }
+            content
+            if showCloseButton {
+                closeButton
+                    .transition(AnyTransition.opacity.combined(with: .scale))
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            closeButton
+        }
+        .onTapGesture {
+            withAnimation {
+                showCloseButton.toggle()
+            }
+            if showCloseButton {
+                startHideTimer()
+            } else {
+                cancelHideTimer()
+            }
         }
         .onAppear {
             loadAsset()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.opacity(0.7))
+        .edgesIgnoringSafeArea(.all)
+    }
+
+    private var content: some View {
+        Group {
+            if asset.mediaType == .video {
+                videoPlayerView
+            } else {
+                imageView
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var closeButton: some View {
@@ -42,12 +63,13 @@ struct DetailView: View {
             self.isPresented = false
         }) {
             Image(systemName: "xmark")
-                .foregroundColor(.primary)
+                .foregroundColor(.black)
                 .padding()
-                .background(Color.gray.opacity(0.7))
+                .background(Color.white)
                 .clipShape(Circle())
         }
-        .padding([.top, .trailing], asset.mediaType == .video ? 50 : 20)
+        .padding(.top, asset.mediaType == .video ? 70 : 40) // Account for volume button in video player
+        .padding(.trailing, 20)
     }
 
     private var loadingView: some View {
@@ -116,5 +138,22 @@ struct DetailView: View {
                 }
             }
         }
+    }
+
+    private func startHideTimer() {
+        cancelHideTimer()
+
+        let workItem = DispatchWorkItem {
+            withAnimation {
+                self.showCloseButton = false
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: workItem)
+        hideTimerWorkItem = workItem
+    }
+
+    private func cancelHideTimer() {
+        hideTimerWorkItem?.cancel()
+        hideTimerWorkItem = nil
     }
 }

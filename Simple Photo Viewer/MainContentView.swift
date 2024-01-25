@@ -22,8 +22,6 @@ struct MainContentView: View {
 
             if isDetailViewPresented.wrappedValue, let selectedAsset = selectedAsset.wrappedValue {
                 DetailView(viewModel: viewModel, asset: selectedAsset, isPresented: isDetailViewPresented)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.black.opacity(0.7).edgesIgnoringSafeArea(.all))
             }
         }
     }
