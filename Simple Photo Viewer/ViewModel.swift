@@ -170,21 +170,4 @@ class ViewModel: ObservableObject {
             self.loadMorePhotos()
         }
     }
-
-    func nextAsset(currentAsset: PHAsset) -> PHAsset? {
-        guard let currentIndex = images.firstIndex(of: currentAsset),
-              currentIndex + 1 < images.count else {
-            return nil // last asset
-        }
-        return images[currentIndex + 1]
-    }
-
-    func previousAsset(currentAsset: PHAsset) -> PHAsset? {
-        guard let currentIndex = images.firstIndex(of: currentAsset),
-              currentIndex - 1 >= 0 else {
-            return nil // first asset
-        }
-        return images[currentIndex - 1]
-    }
-
 }

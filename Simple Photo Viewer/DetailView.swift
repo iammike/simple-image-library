@@ -18,6 +18,11 @@ struct DetailView: View {
     @State private var showCloseButton = false
     @State private var hideTimerWorkItem: DispatchWorkItem?
     @State private var currentIndex: Int = 0
+    @State private var swipeDirection: SwipeDirection = .none
+
+    enum SwipeDirection {
+        case left, right, none
+    }
 
     var currentAsset: PHAsset {
         viewModel.images[currentIndex]
@@ -58,16 +63,37 @@ struct DetailView: View {
     }
 
     private var content: some View {
-        return ZStack {
+        ZStack {
             if currentAsset.mediaType == .video {
-                AnyView(videoPlayerView)
-                    .transition(.slide)
+                videoPlayerView
+                    .id(currentIndex)
+                    .transition(contentTransition)  // Apply transition here
             } else {
-                AnyView(imageView)
-                    .transition(.slide)
+                imageView
+                    .id(currentIndex)
+                    .transition(contentTransition)  // Apply transition here
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+
+
+    private var contentTransition: AnyTransition {
+        switch swipeDirection {
+        case .left:
+            return AnyTransition.asymmetric(
+                insertion: .move(edge: .trailing),
+                removal: .move(edge: .leading)
+            )
+        case .right:
+            return AnyTransition.asymmetric(
+                insertion: .move(edge: .leading),
+                removal: .move(edge: .trailing)
+            )
+        default:
+            return .identity
+        }
     }
 
     private func handleTapGesture() {
@@ -137,11 +163,17 @@ struct DetailView: View {
     }
 
     private func loadAsset() {
+        if currentAsset.mediaType == .video, let existingPlayer = player {
+            existingPlayer.pause()
+        }
+
         if currentAsset.mediaType == .video {
             loadVideo()
         } else {
             loadImage()
+            player = nil
         }
+        swipeDirection = .none
     }
 
     private func loadImage() {
@@ -174,14 +206,17 @@ struct DetailView: View {
         DragGesture()
             .onEnded { gesture in
                 if gesture.translation.width > 100 {
-                    // Swipe right, go to the previous asset
-                    currentIndex = max(currentIndex - 1, 0)
-                    loadAsset()
+                    swipeDirection = .right
+                    withAnimation {
+                        currentIndex = max(currentIndex - 1, 0)
+                    }
                 } else if gesture.translation.width < -100 {
-                    // Swipe left, go to the next asset
-                    currentIndex = min(currentIndex + 1, viewModel.images.count - 1)
-                    loadAsset()
+                    swipeDirection = .left
+                    withAnimation {
+                        currentIndex = min(currentIndex + 1, viewModel.images.count - 1)
+                    }
                 }
+                loadAsset()
             }
     }
 
