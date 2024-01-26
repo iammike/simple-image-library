@@ -15,7 +15,7 @@ struct DetailView: View {
     @Binding var isPresented: Bool
     @State private var image: UIImage? = nil
     @State private var player: AVPlayer? = nil
-    @State private var showCloseButton = false
+//    @State private var showCloseButton = false
     @State private var hideTimerWorkItem: DispatchWorkItem?
     @State private var currentIndex: Int = 0
     @State private var swipeDirection: SwipeDirection = .right // need to set an initial direction for the first asset loaded to work
@@ -39,22 +39,22 @@ struct DetailView: View {
         ZStack(alignment: .topTrailing) {
             Rectangle()
                 .foregroundColor(backgroundColorForScheme.opacity(viewModel.useOpacity ? 0.7 : 1.0))
-                .onTapGesture {
-                    handleTapGesture()
-                }
+//                .onTapGesture {
+//                    handleTapGesture()
+//                }
                 .gesture(swipeGesture)
                 .edgesIgnoringSafeArea(.all)
 
             content
-                .onTapGesture {
-                    handleTapGesture()
-                }
+//                .onTapGesture {
+//                    handleTapGesture()
+//                }
                 .gesture(swipeGesture)
 
-            if showCloseButton {
+//            if showCloseButton {
                 closeButton
-                    .transition(AnyTransition.opacity.combined(with: .scale))
-            }
+//                    .transition(AnyTransition.opacity.combined(with: .scale))
+//            }
         }
         .onAppear {
             loadAsset()
@@ -103,16 +103,16 @@ struct DetailView: View {
         }
     }
 
-    private func handleTapGesture() {
-        withAnimation {
-            showCloseButton.toggle()
-        }
-        if showCloseButton {
-            startHideTimer()
-        } else {
-            cancelHideTimer()
-        }
-    }
+//    private func handleTapGesture() {
+//        withAnimation {
+//            showCloseButton.toggle()
+//        }
+//        if showCloseButton {
+//            startHideTimer()
+//        } else {
+//            cancelHideTimer()
+//        }
+//    }
 
     private var closeButton: some View {
         Button(action: {
@@ -124,10 +124,10 @@ struct DetailView: View {
             Image(systemName: "xmark")
                 .foregroundColor(.black)
                 .padding()
-                .background(Color.white)
+                .background(Color.gray.opacity(0.7))
                 .clipShape(Circle())
         }
-        .padding(.top, currentAsset.mediaType == .video ? 70 : 40)
+        .padding(.top, 70)
         .padding(.trailing, 20)
     }
 
@@ -145,9 +145,6 @@ struct DetailView: View {
         Group {
             if let player = player {
                 VideoPlayer(player: player)
-                    .onAppear {
-                        self.player?.play()
-                    }
             } else {
                 loadingView
             }
@@ -168,7 +165,7 @@ struct DetailView: View {
 
     private func loadAsset() {
         if currentAsset.mediaType == .video {
-            resetPlayer()
+//            resetPlayer()
             loadVideo()
         } else {
             loadImage()
@@ -176,10 +173,10 @@ struct DetailView: View {
         }
     }
 
-    private func resetPlayer() {
-        player?.pause()
-        player = nil
-    }
+//    private func resetPlayer() {
+//        player?.pause()
+//        player = nil
+//    }
 
     private func loadImage() {
         viewModel.getImage(for: currentAsset) { downloadedImage in
@@ -233,36 +230,43 @@ struct DetailView: View {
     private var swipeGesture: some Gesture {
         DragGesture()
             .onEnded { gesture in
-                self.player?.pause()
                 if gesture.translation.width > 100 {
-                    swipeDirection = .right
-                    withAnimation {
-                        currentIndex = max(currentIndex - 1, 0)
+                    if currentIndex > 0 { // Check if not at the first item
+                        self.player?.pause()
+                        swipeDirection = .right
+                        withAnimation {
+                            currentIndex = max(currentIndex - 1, 0)
+                        }
+                        loadAsset()
                     }
                 } else if gesture.translation.width < -100 {
-                    swipeDirection = .left
-                    withAnimation {
-                        currentIndex = min(currentIndex + 1, viewModel.images.count - 1)
+                    if currentIndex < viewModel.images.count - 1 { // Check if not at the last item
+                        self.player?.pause()
+                        swipeDirection = .left
+                        withAnimation {
+                            currentIndex = min(currentIndex + 1, viewModel.images.count - 1)
+                        }
+                        loadAsset()
                     }
                 }
-                loadAsset()
             }
     }
 
-    private func startHideTimer() {
-        cancelHideTimer()
 
-        let workItem = DispatchWorkItem {
-            withAnimation {
-                self.showCloseButton = false
-            }
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: workItem)
-        hideTimerWorkItem = workItem
-    }
-
-    private func cancelHideTimer() {
-        hideTimerWorkItem?.cancel()
-        hideTimerWorkItem = nil
-    }
+//    private func startHideTimer() {
+//        cancelHideTimer()
+//
+//        let workItem = DispatchWorkItem {
+//            withAnimation {
+//                self.showCloseButton = false
+//            }
+//        }
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: workItem)
+//        hideTimerWorkItem = workItem
+//    }
+//
+//    private func cancelHideTimer() {
+//        hideTimerWorkItem?.cancel()
+//        hideTimerWorkItem = nil
+//    }
 }
