@@ -11,12 +11,14 @@ import AVKit
 
 struct DetailView: View {
     @ObservedObject var viewModel: ViewModel
-    let asset: PHAsset
+    @Environment(\.colorScheme) var colorScheme
     @Binding var isPresented: Bool
     @State private var image: UIImage? = nil
     @State private var player: AVPlayer? = nil
     @State private var showCloseButton = false
     @State private var hideTimerWorkItem: DispatchWorkItem?
+
+    let asset: PHAsset
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -40,7 +42,7 @@ struct DetailView: View {
             loadAsset()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black.opacity(0.7))
+        .background(backgroundColorForScheme.opacity(viewModel.useOpacity ? 0.7 : 1.0))
         .edgesIgnoringSafeArea(.all)
     }
 
@@ -138,6 +140,10 @@ struct DetailView: View {
                 }
             }
         }
+    }
+
+    private var backgroundColorForScheme: Color {
+        colorScheme == .dark ? Color.black : Color.white
     }
 
     private func startHideTimer() {
