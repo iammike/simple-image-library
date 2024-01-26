@@ -17,8 +17,17 @@ struct DetailView: View {
     @State private var player: AVPlayer? = nil
     @State private var showCloseButton = false
     @State private var hideTimerWorkItem: DispatchWorkItem?
+    @State private var currentIndex: Int = 0
 
-    let asset: PHAsset
+    var currentAsset: PHAsset {
+        viewModel.images[currentIndex]
+    }
+
+    init(viewModel: ViewModel, isPresented: Binding<Bool>, asset: PHAsset) {
+        self.viewModel = viewModel
+        self._isPresented = isPresented
+        self._currentIndex = State(initialValue: viewModel.images.firstIndex(where: { $0 == asset }) ?? 0)
+    }
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -27,12 +36,14 @@ struct DetailView: View {
                 .onTapGesture {
                     handleTapGesture()
                 }
+                .gesture(swipeGesture)
                 .edgesIgnoringSafeArea(.all)
 
             content
                 .onTapGesture {
                     handleTapGesture()
                 }
+                .gesture(swipeGesture)
 
             if showCloseButton {
                 closeButton
@@ -47,11 +58,13 @@ struct DetailView: View {
     }
 
     private var content: some View {
-        Group {
-            if asset.mediaType == .video {
-                videoPlayerView
+        return ZStack {
+            if currentAsset.mediaType == .video {
+                AnyView(videoPlayerView)
+                    .transition(.slide)
             } else {
-                imageView
+                AnyView(imageView)
+                    .transition(.slide)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -70,7 +83,7 @@ struct DetailView: View {
 
     private var closeButton: some View {
         Button(action: {
-            if let player = player, asset.mediaType == .video {
+            if let player = player, currentAsset.mediaType == .video {
                 player.pause()
             }
             self.isPresented = false
@@ -81,7 +94,7 @@ struct DetailView: View {
                 .background(Color.white)
                 .clipShape(Circle())
         }
-        .padding(.top, asset.mediaType == .video ? 70 : 40) // Account for volume button in video player
+        .padding(.top, currentAsset.mediaType == .video ? 70 : 40)
         .padding(.trailing, 20)
     }
 
@@ -124,7 +137,7 @@ struct DetailView: View {
     }
 
     private func loadAsset() {
-        if asset.mediaType == .video {
+        if currentAsset.mediaType == .video {
             loadVideo()
         } else {
             loadImage()
@@ -132,7 +145,7 @@ struct DetailView: View {
     }
 
     private func loadImage() {
-        viewModel.getImage(for: asset) { downloadedImage in
+        viewModel.getImage(for: currentAsset) { downloadedImage in
             self.image = downloadedImage
         }
     }
@@ -143,7 +156,7 @@ struct DetailView: View {
         options.isNetworkAccessAllowed = true
 
         DispatchQueue.global(qos: .userInitiated).async {
-            PHImageManager.default().requestAVAsset(forVideo: self.asset, options: options) { (avAsset, audioMix, info) in
+            PHImageManager.default().requestAVAsset(forVideo: self.currentAsset, options: options) { (avAsset, audioMix, info) in
                 DispatchQueue.main.async {
                     if let avAsset = avAsset as? AVURLAsset {
                         self.player = AVPlayer(url: avAsset.url)
@@ -155,6 +168,21 @@ struct DetailView: View {
 
     private var backgroundColorForScheme: Color {
         colorScheme == .dark ? Color.black : Color.white
+    }
+
+    private var swipeGesture: some Gesture {
+        DragGesture()
+            .onEnded { gesture in
+                if gesture.translation.width > 100 {
+                    // Swipe right, go to the previous asset
+                    currentIndex = max(currentIndex - 1, 0)
+                    loadAsset()
+                } else if gesture.translation.width < -100 {
+                    // Swipe left, go to the next asset
+                    currentIndex = min(currentIndex + 1, viewModel.images.count - 1)
+                    loadAsset()
+                }
+            }
     }
 
     private func startHideTimer() {
