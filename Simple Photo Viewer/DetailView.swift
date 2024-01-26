@@ -15,62 +15,108 @@ struct DetailView: View {
     @Binding var isPresented: Bool
     @State private var image: UIImage? = nil
     @State private var player: AVPlayer? = nil
-    @State private var showCloseButton = false
+//    @State private var showCloseButton = false
     @State private var hideTimerWorkItem: DispatchWorkItem?
+    @State private var currentIndex: Int = 0
+    @State private var swipeDirection: SwipeDirection = .right // need to set an initial direction for the first asset loaded to work
+    @State private var playerItemStatusObserver: Any?
 
-    let asset: PHAsset
+    enum SwipeDirection {
+        case left, right, none
+    }
+
+    var currentAsset: PHAsset {
+        viewModel.images[currentIndex]
+    }
+
+    init(viewModel: ViewModel, isPresented: Binding<Bool>, asset: PHAsset) {
+        self.viewModel = viewModel
+        self._isPresented = isPresented
+        self._currentIndex = State(initialValue: viewModel.images.firstIndex(where: { $0 == asset }) ?? 0)
+    }
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
             Rectangle()
                 .foregroundColor(backgroundColorForScheme.opacity(viewModel.useOpacity ? 0.7 : 1.0))
-                .onTapGesture {
-                    handleTapGesture()
-                }
+//                .onTapGesture {
+//                    handleTapGesture()
+//                }
+                .gesture(swipeGesture)
                 .edgesIgnoringSafeArea(.all)
 
             content
-                .onTapGesture {
-                    handleTapGesture()
-                }
+//                .onTapGesture {
+//                    handleTapGesture()
+//                }
+                .gesture(swipeGesture)
 
-            if showCloseButton {
+//            if showCloseButton {
                 closeButton
-                    .transition(AnyTransition.opacity.combined(with: .scale))
-            }
+//                    .transition(AnyTransition.opacity.combined(with: .scale))
+//            }
         }
         .onAppear {
             loadAsset()
+        }
+        .onDisappear {
+            playerItemStatusObserver = nil
+            player?.pause()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .edgesIgnoringSafeArea(.all)
     }
 
     private var content: some View {
-        Group {
-            if asset.mediaType == .video {
-                videoPlayerView
-            } else {
-                imageView
+        GeometryReader { geometry in
+            ZStack {
+                if currentAsset.mediaType == .video {
+                    videoPlayerView
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .id(currentIndex)
+                        .transition(contentTransition)
+                } else {
+                    imageView
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .id(currentIndex)
+                        .transition(contentTransition)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func handleTapGesture() {
-        withAnimation {
-            showCloseButton.toggle()
-        }
-        if showCloseButton {
-            startHideTimer()
-        } else {
-            cancelHideTimer()
+    private var contentTransition: AnyTransition {
+        switch swipeDirection {
+        case .left:
+            return AnyTransition.asymmetric(
+                insertion: .move(edge: .trailing),
+                removal: .move(edge: .leading)
+            )
+        case .right:
+            return AnyTransition.asymmetric(
+                insertion: .move(edge: .leading),
+                removal: .move(edge: .trailing)
+            )
+        default:
+            return .identity
         }
     }
 
+//    private func handleTapGesture() {
+//        withAnimation {
+//            showCloseButton.toggle()
+//        }
+//        if showCloseButton {
+//            startHideTimer()
+//        } else {
+//            cancelHideTimer()
+//        }
+//    }
+
     private var closeButton: some View {
         Button(action: {
-            if let player = player, asset.mediaType == .video {
+            if let player = player, currentAsset.mediaType == .video {
                 player.pause()
             }
             self.isPresented = false
@@ -78,10 +124,10 @@ struct DetailView: View {
             Image(systemName: "xmark")
                 .foregroundColor(.black)
                 .padding()
-                .background(Color.white)
+                .background(Color.gray.opacity(0.7))
                 .clipShape(Circle())
         }
-        .padding(.top, asset.mediaType == .video ? 70 : 40) // Account for volume button in video player
+        .padding(.top, 70)
         .padding(.trailing, 20)
     }
 
@@ -95,16 +141,10 @@ struct DetailView: View {
         }
     }
 
-    private var videoPlayerView: some View  {
+    private var videoPlayerView: some View {
         Group {
             if let player = player {
                 VideoPlayer(player: player)
-                    .onAppear {
-                        player.play()
-                    }
-                    .onDisappear {
-                        player.pause()
-                    }
             } else {
                 loadingView
             }
@@ -124,53 +164,109 @@ struct DetailView: View {
     }
 
     private func loadAsset() {
-        if asset.mediaType == .video {
+        if currentAsset.mediaType == .video {
+//            resetPlayer()
             loadVideo()
         } else {
             loadImage()
+            player = nil
         }
     }
 
+//    private func resetPlayer() {
+//        player?.pause()
+//        player = nil
+//    }
+
     private func loadImage() {
-        viewModel.getImage(for: asset) { downloadedImage in
+        viewModel.getImage(for: currentAsset) { downloadedImage in
             self.image = downloadedImage
         }
     }
 
     private func loadVideo() {
+        playerItemStatusObserver = nil
         let options = PHVideoRequestOptions()
         options.version = .current
         options.isNetworkAccessAllowed = true
 
         DispatchQueue.global(qos: .userInitiated).async {
-            PHImageManager.default().requestAVAsset(forVideo: self.asset, options: options) { (avAsset, audioMix, info) in
+            PHImageManager.default().requestAVAsset(forVideo: self.currentAsset, options: options) { (asset, audioMix, info) in
                 DispatchQueue.main.async {
-                    if let avAsset = avAsset as? AVURLAsset {
-                        self.player = AVPlayer(url: avAsset.url)
+                    if let avAsset = asset as? AVURLAsset {
+                        self.setupPlayer(with: avAsset)
                     }
                 }
             }
         }
     }
 
+    private func setupPlayer(with avAsset: AVURLAsset) {
+        let playerItem = AVPlayerItem(url: avAsset.url)
+
+        playerItemStatusObserver = playerItem.observe(\.status, options: [.new, .old]) { item, _ in
+            if item.status == .readyToPlay {
+                DispatchQueue.main.async {
+                    self.player?.play()
+                }
+            }
+        }
+
+        NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: playerItem,
+            queue: .main
+        ) { _ in
+            self.player?.seek(to: CMTime.zero)
+        }
+
+        self.player = AVPlayer(playerItem: playerItem)
+    }
+
     private var backgroundColorForScheme: Color {
         colorScheme == .dark ? Color.black : Color.white
     }
 
-    private func startHideTimer() {
-        cancelHideTimer()
-
-        let workItem = DispatchWorkItem {
-            withAnimation {
-                self.showCloseButton = false
+    private var swipeGesture: some Gesture {
+        DragGesture()
+            .onEnded { gesture in
+                if gesture.translation.width > 100 {
+                    if currentIndex > 0 { // Check if not at the first item
+                        self.player?.pause()
+                        swipeDirection = .right
+                        withAnimation {
+                            currentIndex = max(currentIndex - 1, 0)
+                        }
+                        loadAsset()
+                    }
+                } else if gesture.translation.width < -100 {
+                    if currentIndex < viewModel.images.count - 1 { // Check if not at the last item
+                        self.player?.pause()
+                        swipeDirection = .left
+                        withAnimation {
+                            currentIndex = min(currentIndex + 1, viewModel.images.count - 1)
+                        }
+                        loadAsset()
+                    }
+                }
             }
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: workItem)
-        hideTimerWorkItem = workItem
     }
 
-    private func cancelHideTimer() {
-        hideTimerWorkItem?.cancel()
-        hideTimerWorkItem = nil
-    }
+
+//    private func startHideTimer() {
+//        cancelHideTimer()
+//
+//        let workItem = DispatchWorkItem {
+//            withAnimation {
+//                self.showCloseButton = false
+//            }
+//        }
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: workItem)
+//        hideTimerWorkItem = workItem
+//    }
+//
+//    private func cancelHideTimer() {
+//        hideTimerWorkItem?.cancel()
+//        hideTimerWorkItem = nil
+//    }
 }
