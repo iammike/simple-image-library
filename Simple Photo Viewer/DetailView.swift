@@ -18,7 +18,7 @@ struct DetailView: View {
     @State private var showCloseButton = false
     @State private var hideTimerWorkItem: DispatchWorkItem?
     @State private var currentIndex: Int = 0
-    @State private var swipeDirection: SwipeDirection = .none
+    @State private var swipeDirection: SwipeDirection = .right // need to set an initial direction for the first asset loaded to work
 
     enum SwipeDirection {
         case left, right, none
@@ -63,21 +63,23 @@ struct DetailView: View {
     }
 
     private var content: some View {
-        ZStack {
-            if currentAsset.mediaType == .video {
-                videoPlayerView
-                    .id(currentIndex)
-                    .transition(contentTransition)  // Apply transition here
-            } else {
-                imageView
-                    .id(currentIndex)
-                    .transition(contentTransition)  // Apply transition here
+        GeometryReader { geometry in
+            ZStack {
+                if currentAsset.mediaType == .video {
+                    videoPlayerView
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .id(currentIndex)
+                        .transition(contentTransition)
+                } else {
+                    imageView
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .id(currentIndex)
+                        .transition(contentTransition)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-
-
 
     private var contentTransition: AnyTransition {
         switch swipeDirection {
@@ -134,15 +136,12 @@ struct DetailView: View {
         }
     }
 
-    private var videoPlayerView: some View  {
+    private var videoPlayerView: some View {
         Group {
             if let player = player {
                 VideoPlayer(player: player)
                     .onAppear {
-                        player.play()
-                    }
-                    .onDisappear {
-                        player.pause()
+                        self.player?.play()
                     }
             } else {
                 loadingView
@@ -163,17 +162,18 @@ struct DetailView: View {
     }
 
     private func loadAsset() {
-        if currentAsset.mediaType == .video, let existingPlayer = player {
-            existingPlayer.pause()
-        }
-
         if currentAsset.mediaType == .video {
+            resetPlayer()
             loadVideo()
         } else {
             loadImage()
             player = nil
         }
-        swipeDirection = .none
+    }
+
+    private func resetPlayer() {
+        player?.pause()
+        player = nil
     }
 
     private func loadImage() {
@@ -188,15 +188,30 @@ struct DetailView: View {
         options.isNetworkAccessAllowed = true
 
         DispatchQueue.global(qos: .userInitiated).async {
-            PHImageManager.default().requestAVAsset(forVideo: self.currentAsset, options: options) { (avAsset, audioMix, info) in
+            PHImageManager.default().requestAVAsset(forVideo: self.currentAsset, options: options) { (asset, audioMix, info) in
                 DispatchQueue.main.async {
-                    if let avAsset = avAsset as? AVURLAsset {
-                        self.player = AVPlayer(url: avAsset.url)
+                    if let avAsset = asset as? AVURLAsset {
+                        self.setupPlayer(with: avAsset)
                     }
                 }
             }
         }
     }
+
+    private func setupPlayer(with avAsset: AVURLAsset) {
+        let playerItem = AVPlayerItem(url: avAsset.url)
+        NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: playerItem,
+            queue: .main
+        ) { _ in
+            self.player?.seek(to: CMTime.zero)
+        }
+        self.player = AVPlayer(playerItem: playerItem)
+        // self.player?.play()
+    }
+
+
 
     private var backgroundColorForScheme: Color {
         colorScheme == .dark ? Color.black : Color.white
@@ -205,6 +220,7 @@ struct DetailView: View {
     private var swipeGesture: some Gesture {
         DragGesture()
             .onEnded { gesture in
+                self.player?.pause()
                 if gesture.translation.width > 100 {
                     swipeDirection = .right
                     withAnimation {
