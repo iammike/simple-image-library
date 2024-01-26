@@ -19,6 +19,7 @@ struct DetailView: View {
     @State private var hideTimerWorkItem: DispatchWorkItem?
     @State private var currentIndex: Int = 0
     @State private var swipeDirection: SwipeDirection = .right // need to set an initial direction for the first asset loaded to work
+    @State private var playerItemStatusObserver: Any?
 
     enum SwipeDirection {
         case left, right, none
@@ -57,6 +58,10 @@ struct DetailView: View {
         }
         .onAppear {
             loadAsset()
+        }
+        .onDisappear {
+            playerItemStatusObserver = nil
+            player?.pause()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .edgesIgnoringSafeArea(.all)
@@ -183,6 +188,7 @@ struct DetailView: View {
     }
 
     private func loadVideo() {
+        playerItemStatusObserver = nil
         let options = PHVideoRequestOptions()
         options.version = .current
         options.isNetworkAccessAllowed = true
@@ -200,6 +206,15 @@ struct DetailView: View {
 
     private func setupPlayer(with avAsset: AVURLAsset) {
         let playerItem = AVPlayerItem(url: avAsset.url)
+
+        playerItemStatusObserver = playerItem.observe(\.status, options: [.new, .old]) { item, _ in
+            if item.status == .readyToPlay {
+                DispatchQueue.main.async {
+                    self.player?.play()
+                }
+            }
+        }
+
         NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime,
             object: playerItem,
@@ -207,11 +222,9 @@ struct DetailView: View {
         ) { _ in
             self.player?.seek(to: CMTime.zero)
         }
+
         self.player = AVPlayer(playerItem: playerItem)
-        // self.player?.play()
     }
-
-
 
     private var backgroundColorForScheme: Color {
         colorScheme == .dark ? Color.black : Color.white
