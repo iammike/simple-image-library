@@ -22,27 +22,27 @@ struct DetailView: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
+            Rectangle()
+                .foregroundColor(backgroundColorForScheme.opacity(viewModel.useOpacity ? 0.7 : 1.0))
+                .onTapGesture {
+                    handleTapGesture()
+                }
+                .edgesIgnoringSafeArea(.all)
+
             content
+                .onTapGesture {
+                    handleTapGesture()
+                }
+
             if showCloseButton {
                 closeButton
                     .transition(AnyTransition.opacity.combined(with: .scale))
-            }
-        }
-        .onTapGesture {
-            withAnimation {
-                showCloseButton.toggle()
-            }
-            if showCloseButton {
-                startHideTimer()
-            } else {
-                cancelHideTimer()
             }
         }
         .onAppear {
             loadAsset()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(backgroundColorForScheme.opacity(viewModel.useOpacity ? 0.7 : 1.0))
         .edgesIgnoringSafeArea(.all)
     }
 
@@ -55,6 +55,17 @@ struct DetailView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func handleTapGesture() {
+        withAnimation {
+            showCloseButton.toggle()
+        }
+        if showCloseButton {
+            startHideTimer()
+        } else {
+            cancelHideTimer()
+        }
     }
 
     private var closeButton: some View {
