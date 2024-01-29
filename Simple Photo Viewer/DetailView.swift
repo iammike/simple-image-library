@@ -15,7 +15,6 @@ struct DetailView: View {
     @Binding var isPresented: Bool
     @State private var image: UIImage? = nil
     @State private var player: AVPlayer? = nil
-//    @State private var showCloseButton = false
     @State private var hideTimerWorkItem: DispatchWorkItem?
     @State private var currentIndex: Int = 0
     @State private var swipeDirection: SwipeDirection = .right // need to set an initial direction for the first asset loaded to work
@@ -39,22 +38,13 @@ struct DetailView: View {
         ZStack(alignment: .topTrailing) {
             Rectangle()
                 .foregroundColor(backgroundColorForScheme.opacity(viewModel.useOpacity ? 0.7 : 1.0))
-//                .onTapGesture {
-//                    handleTapGesture()
-//                }
                 .gesture(swipeGesture)
                 .edgesIgnoringSafeArea(.all)
 
             content
-//                .onTapGesture {
-//                    handleTapGesture()
-//                }
                 .gesture(swipeGesture)
 
-//            if showCloseButton {
-                closeButton
-//                    .transition(AnyTransition.opacity.combined(with: .scale))
-//            }
+            closeButton
         }
         .onAppear {
             loadAsset()
@@ -102,17 +92,6 @@ struct DetailView: View {
             return .identity
         }
     }
-
-//    private func handleTapGesture() {
-//        withAnimation {
-//            showCloseButton.toggle()
-//        }
-//        if showCloseButton {
-//            startHideTimer()
-//        } else {
-//            cancelHideTimer()
-//        }
-//    }
 
     private var closeButton: some View {
         Button(action: {
@@ -165,18 +144,12 @@ struct DetailView: View {
 
     private func loadAsset() {
         if currentAsset.mediaType == .video {
-//            resetPlayer()
             loadVideo()
         } else {
             loadImage()
             player = nil
         }
     }
-
-//    private func resetPlayer() {
-//        player?.pause()
-//        player = nil
-//    }
 
     private func loadImage() {
         viewModel.getImage(for: currentAsset) { downloadedImage in
@@ -185,25 +158,16 @@ struct DetailView: View {
     }
 
     private func loadVideo() {
-        playerItemStatusObserver = nil
-        let options = PHVideoRequestOptions()
-        options.version = .current
-        options.isNetworkAccessAllowed = true
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            PHImageManager.default().requestAVAsset(forVideo: self.currentAsset, options: options) { (asset, audioMix, info) in
-                DispatchQueue.main.async {
-                    if let avAsset = asset as? AVURLAsset {
-                        self.setupPlayer(with: avAsset)
-                    }
-                }
+        viewModel.getVideo(for: currentAsset) { playerItem in
+            guard let playerItem = playerItem else {
+                // Handle error if needed
+                return
             }
+            setupPlayer(with: playerItem)
         }
     }
 
-    private func setupPlayer(with avAsset: AVURLAsset) {
-        let playerItem = AVPlayerItem(url: avAsset.url)
-
+    private func setupPlayer(with playerItem: AVPlayerItem) {
         playerItemStatusObserver = playerItem.observe(\.status, options: [.new, .old]) { item, _ in
             if item.status == .readyToPlay {
                 DispatchQueue.main.async {
@@ -251,22 +215,4 @@ struct DetailView: View {
                 }
             }
     }
-
-
-//    private func startHideTimer() {
-//        cancelHideTimer()
-//
-//        let workItem = DispatchWorkItem {
-//            withAnimation {
-//                self.showCloseButton = false
-//            }
-//        }
-//        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: workItem)
-//        hideTimerWorkItem = workItem
-//    }
-//
-//    private func cancelHideTimer() {
-//        hideTimerWorkItem?.cancel()
-//        hideTimerWorkItem = nil
-//    }
 }

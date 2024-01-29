@@ -146,7 +146,25 @@ class ViewModel: ObservableObject {
             }
         }
     }
-    
+
+    func getVideo(for asset: PHAsset, completion: @escaping (AVPlayerItem?) -> Void) {
+        let options = PHVideoRequestOptions()
+        options.version = .current
+        options.isNetworkAccessAllowed = true
+
+        PHImageManager.default().requestAVAsset(forVideo: asset, options: options) { (avAsset, audioMix, info) in
+            DispatchQueue.main.async {
+                guard let avAsset = avAsset as? AVURLAsset else {
+                    completion(nil)
+                    return
+                }
+
+                let playerItem = AVPlayerItem(url: avAsset.url)
+                completion(playerItem)
+            }
+        }
+    }
+
     private func albumContainsImagesAndVideos(_ album: PHAssetCollection) -> Bool {
         let fetchOptions = PHFetchOptions()
         fetchOptions.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
@@ -164,7 +182,6 @@ class ViewModel: ObservableObject {
     
     func refreshThumbnails() {
         DispatchQueue.main.async {
-            // Reset state for photo fetching
             self.fetchOffset = 0
             self.images.removeAll()
             self.loadMorePhotos()
