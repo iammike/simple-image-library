@@ -24,7 +24,7 @@ struct AlbumView: View {
                         viewModel.selectAlbum(album)
                     }
                 }
-                .padding()
+                .padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10))
                 .background(viewModel.selectedAlbumIdentifier == album.localIdentifier ? Color.blue.opacity(0.3) : Color.clear)
                 .cornerRadius(10)
             }

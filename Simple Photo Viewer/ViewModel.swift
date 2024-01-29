@@ -21,7 +21,8 @@ class ViewModel: ObservableObject {
     private let fetchLimit = 50
     private var currentAlbum: PHAssetCollection?
     private var allPhotos: PHFetchResult<PHAsset>
-    
+    var videoRequestID: PHImageRequestID?
+
     init() {
         UserDefaults.standard.register(defaults: ["useOpacity": true])
 
@@ -146,7 +147,36 @@ class ViewModel: ObservableObject {
             }
         }
     }
-    
+
+    func getVideo(for asset: PHAsset, completion: @escaping (AVPlayerItem?) -> Void) {
+        let options = PHVideoRequestOptions()
+        options.version = .current
+        options.isNetworkAccessAllowed = true
+
+        if let requestID = videoRequestID {
+            PHImageManager.default().cancelImageRequest(requestID)
+        }
+
+        PHImageManager.default().requestAVAsset(forVideo: asset, options: options) { (avAsset, audioMix, info) in
+            DispatchQueue.main.async {
+                guard let avAsset = avAsset as? AVURLAsset else {
+                    completion(nil)
+                    return
+                }
+
+                let playerItem = AVPlayerItem(url: avAsset.url)
+                completion(playerItem)
+            }
+        }
+    }
+
+    func cancelVideoLoading() {
+        if let requestID = videoRequestID {
+            PHImageManager.default().cancelImageRequest(requestID)
+            videoRequestID = nil
+        }
+    }
+
     private func albumContainsImagesAndVideos(_ album: PHAssetCollection) -> Bool {
         let fetchOptions = PHFetchOptions()
         fetchOptions.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
@@ -164,7 +194,6 @@ class ViewModel: ObservableObject {
     
     func refreshThumbnails() {
         DispatchQueue.main.async {
-            // Reset state for photo fetching
             self.fetchOffset = 0
             self.images.removeAll()
             self.loadMorePhotos()

@@ -20,7 +20,7 @@ struct ContentView: View {
     @State private var accessCheckTimer: Timer? = nil
     
     private let minLoaderTime = 1.5
-    private let accessCheckInterval = 2.0 // Check every 2 seconds
+    private let accessCheckInterval = 2.0
     
     var body: some View {
         Group {
