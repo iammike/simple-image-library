@@ -13,19 +13,20 @@ struct DetailView: View {
     @ObservedObject var viewModel: ViewModel
     @Environment(\.colorScheme) var colorScheme
     @Binding var isPresented: Bool
+
+    @State private var currentIndex: Int = 0
     @State private var image: UIImage? = nil
     @State private var player: AVPlayer? = nil
-    @State private var hideTimerWorkItem: DispatchWorkItem?
-    @State private var swipeDirection: SwipeDirection = .right // need to set an initial direction for the first asset loaded to work
     @State private var playerItemStatusObserver: Any?
     @State private var isAssetLoading: Bool = false
-    @State private var currentScale: CGFloat = 1.0
-    @State private var baseScale: CGFloat = 1.0
-    @State private var currentIndex: Int = 0 {
-        didSet {
-            resetZoom()
-        }
-    }
+
+    @State private var isZoomed: Bool = false
+    @State private var offset = CGSize.zero
+    @State private var scale: CGFloat = 1
+    @GestureState private var scaleState: CGFloat = 1.0
+    @GestureState private var offsetState = CGSize.zero
+
+    @State private var swipeDirection: SwipeDirection = .right // need to set an initial direction for the first asset loaded to work
 
     enum SwipeDirection {
         case left, right, none
@@ -44,12 +45,16 @@ struct DetailView: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             Rectangle()
-                .foregroundColor(backgroundColorForScheme.opacity(viewModel.useOpacity ? 0.7 : 1.0))
-                .gesture(swipeGesture)
+                .foregroundColor(Color.black.opacity(viewModel.useOpacity ? 0.7 : 1.0))
+                .highPriorityGesture(
+                    isZoomed ? nil : swipeGesture
+                )
                 .edgesIgnoringSafeArea(.all)
 
             content
-                .gesture(swipeGesture)
+                .highPriorityGesture(
+                    isZoomed ? nil : swipeGesture
+                )
 
             closeButton
         }
@@ -80,23 +85,6 @@ struct DetailView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var contentTransition: AnyTransition {
-        switch swipeDirection {
-        case .left:
-            return AnyTransition.asymmetric(
-                insertion: .move(edge: .trailing),
-                removal: .move(edge: .leading)
-            )
-        case .right:
-            return AnyTransition.asymmetric(
-                insertion: .move(edge: .leading),
-                removal: .move(edge: .trailing)
-            )
-        default:
-            return .identity
-        }
     }
 
     private var closeButton: some View {
@@ -140,21 +128,17 @@ struct DetailView: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
-                    .scaleEffect(currentScale)
-                    .gesture(magnificationGesture)
+                    .scaleEffect(self.scale * scaleState)
+                    .offset(x: offset.width + offsetState.width, y: offset.height + offsetState.height)
+                    .gesture(SimultaneousGesture(magnificationGesture, dragGesture))
             } else {
                 loadingView
             }
         }
     }
 
-    private func resetZoom() {
-        currentScale = 1.0
-        baseScale = 1.0
-    }
-
     private func loadAsset() {
-        resetZoom()
+        isAssetLoading = true
         viewModel.cancelVideoLoading()
 
         if currentAsset.mediaType == .video {
@@ -166,7 +150,6 @@ struct DetailView: View {
     }
 
     private func loadImage() {
-        isAssetLoading = true
         viewModel.getImage(for: currentAsset) { downloadedImage in
             DispatchQueue.main.async {
                 self.image = downloadedImage
@@ -176,7 +159,6 @@ struct DetailView: View {
     }
 
     private func loadVideo() {
-        isAssetLoading = true
         viewModel.getVideo(for: currentAsset) { playerItem in
             guard let playerItem = playerItem else {
                 DispatchQueue.main.async {
@@ -218,31 +200,75 @@ struct DetailView: View {
         }
     }
 
-    private var backgroundColorForScheme: Color {
-        colorScheme == .dark ? Color.black : Color.white
+    private var contentTransition: AnyTransition {
+        switch swipeDirection {
+        case .left:
+            return AnyTransition.asymmetric(
+                insertion: .move(edge: .trailing),
+                removal: .move(edge: .leading)
+            )
+        case .right:
+            return AnyTransition.asymmetric(
+                insertion: .move(edge: .leading),
+                removal: .move(edge: .trailing)
+            )
+        default:
+            return .identity
+        }
     }
 
-    private var magnificationGesture: some Gesture {
+    var magnificationGesture: some Gesture {
         MagnificationGesture()
-            .onChanged { value in
-                let newScale = value * baseScale
-                let minScale: CGFloat = 1.0
+            .updating($scaleState) { currentState, gestureState, _ in
+                gestureState = currentState
+            }
+            .onEnded { value in
+                let newScale = scale * value
+                let clampedScale = min(max(newScale, 1.0), 24.0)
 
-                if newScale >= minScale {
-                    self.currentScale = newScale
+                if clampedScale < scale {
+                    let screenWidth = UIScreen.main.bounds.width
+                    let screenHeight = UIScreen.main.bounds.height
+                    let imageWidth = screenWidth * clampedScale
+                    let imageHeight = screenHeight * clampedScale
+
+                    let xOffset = min(max(offset.width + offsetState.width, -(imageWidth - screenWidth) / 2), (imageWidth - screenWidth) / 2)
+                    let yOffset = min(max(offset.height + offsetState.height, -(imageHeight - screenHeight) / 2), (imageHeight - screenHeight) / 2)
+
+                    offset = CGSize(width: xOffset, height: yOffset)
+                }
+
+                scale = clampedScale
+
+                if scale == 1.0 {
+                    isZoomed = false
+                } else {
+                    isZoomed = true
+                }
+            }
+    }
+
+    private var dragGesture: some Gesture {
+        DragGesture()
+            .updating($offsetState) { currentState, gestureState, _ in
+                if isZoomed {
+                    gestureState = currentState.translation
+                } else {
+                    gestureState = CGSize.zero
                 }
             }
             .onEnded { value in
-                self.baseScale = currentScale
+                if isZoomed {
+                    offset.height += value.translation.height
+                    offset.width += value.translation.width
+                }
             }
     }
-
-
 
     private var swipeGesture: some Gesture {
         DragGesture()
             .onEnded { gesture in
-                guard !isAssetLoading else { return }
+                guard !isAssetLoading && scale == 1.0 else { return }
                 if gesture.translation.width > 100 {
                     if currentIndex > 0 { // first item?
                         stopAndReleasePlayer()
