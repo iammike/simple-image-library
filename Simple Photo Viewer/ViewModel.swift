@@ -21,7 +21,8 @@ class ViewModel: ObservableObject {
     private let fetchLimit = 50
     private var currentAlbum: PHAssetCollection?
     private var allPhotos: PHFetchResult<PHAsset>
-    
+    var videoRequestID: PHImageRequestID?
+
     init() {
         UserDefaults.standard.register(defaults: ["useOpacity": true])
 
@@ -152,6 +153,10 @@ class ViewModel: ObservableObject {
         options.version = .current
         options.isNetworkAccessAllowed = true
 
+        if let requestID = videoRequestID {
+            PHImageManager.default().cancelImageRequest(requestID)
+        }
+
         PHImageManager.default().requestAVAsset(forVideo: asset, options: options) { (avAsset, audioMix, info) in
             DispatchQueue.main.async {
                 guard let avAsset = avAsset as? AVURLAsset else {
@@ -162,6 +167,13 @@ class ViewModel: ObservableObject {
                 let playerItem = AVPlayerItem(url: avAsset.url)
                 completion(playerItem)
             }
+        }
+    }
+
+    func cancelVideoLoading() {
+        if let requestID = videoRequestID {
+            PHImageManager.default().cancelImageRequest(requestID)
+            videoRequestID = nil
         }
     }
 

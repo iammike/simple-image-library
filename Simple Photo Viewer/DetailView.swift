@@ -16,9 +16,16 @@ struct DetailView: View {
     @State private var image: UIImage? = nil
     @State private var player: AVPlayer? = nil
     @State private var hideTimerWorkItem: DispatchWorkItem?
-    @State private var currentIndex: Int = 0
     @State private var swipeDirection: SwipeDirection = .right // need to set an initial direction for the first asset loaded to work
     @State private var playerItemStatusObserver: Any?
+    @State private var isAssetLoading: Bool = false
+    @State private var currentScale: CGFloat = 1.0
+    @State private var baseScale: CGFloat = 1.0
+    @State private var currentIndex: Int = 0 {
+        didSet {
+            resetZoom()
+        }
+    }
 
     enum SwipeDirection {
         case left, right, none
@@ -50,8 +57,7 @@ struct DetailView: View {
             loadAsset()
         }
         .onDisappear {
-            playerItemStatusObserver = nil
-            player?.pause()
+            stopAndReleasePlayer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .edgesIgnoringSafeArea(.all)
@@ -95,9 +101,7 @@ struct DetailView: View {
 
     private var closeButton: some View {
         Button(action: {
-            if let player = player, currentAsset.mediaType == .video {
-                player.pause()
-            }
+            stopAndReleasePlayer()
             self.isPresented = false
         }) {
             Image(systemName: "xmark")
@@ -115,7 +119,7 @@ struct DetailView: View {
             Spacer()
             ProgressView()
                 .scaleEffect(1.5)
-                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                .progressViewStyle(CircularProgressViewStyle(tint: .primary))
             Spacer()
         }
     }
@@ -136,13 +140,23 @@ struct DetailView: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
+                    .scaleEffect(currentScale)
+                    .gesture(magnificationGesture)
             } else {
                 loadingView
             }
         }
     }
 
+    private func resetZoom() {
+        currentScale = 1.0
+        baseScale = 1.0
+    }
+
     private func loadAsset() {
+        resetZoom()
+        viewModel.cancelVideoLoading()
+
         if currentAsset.mediaType == .video {
             loadVideo()
         } else {
@@ -152,18 +166,25 @@ struct DetailView: View {
     }
 
     private func loadImage() {
+        isAssetLoading = true
         viewModel.getImage(for: currentAsset) { downloadedImage in
-            self.image = downloadedImage
+            DispatchQueue.main.async {
+                self.image = downloadedImage
+                self.isAssetLoading = false
+            }
         }
     }
 
     private func loadVideo() {
+        isAssetLoading = true
         viewModel.getVideo(for: currentAsset) { playerItem in
             guard let playerItem = playerItem else {
-                // Handle error if needed
+                DispatchQueue.main.async {
+                    self.isAssetLoading = false
+                }
                 return
             }
-            setupPlayer(with: playerItem)
+            self.setupPlayer(with: playerItem)
         }
     }
 
@@ -172,6 +193,7 @@ struct DetailView: View {
             if item.status == .readyToPlay {
                 DispatchQueue.main.async {
                     self.player?.play()
+                    self.isAssetLoading = false
                 }
             }
         }
@@ -187,16 +209,44 @@ struct DetailView: View {
         self.player = AVPlayer(playerItem: playerItem)
     }
 
+    private func stopAndReleasePlayer() {
+        DispatchQueue.main.async {
+            self.player?.pause()
+            self.player = nil
+            self.playerItemStatusObserver = nil
+            self.isAssetLoading = false
+        }
+    }
+
     private var backgroundColorForScheme: Color {
         colorScheme == .dark ? Color.black : Color.white
     }
 
+    private var magnificationGesture: some Gesture {
+        MagnificationGesture()
+            .onChanged { value in
+                let newScale = value * baseScale
+                let minScale: CGFloat = 1.0
+
+                if newScale >= minScale {
+                    self.currentScale = newScale
+                }
+            }
+            .onEnded { value in
+                self.baseScale = currentScale
+            }
+    }
+
+
+
     private var swipeGesture: some Gesture {
         DragGesture()
             .onEnded { gesture in
+                guard !isAssetLoading else { return }
                 if gesture.translation.width > 100 {
-                    if currentIndex > 0 { // Check if not at the first item
-                        self.player?.pause()
+                    if currentIndex > 0 { // first item?
+                        stopAndReleasePlayer()
+                        viewModel.cancelVideoLoading()
                         swipeDirection = .right
                         withAnimation {
                             currentIndex = max(currentIndex - 1, 0)
@@ -204,8 +254,9 @@ struct DetailView: View {
                         loadAsset()
                     }
                 } else if gesture.translation.width < -100 {
-                    if currentIndex < viewModel.images.count - 1 { // Check if not at the last item
-                        self.player?.pause()
+                    if currentIndex < viewModel.images.count - 1 { // last item?
+                        stopAndReleasePlayer()
+                        viewModel.cancelVideoLoading()
                         swipeDirection = .left
                         withAnimation {
                             currentIndex = min(currentIndex + 1, viewModel.images.count - 1)
