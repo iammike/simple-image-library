@@ -29,36 +29,29 @@ struct ThumbnailView: View {
                     .frame(width: 200, height: 200)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray, lineWidth: 1))
         .onAppear {
             loadThumbnailImage()
         }
     }
-    
+
     @ViewBuilder
     private var videoOverlay: some View {
         if asset.mediaType == .video {
-            ZStack {
-                Image(systemName: "play.circle")
-                    .resizable()
-                    .frame(width: 30, height: 30)
-                    .foregroundColor(.white.opacity(0.9))
-                
                 VStack(alignment: .trailing) {
+                    Spacer()
                     HStack {
                         Spacer()
-                        Text(videoDurationText)
+                        Text("⏵ \(videoDurationText)")
                             .font(.footnote)
                             .foregroundColor(.white)
-                            .padding(5)
+                            .padding(4)
                             .background(.black.opacity(0.3))
-                            .cornerRadius(5)
+                            .cornerRadius(6)
                     }
-                    Spacer()
-                }
             }
-            .padding()
+            .padding(8)
         }
     }
 
