@@ -29,36 +29,29 @@ struct ThumbnailView: View {
                     .frame(width: 200, height: 200)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray, lineWidth: 1))
         .onAppear {
             loadThumbnailImage()
         }
     }
-    
+
     @ViewBuilder
     private var videoOverlay: some View {
         if asset.mediaType == .video {
-            ZStack {
-                Image(systemName: "play.circle")
-                    .resizable()
-                    .frame(width: 30, height: 30)
-                    .foregroundColor(.white.opacity(0.9))
-                
                 VStack(alignment: .trailing) {
+                    Spacer()
                     HStack {
                         Spacer()
-                        Text(videoDurationText)
+                        Text("⏵ \(videoDurationText)")
                             .font(.footnote)
                             .foregroundColor(.white)
-                            .padding(5)
+                            .padding(4)
                             .background(.black.opacity(0.3))
-                            .cornerRadius(5)
+                            .cornerRadius(6)
                     }
-                    Spacer()
-                }
             }
-            .padding()
+            .padding(8)
         }
     }
 
@@ -78,8 +71,14 @@ struct ThumbnailView: View {
     
     private var videoDurationText: String {
         let durationInSeconds = Int(round(asset.duration))
-        let minutes = durationInSeconds / 60
+        let hours = durationInSeconds / 3600
+        let minutes = (durationInSeconds % 3600) / 60
         let seconds = durationInSeconds % 60
-        return String(format: "%02d:%02d", minutes, seconds)
+
+        if hours > 0 {
+            return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            return String(format: "%02d:%02d", minutes, seconds)
+        }
     }
 }
