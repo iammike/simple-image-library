@@ -56,6 +56,9 @@ struct DetailView: View {
         .background(Color.black.opacity(viewModel.useOpacity ? 0.7 : 1.0))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .edgesIgnoringSafeArea(.all)
+        .highPriorityGesture(
+            isZoomed ? nil : swipeGesture
+        )
     }
 
     private var content: some View {
@@ -70,9 +73,6 @@ struct DetailView: View {
         .edgesIgnoringSafeArea(.all)
         .id(currentIndex)
         .transition(contentTransition)
-        .highPriorityGesture(
-            isZoomed ? nil : swipeGesture
-        )
     }
 
     private var videoPlayerView: some View {
@@ -93,7 +93,10 @@ struct DetailView: View {
                     .scaledToFit()
                     .scaleEffect(self.scale * scaleState)
                     .offset(x: offset.width + offsetState.width, y: offset.height + offsetState.height)
-                    .gesture(SimultaneousGesture(magnificationGesture, dragGesture))
+                    .gesture(SimultaneousGesture(
+                        SimultaneousGesture(magnificationGestureToZoomImage, dragGestureToPanImage),
+                        doubleTapGestureToResetImage
+                    ))
             } else {
                 loadingView
             }
@@ -205,7 +208,7 @@ struct DetailView: View {
         }
     }
 
-    var magnificationGesture: some Gesture {
+    var magnificationGestureToZoomImage: some Gesture {
         MagnificationGesture()
             .updating($scaleState) { currentState, gestureState, _ in
                 gestureState = currentState
@@ -236,7 +239,7 @@ struct DetailView: View {
             }
     }
 
-    private var dragGesture: some Gesture {
+    private var dragGestureToPanImage: some Gesture {
         DragGesture()
             .updating($offsetState) { currentState, gestureState, _ in
                 if isZoomed {
@@ -249,6 +252,17 @@ struct DetailView: View {
                 if isZoomed {
                     offset.height += value.translation.height
                     offset.width += value.translation.width
+                }
+            }
+    }
+
+    private var doubleTapGestureToResetImage: some Gesture {
+        TapGesture(count: 2)
+            .onEnded {
+                withAnimation {
+                    scale = 1.0
+                    offset = CGSize.zero
+                    isZoomed = false
                 }
             }
     }
