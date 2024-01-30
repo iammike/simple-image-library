@@ -71,8 +71,14 @@ struct ThumbnailView: View {
     
     private var videoDurationText: String {
         let durationInSeconds = Int(round(asset.duration))
-        let minutes = durationInSeconds / 60
+        let hours = durationInSeconds / 3600
+        let minutes = (durationInSeconds % 3600) / 60
         let seconds = durationInSeconds % 60
-        return String(format: "%02d:%02d", minutes, seconds)
+
+        if hours > 0 {
+            return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            return String(format: "%02d:%02d", minutes, seconds)
+        }
     }
 }
