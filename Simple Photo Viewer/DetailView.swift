@@ -44,18 +44,7 @@ struct DetailView: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            Rectangle()
-                .foregroundColor(Color.black.opacity(viewModel.useOpacity ? 0.7 : 1.0))
-                .highPriorityGesture(
-                    isZoomed ? nil : swipeGesture
-                )
-                .edgesIgnoringSafeArea(.all)
-
             content
-                .highPriorityGesture(
-                    isZoomed ? nil : swipeGesture
-                )
-
             closeButton
         }
         .onAppear {
@@ -64,52 +53,26 @@ struct DetailView: View {
         .onDisappear {
             stopAndReleasePlayer()
         }
+        .background(Color.black.opacity(viewModel.useOpacity ? 0.7 : 1.0))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .edgesIgnoringSafeArea(.all)
     }
 
     private var content: some View {
-        GeometryReader { geometry in
-            ZStack {
-                if currentAsset.mediaType == .video {
-                    videoPlayerView
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                        .id(currentIndex)
-                        .transition(contentTransition)
-                } else {
-                    imageView
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                        .id(currentIndex)
-                        .transition(contentTransition)
-                }
+        Group {
+            if currentAsset.mediaType == .video {
+                videoPlayerView
+            } else {
+                imageView
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var closeButton: some View {
-        Button(action: {
-            stopAndReleasePlayer()
-            self.isPresented = false
-        }) {
-            Image(systemName: "xmark")
-                .foregroundColor(.black)
-                .padding()
-                .background(Color.gray.opacity(0.7))
-                .clipShape(Circle())
-        }
-        .padding(.top, 70)
-        .padding(.trailing, 20)
-    }
-
-    private var loadingView: some View {
-        VStack {
-            Spacer()
-            ProgressView()
-                .scaleEffect(1.5)
-                .progressViewStyle(CircularProgressViewStyle(tint: .primary))
-            Spacer()
-        }
+        .edgesIgnoringSafeArea(.all)
+        .id(currentIndex)
+        .transition(contentTransition)
+        .highPriorityGesture(
+            isZoomed ? nil : swipeGesture
+        )
     }
 
     private var videoPlayerView: some View {
@@ -134,6 +97,31 @@ struct DetailView: View {
             } else {
                 loadingView
             }
+        }
+    }
+
+    private var closeButton: some View {
+        Button(action: {
+            stopAndReleasePlayer()
+            self.isPresented = false
+        }) {
+            Image(systemName: "xmark")
+                .foregroundColor(.black)
+                .padding()
+                .background(Color.gray.opacity(0.7))
+                .clipShape(Circle())
+        }
+        .padding(.top, 70)
+        .padding(.trailing, 20)
+    }
+
+    private var loadingView: some View {
+        VStack {
+            Spacer()
+            ProgressView()
+                .scaleEffect(1.5)
+                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+            Spacer()
         }
     }
 
@@ -224,7 +212,7 @@ struct DetailView: View {
             }
             .onEnded { value in
                 let newScale = scale * value
-                let clampedScale = min(max(newScale, 1.0), 24.0)
+                let clampedScale = min(max(newScale, 1.0), 8.0)
 
                 if clampedScale < scale {
                     let screenWidth = UIScreen.main.bounds.width
