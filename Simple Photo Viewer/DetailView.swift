@@ -53,7 +53,7 @@ struct DetailView: View {
         .onDisappear {
             stopAndReleasePlayer()
         }
-        .background(Color.black.opacity(viewModel.useOpacity ? 0.7 : 1.0))
+        .background(.black)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .edgesIgnoringSafeArea(.all)
         .highPriorityGesture(
