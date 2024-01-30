@@ -9,8 +9,6 @@ import SwiftUI
 import Photos
 
 class ViewModel: ObservableObject {
-    @Published var useOpacity: Bool = UserDefaults.standard.bool(forKey: "useOpacity")
-
     @Published var images: [PHAsset] = []
     @Published var albums: [PHAssetCollection] = []
     @Published var selectedAlbumIdentifier: String?
@@ -24,17 +22,12 @@ class ViewModel: ObservableObject {
     var videoRequestID: PHImageRequestID?
 
     init() {
-        UserDefaults.standard.register(defaults: ["useOpacity": true])
 
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
         fetchOptions.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
         allPhotos = PHAsset.fetchAssets(with: fetchOptions)
         checkPhotoLibraryAccess()
-
-        NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
-            self?.useOpacity = UserDefaults.standard.bool(forKey: "useOpacity")
-        }
     }
     
     func checkPhotoLibraryAccess() {
