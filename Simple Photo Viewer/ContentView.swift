@@ -41,12 +41,16 @@ struct ContentView: View {
     }
     
     private func setupLoadingTimer() {
+    #if targetEnvironment(simulator)
+        self.isShowingLoader = false
+    #else
         loadingStartTime = Date()
         DispatchQueue.main.asyncAfter(deadline: .now() + minLoaderTime) {
             if Date().timeIntervalSince(loadingStartTime) >= minLoaderTime {
                 self.isShowingLoader = false
             }
         }
+    #endif
     }
     
     private func setupAccessCheckTimer() {
