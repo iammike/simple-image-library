@@ -14,7 +14,7 @@ struct AlbumView: View {
     var body: some View {
         List {
             if viewModel.showAlbumViewSettings {
-                Text("Once saved, view settings can be modified again by enabling 'Show Album View Settings' in this app's section within the iOS Settings application.")
+                Text("Once saved, view settings can be modified again by enabling 'Show album view settings' in this app's section within the iOS Settings application.")
                 Button(action: {
                     viewModel.toggleIsSettingsComplete()
                 }) {

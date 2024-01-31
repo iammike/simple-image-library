@@ -8,9 +8,6 @@
 import SwiftUI
 import Photos
 
-import SwiftUI
-import Photos
-
 struct ContentView: View {
     @StateObject private var viewModel = ViewModel()
     @State private var selectedAsset: PHAsset?
