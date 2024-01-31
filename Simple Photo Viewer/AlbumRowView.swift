@@ -9,10 +9,12 @@ import SwiftUI
 import Photos
 
 struct AlbumRowView: View {
+    @ObservedObject var viewModel: ViewModel
+
     let album: PHAssetCollection
     let isSelected: Bool
     let isVisible: Bool
-    let albumColor: Color
+//    let albumColor: Color
     var toggleVisibility: () -> Void
     var selectAlbum: () -> Void
 
@@ -26,16 +28,15 @@ struct AlbumRowView: View {
                 selectAlbum()
             }
 
-            Button(action: toggleVisibility) {
-                Image(systemName: "eye")
-                    .foregroundColor(isVisible ? .primary : .gray)
+            if !viewModel.isSettingsComplete {
+                Button(action: toggleVisibility) {
+                    Image(systemName: "eye")
+                        .foregroundColor(isVisible ? .primary : .gray)
+                }
             }
         }
         .padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10))
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .stroke(Color.gray, lineWidth: isSelected ? 2 : 0)
-                .background(albumColor)
-        )
+        .background(isSelected ? Color.blue.opacity(0.3) : Color.clear)
+        .cornerRadius(6)
     }
 }

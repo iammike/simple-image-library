@@ -27,10 +27,11 @@ struct AlbumView: View {
                 let isVisible = viewModel.albumSettings[album.localIdentifier]?.isVisible ?? true
                 if !viewModel.isSettingsComplete || isVisible {
                     AlbumRowView(
+                        viewModel: viewModel,
                         album: album,
                         isSelected: viewModel.selectedAlbumIdentifier == album.localIdentifier,
                         isVisible: isVisible,
-                        albumColor: viewModel.albumSettings[album.localIdentifier]?.color ?? .clear,
+//                        albumColor: viewModel.albumSettings[album.localIdentifier]?.color ?? Color.clear,
                         toggleVisibility: {
                             viewModel.toggleAlbumVisibility(album.localIdentifier)
                         },
