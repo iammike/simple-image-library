@@ -14,19 +14,17 @@ struct AlbumRowView: View {
     let album: PHAssetCollection
     let isSelected: Bool
     let isVisible: Bool
-//    let albumColor: Color
     var toggleVisibility: () -> Void
     var selectAlbum: () -> Void
 
     var body: some View {
         HStack {
-            Group {
-                Text(album.localizedTitle ?? "Unknown Album")
-                Spacer()
-            }
-            .onTapGesture {
-                selectAlbum()
-            }
+            Text(album.localizedTitle ?? "Unknown Album")
+                .onTapGesture {
+                    selectAlbum()
+                }
+
+            Spacer()
 
             if viewModel.showAlbumViewSettings {
                 Button(action: toggleVisibility) {
@@ -38,5 +36,14 @@ struct AlbumRowView: View {
         .padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10))
         .background(isSelected ? Color.blue.opacity(0.3) : Color.clear)
         .cornerRadius(6)
+        .overlay(
+            Group {
+                if !viewModel.showAlbumViewSettings {
+                    Button(action: selectAlbum) {
+                        Rectangle().foregroundColor(Color.clear)
+                    }
+                }
+            }
+        )
     }
 }
