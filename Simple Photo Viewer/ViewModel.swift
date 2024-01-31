@@ -26,7 +26,11 @@ class ViewModel: ObservableObject {
     var videoRequestID: PHImageRequestID?
 
     init() {
-        showAlbumViewSettings = UserDefaults.standard.bool(forKey: "showAlbumViewSettings")
+        if UserDefaults.standard.object(forKey: "showAlbumViewSettings") != nil {
+            showAlbumViewSettings = UserDefaults.standard.bool(forKey: "showAlbumViewSettings")
+        } else {
+            showAlbumViewSettings = true
+        }
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
         fetchOptions.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
@@ -89,7 +93,11 @@ class ViewModel: ObservableObject {
     }
 
     func loadShowAlbumViewSettings() {
-        showAlbumViewSettings = UserDefaults.standard.bool(forKey: "showAlbumViewSettings")
+        if UserDefaults.standard.object(forKey: "showAlbumViewSettings") != nil {
+            showAlbumViewSettings = UserDefaults.standard.bool(forKey: "showAlbumViewSettings")
+        } else {
+            showAlbumViewSettings = true // Default value for fresh installs
+        }
     }
 
     func checkPhotoLibraryAccess() {

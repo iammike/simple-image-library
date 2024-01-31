@@ -12,7 +12,7 @@
 			<key>Key</key>
 			<string>showAlbumViewSettings</string>
 			<key>DefaultValue</key>
-			<false/>
+			<true/>
 		</dict>
 	</array>
 	<key>StringsTable</key>
