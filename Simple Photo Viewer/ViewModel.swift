@@ -11,25 +11,54 @@ import Photos
 class ViewModel: ObservableObject {
     @Published var images: [PHAsset] = []
     @Published var albums: [PHAssetCollection] = []
+    @Published var albumSettings: [String: AlbumSettings] = [:]
     @Published var selectedAlbumIdentifier: String?
     @Published var hasPhotoLibraryAccess: Bool = false
     @Published var photoLibraryAccessHasBeenChecked: Bool = false
-    
+    @Published var isSettingsComplete: Bool = false
+
     private var fetchOffset = 0
     private let fetchLimit = 50
     private var currentAlbum: PHAssetCollection?
     private var allPhotos: PHFetchResult<PHAsset>
+    private var loadedAlbumSettingsData: Data?
+    private let decoder = JSONDecoder()
     var videoRequestID: PHImageRequestID?
 
     init() {
-
+        isSettingsComplete = UserDefaults.standard.bool(forKey: "isSettingsComplete")
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
         fetchOptions.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
         allPhotos = PHAsset.fetchAssets(with: fetchOptions)
+        loadAlbumSettings()
         checkPhotoLibraryAccess()
     }
-    
+
+    func toggleIsSettingsComplete() {
+        isSettingsComplete.toggle()
+        UserDefaults.standard.set(isSettingsComplete, forKey: "isSettingsComplete")
+    }
+
+    private func loadAlbumSettings() {
+        if let data = UserDefaults.standard.data(forKey: "albumSettings") {
+            let jsonDecoder = JSONDecoder()
+            if let decodedSettings = try? jsonDecoder.decode([String: AlbumSettings].self, from: data) {
+                self.albumSettings = decodedSettings
+            }
+        }
+    }
+
+    private func saveAlbumSettings() {
+        do {
+            let jsonEncoder = JSONEncoder()
+            let data = try jsonEncoder.encode(albumSettings)
+            UserDefaults.standard.set(data, forKey: "albumSettings")
+        } catch {
+            print("Error saving album settings: \(error)")
+        }
+    }
+
     func checkPhotoLibraryAccess() {
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         updateAccessStatus(status)
@@ -72,14 +101,14 @@ class ViewModel: ObservableObject {
     
     func fetchAlbums() {
         let fetchOptions = PHFetchOptions()
-        
+
         let allAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
         let allSmartAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: fetchOptions)
-        
+
         let allAlbums = (allAlbumsFetchResult.objects(at: IndexSet(0..<allAlbumsFetchResult.count)) +
                          allSmartAlbumsFetchResult.objects(at: IndexSet(0..<allSmartAlbumsFetchResult.count)))
-                         .filter(albumContainsImagesAndVideos)
-        
+            .filter(albumContainsImagesAndVideos)
+
         func latestAssetDate(in album: PHAssetCollection) -> Date? {
             let assetsFetchOptions = PHFetchOptions()
             assetsFetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
@@ -87,20 +116,47 @@ class ViewModel: ObservableObject {
             let assets = PHAsset.fetchAssets(in: album, options: assetsFetchOptions)
             return assets.firstObject?.creationDate
         }
-        
+
         let sortedAlbums = allAlbums.sorted {
             latestAssetDate(in: $0) ?? Date.distantPast > latestAssetDate(in: $1) ?? Date.distantPast
         }
-        
+
         DispatchQueue.main.async {
             self.albums = sortedAlbums
+
+            sortedAlbums.forEach { album in
+                if self.albumSettings[album.localIdentifier] == nil {
+                    if let data = UserDefaults.standard.data(forKey: "albumSettings") {
+                        let jsonDecoder = JSONDecoder()
+                        if let decodedSettings = try? jsonDecoder.decode(AlbumSettings.self, from: data) {
+                            self.albumSettings[album.localIdentifier] = decodedSettings
+                        }
+                    } else {
+                        let dummyDecoder: Decoder? = nil
+                        self.albumSettings[album.localIdentifier] = AlbumSettings(from: dummyDecoder)
+                    }
+                }
+            }
+
             if self.currentAlbum == nil, let firstAlbum = sortedAlbums.first {
                 self.selectAlbum(firstAlbum)
             }
         }
     }
 
-    
+
+    func toggleAlbumVisibility(_ albumIdentifier: String) {
+        if let settings = albumSettings[albumIdentifier] {
+            var updatedSettings = settings
+            updatedSettings.isVisible.toggle()
+            albumSettings[albumIdentifier] = updatedSettings
+            objectWillChange.send()
+        } else {
+            print("Album didn't exist")
+        }
+        saveAlbumSettings() // will need this in the color toggle too
+    }
+
     private func loadMorePhotosFromAlbum(_ album: PHAssetCollection) {
         let options = PHFetchOptions()
         options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
@@ -191,5 +247,47 @@ class ViewModel: ObservableObject {
             self.images.removeAll()
             self.loadMorePhotos()
         }
+    }
+}
+
+struct AlbumSettings: Codable, Equatable {
+    var isVisible: Bool
+    var color: Color
+
+    enum CodingKeys: String, CodingKey {
+        case isVisible
+        case color
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        isVisible = try container.decode(Bool.self, forKey: .isVisible)
+
+        let colorString = try container.decode(String.self, forKey: .color)
+        color = Color(colorString)
+    }
+
+    init(from decoder: Decoder? = nil) {
+        isVisible = true
+        color = Color.clear
+
+        if let decoder = decoder {
+            do {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                isVisible = try container.decode(Bool.self, forKey: .isVisible)
+
+                let colorString = try container.decode(String.self, forKey: .color)
+                color = Color(colorString)
+            } catch {
+                print("Error decoding AlbumSettings: \(error)")
+            }
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(isVisible, forKey: .isVisible)
+
+        try container.encode(color.description, forKey: .color)
     }
 }

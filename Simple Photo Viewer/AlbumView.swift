@@ -13,22 +13,45 @@ struct AlbumView: View {
 
     var body: some View {
         List {
+            if !viewModel.isSettingsComplete {
+                Button(action: {
+                    viewModel.toggleIsSettingsComplete()
+                }) {
+                    Text("Complete Album View Settings")
+                        .font(.headline)
+                        .padding()
+                }
+            }
+
             ForEach(viewModel.albums, id: \.localIdentifier) { album in
-                HStack {
-                    Text(album.localizedTitle ?? "Unknown Album")
-                    Spacer()
+                let isVisible = viewModel.albumSettings[album.localIdentifier]?.isVisible ?? true
+                if !viewModel.isSettingsComplete || isVisible {
+                    AlbumRowView(
+                        album: album,
+                        isSelected: viewModel.selectedAlbumIdentifier == album.localIdentifier,
+                        isVisible: isVisible,
+                        albumColor: viewModel.albumSettings[album.localIdentifier]?.color ?? .clear,
+                        toggleVisibility: {
+                            viewModel.toggleAlbumVisibility(album.localIdentifier)
+                        },
+                        selectAlbum: {
+                            if viewModel.selectedAlbumIdentifier != album.localIdentifier {
+                                viewModel.selectAlbum(album)
+                            }
+                        }
+                    )
                 }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if viewModel.selectedAlbumIdentifier != album.localIdentifier {
-                        viewModel.selectAlbum(album)
-                    }
+            }
+
+            if viewModel.isSettingsComplete {
+                Button(action: {
+                    viewModel.toggleIsSettingsComplete()
+                }) {
+                    Text("Toggle isSettingsComplete")
+                        .font(.headline)
+                        .padding()
                 }
-                .padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10))
-                .background(viewModel.selectedAlbumIdentifier == album.localIdentifier ? Color.blue.opacity(0.3) : Color.clear)
-                .cornerRadius(6)
             }
         }
     }
 }
-

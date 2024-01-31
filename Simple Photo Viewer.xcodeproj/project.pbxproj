@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EF69CC652B6A80F4005A99AF /* AlbumRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF69CC642B6A80F4005A99AF /* AlbumRowView.swift */; };
 		EF6CA37B2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6CA37A2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift */; };
 		EF6CA37D2B5EBEE0005CBF53 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */; };
 		EF6CA37F2B5EBEE2005CBF53 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EF6CA37E2B5EBEE2005CBF53 /* Assets.xcassets */; };
@@ -22,6 +23,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		EF69CC642B6A80F4005A99AF /* AlbumRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumRowView.swift; sourceTree = "<group>"; };
 		EF6CA3772B5EBEE0005CBF53 /* Simple Photo Viewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Simple Photo Viewer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF6CA37A2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Simple_Photo_ViewerApp.swift; sourceTree = "<group>"; };
 		EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -72,6 +74,7 @@
 				EFA87E852B62AA2C00F1D761 /* Simple-Photo-Viewer-Info.plist */,
 				EFCDF8BD2B614CA90007C3BB /* AccessDeniedView.swift */,
 				EFCDF8B52B60260C0007C3BB /* AlbumView.swift */,
+				EF69CC642B6A80F4005A99AF /* AlbumRowView.swift */,
 				EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */,
 				EF6CA38D2B5EC229005CBF53 /* DetailView.swift */,
 				EFCDF8BF2B614CBC0007C3BB /* LoadingView.swift */,
@@ -172,6 +175,7 @@
 				EFCDF8BE2B614CA90007C3BB /* AccessDeniedView.swift in Sources */,
 				EFCDF8BC2B614C280007C3BB /* MainContentView.swift in Sources */,
 				EF6CA37B2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift in Sources */,
+				EF69CC652B6A80F4005A99AF /* AlbumRowView.swift in Sources */,
 				EFCDF8B42B60259B0007C3BB /* ThumbnailListView.swift in Sources */,
 				EF6CA38E2B5EC229005CBF53 /* DetailView.swift in Sources */,
 				EFCDF8B82B6026620007C3BB /* ViewModel.swift in Sources */,
