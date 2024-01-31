@@ -33,6 +33,19 @@ class ViewModel: ObservableObject {
         allPhotos = PHAsset.fetchAssets(with: fetchOptions)
         loadAlbumSettings()
         checkPhotoLibraryAccess()
+        setupAppActiveObserver()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    private func setupAppActiveObserver() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil, queue: .main) { [weak self] _ in
+                self?.loadShowAlbumViewSettings()
+            }
     }
 
     func toggleIsSettingsComplete() {
@@ -74,6 +87,10 @@ class ViewModel: ObservableObject {
         } catch {
             print("Error saving album settings: \(error)")
         }
+    }
+
+    func loadShowAlbumViewSettings() {
+        showAlbumViewSettings = UserDefaults.standard.bool(forKey: "showAlbumViewSettings")
     }
 
     func checkPhotoLibraryAccess() {
