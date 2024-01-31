@@ -15,7 +15,7 @@ class ViewModel: ObservableObject {
     @Published var selectedAlbumIdentifier: String?
     @Published var hasPhotoLibraryAccess: Bool = false
     @Published var photoLibraryAccessHasBeenChecked: Bool = false
-    @Published var isSettingsComplete: Bool = false
+    @Published var showAlbumViewSettings: Bool = true
 
     private var fetchOffset = 0
     private let fetchLimit = 50
@@ -26,7 +26,7 @@ class ViewModel: ObservableObject {
     var videoRequestID: PHImageRequestID?
 
     init() {
-        isSettingsComplete = UserDefaults.standard.bool(forKey: "isSettingsComplete")
+        showAlbumViewSettings = UserDefaults.standard.bool(forKey: "showAlbumViewSettings")
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
         fetchOptions.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
@@ -36,8 +36,8 @@ class ViewModel: ObservableObject {
     }
 
     func toggleIsSettingsComplete() {
-        isSettingsComplete.toggle()
-        UserDefaults.standard.set(isSettingsComplete, forKey: "isSettingsComplete")
+        showAlbumViewSettings.toggle()
+        UserDefaults.standard.set(showAlbumViewSettings, forKey: "showAlbumViewSettings")
 
         if let currentAlbumIdentifier = currentAlbum?.localIdentifier,
            let isCurrentAlbumVisible = albumSettings[currentAlbumIdentifier]?.isVisible,

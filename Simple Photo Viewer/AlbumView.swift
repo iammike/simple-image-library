@@ -13,19 +13,29 @@ struct AlbumView: View {
 
     var body: some View {
         List {
-            if !viewModel.isSettingsComplete {
+            if viewModel.showAlbumViewSettings {
+                Text("After saving, view settings can only be be accessed by toggling \"Show album view settings\" in iOS's Settings.app entry for this application.")
                 Button(action: {
                     viewModel.toggleIsSettingsComplete()
                 }) {
-                    Text("Complete Album View Settings")
+                    Text("Save View Settings")
                         .font(.headline)
+                        .foregroundColor(.white)
                         .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                        .padding(.horizontal)
                 }
             }
 
+            Text("Albums")
+                .font(.title)
+                .fontWeight(.bold)
+
             ForEach(viewModel.albums, id: \.localIdentifier) { album in
                 let isVisible = viewModel.albumSettings[album.localIdentifier]?.isVisible ?? true
-                if !viewModel.isSettingsComplete || isVisible {
+                if viewModel.showAlbumViewSettings || isVisible {
                     AlbumRowView(
                         viewModel: viewModel,
                         album: album,
@@ -41,16 +51,6 @@ struct AlbumView: View {
                             }
                         }
                     )
-                }
-            }
-
-            if viewModel.isSettingsComplete {
-                Button(action: {
-                    viewModel.toggleIsSettingsComplete()
-                }) {
-                    Text("Toggle isSettingsComplete")
-                        .font(.headline)
-                        .padding()
                 }
             }
         }

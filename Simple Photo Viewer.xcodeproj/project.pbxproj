@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		EF69CC652B6A80F4005A99AF /* AlbumRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF69CC642B6A80F4005A99AF /* AlbumRowView.swift */; };
+		EF69CC672B6AB16F005A99AF /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = EF69CC662B6AB16F005A99AF /* Settings.bundle */; };
 		EF6CA37B2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6CA37A2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift */; };
 		EF6CA37D2B5EBEE0005CBF53 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */; };
 		EF6CA37F2B5EBEE2005CBF53 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EF6CA37E2B5EBEE2005CBF53 /* Assets.xcassets */; };
@@ -24,6 +25,7 @@
 
 /* Begin PBXFileReference section */
 		EF69CC642B6A80F4005A99AF /* AlbumRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumRowView.swift; sourceTree = "<group>"; };
+		EF69CC662B6AB16F005A99AF /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		EF6CA3772B5EBEE0005CBF53 /* Simple Photo Viewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Simple Photo Viewer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF6CA37A2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Simple_Photo_ViewerApp.swift; sourceTree = "<group>"; };
 		EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -86,6 +88,7 @@
 				EF6CA37E2B5EBEE2005CBF53 /* Assets.xcassets */,
 				EF6CA3802B5EBEE2005CBF53 /* Simple_Photo_Viewer.entitlements */,
 				EF6CA3812B5EBEE2005CBF53 /* Preview Content */,
+				EF69CC662B6AB16F005A99AF /* Settings.bundle */,
 			);
 			path = "Simple Photo Viewer";
 			sourceTree = "<group>";
@@ -157,6 +160,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EF6CA3832B5EBEE2005CBF53 /* Preview Assets.xcassets in Resources */,
+				EF69CC672B6AB16F005A99AF /* Settings.bundle in Resources */,
 				EF6CA37F2B5EBEE2005CBF53 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

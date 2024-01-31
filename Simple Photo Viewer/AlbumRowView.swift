@@ -28,7 +28,7 @@ struct AlbumRowView: View {
                 selectAlbum()
             }
 
-            if !viewModel.isSettingsComplete {
+            if viewModel.showAlbumViewSettings {
                 Button(action: toggleVisibility) {
                     Image(systemName: "eye")
                         .foregroundColor(isVisible ? .primary : .gray)
