@@ -69,7 +69,6 @@ class ViewModel: ObservableObject {
         }
     }
 
-
     private func loadAlbumSettings() {
         if let data = UserDefaults.standard.data(forKey: "albumSettings") {
             let jsonDecoder = JSONDecoder()
