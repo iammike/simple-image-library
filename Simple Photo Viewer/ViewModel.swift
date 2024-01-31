@@ -38,7 +38,24 @@ class ViewModel: ObservableObject {
     func toggleIsSettingsComplete() {
         isSettingsComplete.toggle()
         UserDefaults.standard.set(isSettingsComplete, forKey: "isSettingsComplete")
+
+        if let currentAlbumIdentifier = currentAlbum?.localIdentifier,
+           let isCurrentAlbumVisible = albumSettings[currentAlbumIdentifier]?.isVisible,
+           !isCurrentAlbumVisible {
+            selectFirstVisibleAlbum()
+        }
     }
+
+    func selectFirstVisibleAlbum() {
+        guard !albums.isEmpty else { return }
+
+        if let firstVisibleAlbum = albums.first(where: { album in
+            return albumSettings[album.localIdentifier]?.isVisible ?? false
+        }) {
+            selectAlbum(firstVisibleAlbum)
+        }
+    }
+
 
     private func loadAlbumSettings() {
         if let data = UserDefaults.standard.data(forKey: "albumSettings") {
@@ -138,9 +155,7 @@ class ViewModel: ObservableObject {
                 }
             }
 
-            if self.currentAlbum == nil, let firstAlbum = sortedAlbums.first {
-                self.selectAlbum(firstAlbum)
-            }
+            self.selectFirstVisibleAlbum()
         }
     }
 
