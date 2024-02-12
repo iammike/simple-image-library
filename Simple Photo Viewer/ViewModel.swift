@@ -16,6 +16,7 @@ class ViewModel: ObservableObject {
     @Published var hasPhotoLibraryAccess: Bool = false
     @Published var photoLibraryAccessHasBeenChecked: Bool = false
     @Published var showAlbumViewSettings: Bool = true
+    @Published var prefetchedImage: UIImage?
 
     private var fetchOffset = 0
     private let fetchLimit = 50
@@ -232,6 +233,18 @@ class ViewModel: ObservableObject {
         manager.requestImage(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { (result, _) in
             DispatchQueue.main.async {
                 completion(result)
+            }
+        }
+    }
+
+    func prefetchImageForNextIndex(currentIndex: Int) {
+        let nextIndex = currentIndex + 1
+        guard images.indices.contains(nextIndex) else { return }
+
+        let nextAsset = images[nextIndex]
+        getImage(for: nextAsset) { [weak self] downloadedImage in
+            DispatchQueue.main.async {
+                self?.prefetchedImage = downloadedImage
             }
         }
     }
