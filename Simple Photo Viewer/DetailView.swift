@@ -145,6 +145,8 @@ struct DetailView: View {
             DispatchQueue.main.async {
                 self.image = downloadedImage
                 self.isAssetLoading = false
+                // Trigger prefetching right after the current image is loaded
+                self.viewModel.prefetchImageForNextIndex(currentIndex: self.currentIndex)
             }
         }
     }
@@ -270,28 +272,31 @@ struct DetailView: View {
     private var swipeGesture: some Gesture {
         DragGesture()
             .onEnded { gesture in
-                guard !isAssetLoading && scale == 1.0 else { return }
+                guard !self.isAssetLoading && self.scale == 1.0 else { return }
                 if gesture.translation.width > 100 {
-                    if currentIndex > 0 { // first item?
-                        stopAndReleasePlayer()
-                        viewModel.cancelVideoLoading()
-                        swipeDirection = .right
+                    // logic for swiping right
+                    if self.currentIndex > 0 {
+                        self.stopAndReleasePlayer()
+                        self.viewModel.cancelVideoLoading()
+                        self.swipeDirection = .right
                         withAnimation {
-                            currentIndex = max(currentIndex - 1, 0)
+                            self.currentIndex -= 1
                         }
-                        loadAsset()
+                        self.loadAsset()
                     }
                 } else if gesture.translation.width < -100 {
-                    if currentIndex < viewModel.images.count - 1 { // last item?
-                        stopAndReleasePlayer()
-                        viewModel.cancelVideoLoading()
-                        swipeDirection = .left
+                    // logic for swiping left
+                    if self.currentIndex < self.viewModel.images.count - 1 {
+                        self.stopAndReleasePlayer()
+                        self.viewModel.cancelVideoLoading()
+                        self.swipeDirection = .left
                         withAnimation {
-                            currentIndex = min(currentIndex + 1, viewModel.images.count - 1)
+                            self.currentIndex += 1
                         }
-                        loadAsset()
+                        self.loadAsset()
                     }
                 }
             }
     }
+
 }
