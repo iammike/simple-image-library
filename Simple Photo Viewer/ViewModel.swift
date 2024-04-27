@@ -19,7 +19,7 @@ class ViewModel: ObservableObject {
     @Published var prefetchedImage: UIImage?
 
     private var fetchOffset = 0
-    private let fetchLimit = 50
+    private let fetchLimit = 250
     private var currentAlbum: PHAssetCollection?
     private var allPhotos: PHFetchResult<PHAsset>
     private var loadedAlbumSettingsData: Data?
@@ -228,8 +228,7 @@ class ViewModel: ObservableObject {
         let options = PHImageRequestOptions()
         options.isSynchronous = false
         options.isNetworkAccessAllowed = true
-        options.deliveryMode = .highQualityFormat
-        
+
         manager.requestImage(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { (result, _) in
             DispatchQueue.main.async {
                 completion(result)
