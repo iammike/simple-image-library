@@ -105,18 +105,18 @@ class ViewModel: ObservableObject {
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         updateAccessStatus(status)
     }
-    
+
     private func updateAccessStatus(_ status: PHAuthorizationStatus) {
         DispatchQueue.main.async {
             switch status {
             case .authorized:
                 self.hasPhotoLibraryAccess = true
                 self.fetchAlbums()
-                
+
             case .limited, .denied, .restricted, .notDetermined:
                 self.hasPhotoLibraryAccess = false
                 self.clearCachedData()
-                
+
             @unknown default:
                 self.hasPhotoLibraryAccess = false
                 self.clearCachedData()
@@ -124,12 +124,12 @@ class ViewModel: ObservableObject {
             self.photoLibraryAccessHasBeenChecked = true
         }
     }
-    
+
     private func clearCachedData() {
         self.albums.removeAll()
         self.images.removeAll()
     }
-    
+
     private func processPhotoLibraryAccess(status: PHAuthorizationStatus) {
         DispatchQueue.main.async {
             switch status {
@@ -140,7 +140,7 @@ class ViewModel: ObservableObject {
             }
         }
     }
-    
+
     func fetchAlbums() {
         let fetchOptions = PHFetchOptions()
 
@@ -184,7 +184,6 @@ class ViewModel: ObservableObject {
         }
     }
 
-
     func toggleAlbumVisibility(_ albumIdentifier: String) {
         if let settings = albumSettings[albumIdentifier] {
             var updatedSettings = settings
@@ -201,13 +200,13 @@ class ViewModel: ObservableObject {
         let options = PHFetchOptions()
         options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
         options.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
-        
+
         let assets = PHAsset.fetchAssets(in: album, options: options)
         let count = assets.count
         guard fetchOffset < count else {
             return // No more photos to fetch
         }
-        
+
         let upperBound = min(fetchOffset + fetchLimit, count)
         assets.enumerateObjects(at: IndexSet(fetchOffset..<upperBound)) { asset, _, _ in
             DispatchQueue.main.async {
@@ -216,13 +215,13 @@ class ViewModel: ObservableObject {
         }
         fetchOffset += min(fetchLimit, count - fetchOffset)
     }
-    
+
     func loadMorePhotos() {
         if let currentAlbum = currentAlbum {
             loadMorePhotosFromAlbum(currentAlbum)
         }
     }
-    
+
     func getImage(for asset: PHAsset, completion: @escaping (UIImage?) -> Void) {
         let manager = PHImageManager.default()
         let options = PHImageRequestOptions()
@@ -283,7 +282,7 @@ class ViewModel: ObservableObject {
         let assetCount = PHAsset.fetchAssets(in: album, options: fetchOptions).count
         return assetCount > 0
     }
-    
+
     func selectAlbum(_ album: PHAssetCollection) {
         selectedAlbumIdentifier = album.localIdentifier
         currentAlbum = album
@@ -291,12 +290,63 @@ class ViewModel: ObservableObject {
         images = []
         loadMorePhotosFromAlbum(album)
     }
-    
+
     func refreshThumbnails() {
         DispatchQueue.main.async {
             self.fetchOffset = 0
             self.images.removeAll()
             self.loadMorePhotos()
+        }
+    }
+
+    func refreshAlbums() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let fetchOptions = PHFetchOptions()
+
+            let allAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
+            let allSmartAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: fetchOptions)
+
+            let allAlbums = (allAlbumsFetchResult.objects(at: IndexSet(0..<allAlbumsFetchResult.count)) +
+                             allSmartAlbumsFetchResult.objects(at: IndexSet(0..<allSmartAlbumsFetchResult.count)))
+                .filter(self.albumContainsImagesAndVideos)
+
+            func latestAssetDate(in album: PHAssetCollection) -> Date? {
+                let assetsFetchOptions = PHFetchOptions()
+                assetsFetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+                assetsFetchOptions.fetchLimit = 1
+                let assets = PHAsset.fetchAssets(in: album, options: assetsFetchOptions)
+                return assets.firstObject?.creationDate
+            }
+
+            let sortedAlbums = allAlbums.sorted {
+                latestAssetDate(in: $0) ?? Date.distantPast > latestAssetDate(in: $1) ?? Date.distantPast
+            }
+
+            DispatchQueue.main.async {
+                let currentAlbumIdentifier = self.selectedAlbumIdentifier
+                self.albums = sortedAlbums
+
+                sortedAlbums.forEach { album in
+                    if self.albumSettings[album.localIdentifier] == nil {
+                        if let data = UserDefaults.standard.data(forKey: "albumSettings") {
+                            let jsonDecoder = JSONDecoder()
+                            if let decodedSettings = try? jsonDecoder.decode(AlbumSettings.self, from: data) {
+                                self.albumSettings[album.localIdentifier] = decodedSettings
+                            }
+                        } else {
+                            let dummyDecoder: Decoder? = nil
+                            self.albumSettings[album.localIdentifier] = AlbumSettings(from: dummyDecoder)
+                        }
+                    }
+                }
+
+                if let currentAlbumIdentifier = currentAlbumIdentifier,
+                   self.albums.contains(where: { $0.localIdentifier == currentAlbumIdentifier }) {
+                    self.selectedAlbumIdentifier = currentAlbumIdentifier
+                } else {
+                    self.selectFirstVisibleAlbum()
+                }
+            }
         }
     }
 }
