@@ -104,14 +104,21 @@ struct DetailView: View {
     }
 
     private var closeButton: some View {
-        Button(action: {
+        let isVisionImpaired = UserDefaults.standard.bool(forKey: "visionImpairedCloseButton")
+        let buttonSize: CGFloat = isVisionImpaired ? 1.5 : 1.0
+        let buttonOpacity: Double = isVisionImpaired ? 1.0 : 0.7
+
+        return Button(action: {
             stopAndReleasePlayer()
             self.isPresented = false
         }) {
             Image(systemName: "xmark")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24 * buttonSize, height: 24 * buttonSize)
                 .foregroundColor(.black)
                 .padding()
-                .background(Color.gray.opacity(0.7))
+                .background(Color.gray.opacity(buttonOpacity))
                 .clipShape(Circle())
         }
         .padding(.top, 70)

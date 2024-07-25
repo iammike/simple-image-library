@@ -56,7 +56,7 @@ struct InitialView: View {
 
     private var generalInfoText: some View {
         Text("""
-        This app is intended for children or users with special needs who benefit from a more "protected" media library experience. By default, all albums are displayed. On the next screen you will be able to hide individual albums. Following that process, the ability to hide or unhide can only be reinvoked by toggling the "Show album view settings" in Settings.app for this application.\n
+        This app is intended for children or users with special needs who benefit from a more "protected" media library experience. By default, all albums are displayed. On the next screen you will be able to hide individual albums. Following that process, the ability to hide or unhide can only be reinvoked by toggling the "Show album view settings" in Settings.app for this application. Additional settings, generally related to accessibility can also be found in Settings.app.\n
         It is recommended you use this app with Guided Access:
         """)
         .padding(.bottom, 20)

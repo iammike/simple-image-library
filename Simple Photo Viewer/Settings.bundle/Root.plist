@@ -8,6 +8,16 @@
 			<key>Type</key>
 			<string>PSToggleSwitchSpecifier</string>
 			<key>Title</key>
+			<string>Vision impaired media close button</string>
+			<key>Key</key>
+			<string>visionImpairedCloseButton</string>
+			<key>DefaultValue</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
 			<string>Show album view settings</string>
 			<key>Key</key>
 			<string>showAlbumViewSettings</string>
