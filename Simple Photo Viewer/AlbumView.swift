@@ -41,7 +41,6 @@ struct AlbumView: View {
                         album: album,
                         isSelected: viewModel.selectedAlbumIdentifier == album.localIdentifier,
                         isVisible: isVisible,
-//                        albumColor: viewModel.albumSettings[album.localIdentifier]?.color ?? Color.clear,
                         toggleVisibility: {
                             viewModel.toggleAlbumVisibility(album.localIdentifier)
                         },
@@ -53,6 +52,9 @@ struct AlbumView: View {
                     )
                 }
             }
+        }
+        .refreshable {
+            viewModel.refreshAlbums()
         }
     }
 }
