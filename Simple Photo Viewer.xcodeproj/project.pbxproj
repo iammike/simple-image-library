@@ -23,6 +23,7 @@
 		EFCDF8BC2B614C280007C3BB /* MainContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCDF8BB2B614C280007C3BB /* MainContentView.swift */; };
 		EFCDF8BE2B614CA90007C3BB /* AccessDeniedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCDF8BD2B614CA90007C3BB /* AccessDeniedView.swift */; };
 		EFCDF8C02B614CBC0007C3BB /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCDF8BF2B614CBC0007C3BB /* LoadingView.swift */; };
+		EFD5D21C2C52CD7A0028F269 /* LivePhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD5D21B2C52CD7A0028F269 /* LivePhotoView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +46,7 @@
 		EFCDF8BB2B614C280007C3BB /* MainContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainContentView.swift; sourceTree = "<group>"; };
 		EFCDF8BD2B614CA90007C3BB /* AccessDeniedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessDeniedView.swift; sourceTree = "<group>"; };
 		EFCDF8BF2B614CBC0007C3BB /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
+		EFD5D21B2C52CD7A0028F269 /* LivePhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePhotoView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +87,7 @@
 				EF6CA38D2B5EC229005CBF53 /* DetailView.swift */,
 				EF7A389D2BE2B915009FE703 /* InitialView.swift */,
 				EFCDF8BF2B614CBC0007C3BB /* LoadingView.swift */,
+				EFD5D21B2C52CD7A0028F269 /* LivePhotoView.swift */,
 				EFCDF8BB2B614C280007C3BB /* MainContentView.swift */,
 				EF7A389F2BE2B951009FE703 /* MainUI.swift */,
 				EFCDF8B32B60259B0007C3BB /* ThumbnailListView.swift */,
@@ -191,6 +194,7 @@
 				EF7A389E2BE2B915009FE703 /* InitialView.swift in Sources */,
 				EF6CA38E2B5EC229005CBF53 /* DetailView.swift in Sources */,
 				EFCDF8B82B6026620007C3BB /* ViewModel.swift in Sources */,
+				EFD5D21C2C52CD7A0028F269 /* LivePhotoView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
