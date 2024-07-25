@@ -51,7 +51,7 @@ struct DetailView: View {
             loadAsset()
         }
         .onDisappear {
-            stopAndReleasePlayer()
+            cleanup()
         }
         .background(.black)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -227,8 +227,14 @@ struct DetailView: View {
             self.player?.pause()
             self.player = nil
             self.playerItemStatusObserver = nil
-            self.isAssetLoading = false
         }
+    }
+
+    private func cleanup() {
+        stopAndReleasePlayer()
+        self.image = nil
+        self.viewModel.livePhoto = nil
+        self.isAssetLoading = false
     }
 
     private var contentTransition: AnyTransition {
