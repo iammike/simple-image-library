@@ -17,6 +17,7 @@ class ViewModel: ObservableObject {
     @Published var photoLibraryAccessHasBeenChecked: Bool = false
     @Published var showAlbumViewSettings: Bool = true
     @Published var prefetchedImage: UIImage?
+    @Published var livePhoto: PHLivePhoto?
 
     private var fetchOffset = 0
     private let fetchLimit = 250
@@ -231,6 +232,19 @@ class ViewModel: ObservableObject {
         manager.requestImage(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { (result, _) in
             DispatchQueue.main.async {
                 completion(result)
+            }
+        }
+    }
+
+    func getLivePhoto(for asset: PHAsset, completion: @escaping (PHLivePhoto?) -> Void) {
+        let manager = PHImageManager.default()
+        let options = PHLivePhotoRequestOptions()
+        options.deliveryMode = .highQualityFormat
+        options.isNetworkAccessAllowed = true
+
+        manager.requestLivePhoto(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { livePhoto, _ in
+            DispatchQueue.main.async {
+                completion(livePhoto)
             }
         }
     }

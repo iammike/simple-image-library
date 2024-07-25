@@ -11,7 +11,7 @@ import Photos
 struct ThumbnailView: View {
     @State private var thumbnailImage: UIImage? = nil
     let asset: PHAsset
-    
+
     var body: some View {
         Group {
             if let image = thumbnailImage {
@@ -19,7 +19,7 @@ struct ThumbnailView: View {
                     .resizable()
                     .scaledToFill()
                     .frame(width: 200, height: 200)
-                    .overlay(videoOverlay)
+                    .overlay(mediaOverlay)
             } else {
                 Rectangle()
                     .overlay(
@@ -37,22 +37,27 @@ struct ThumbnailView: View {
     }
 
     @ViewBuilder
-    private var videoOverlay: some View {
-        if asset.mediaType == .video {
-                VStack(alignment: .trailing) {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Text("⏵ \(videoDurationText)")
-                            .font(.footnote)
-                            .foregroundColor(.white)
-                            .padding(4)
-                            .background(.black.opacity(0.3))
-                            .cornerRadius(6)
-                    }
+    private var mediaOverlay: some View {
+        VStack(alignment: .trailing) {
+            Spacer()
+            HStack {
+                Spacer()
+                if asset.mediaType == .video {
+                    Text("⏵ \(videoDurationText)")
+                        .font(.footnote)
+                        .foregroundColor(.white)
+                        .padding(4)
+                } else if asset.mediaSubtypes.contains(.photoLive) {
+                    Image(systemName: "livephoto")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
+                        .foregroundColor(.white)
+                        .padding(4)
+                }
             }
-            .padding(8)
         }
+        .padding(8)
     }
 
     private func loadThumbnailImage() {
@@ -61,14 +66,14 @@ struct ThumbnailView: View {
         options.isSynchronous = false
         options.deliveryMode = .opportunistic
         options.resizeMode = .exact
-        
+
         manager.requestImage(for: asset, targetSize: CGSize(width: 200, height: 200), contentMode: .aspectFill, options: options) { image, _ in
             DispatchQueue.main.async {
                 self.thumbnailImage = image
             }
         }
     }
-    
+
     private var videoDurationText: String {
         let durationInSeconds = Int(round(asset.duration))
         let hours = durationInSeconds / 3600

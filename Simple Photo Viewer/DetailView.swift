@@ -65,6 +65,8 @@ struct DetailView: View {
         Group {
             if currentAsset.mediaType == .video {
                 videoPlayerView
+            } else if currentAsset.mediaSubtypes.contains(.photoLive) {
+                livePhotoView
             } else {
                 imageView
             }
@@ -91,6 +93,22 @@ struct DetailView: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
+                    .scaleEffect(self.scale * scaleState)
+                    .offset(x: offset.width + offsetState.width, y: offset.height + offsetState.height)
+                    .gesture(SimultaneousGesture(
+                        SimultaneousGesture(magnificationGestureToZoomImage, dragGestureToPanImage),
+                        doubleTapGestureToResetImage
+                    ))
+            } else {
+                loadingView
+            }
+        }
+    }
+
+    private var livePhotoView: some View {
+        Group {
+            if let livePhoto = viewModel.livePhoto {
+                LivePhotoView(livePhoto: livePhoto)
                     .scaleEffect(self.scale * scaleState)
                     .offset(x: offset.width + offsetState.width, y: offset.height + offsetState.height)
                     .gesture(SimultaneousGesture(
@@ -141,6 +159,8 @@ struct DetailView: View {
 
         if currentAsset.mediaType == .video {
             loadVideo()
+        } else if currentAsset.mediaSubtypes.contains(.photoLive) {
+            loadLivePhoto()
         } else {
             loadImage()
             player = nil
@@ -151,6 +171,17 @@ struct DetailView: View {
         viewModel.getImage(for: currentAsset) { downloadedImage in
             DispatchQueue.main.async {
                 self.image = downloadedImage
+                self.isAssetLoading = false
+                // Trigger prefetching right after the current image is loaded
+                self.viewModel.prefetchImageForNextIndex(currentIndex: self.currentIndex)
+            }
+        }
+    }
+
+    private func loadLivePhoto() {
+        viewModel.getLivePhoto(for: currentAsset) { livePhoto in
+            DispatchQueue.main.async {
+                self.viewModel.livePhoto = livePhoto
                 self.isAssetLoading = false
                 // Trigger prefetching right after the current image is loaded
                 self.viewModel.prefetchImageForNextIndex(currentIndex: self.currentIndex)
@@ -305,5 +336,4 @@ struct DetailView: View {
                 }
             }
     }
-
 }
