@@ -365,44 +365,43 @@ class ViewModel: ObservableObject {
     }
 }
 
-struct AlbumSettings: Codable, Equatable {
+/// A struct representing the settings for an album, including its visibility.
+struct AlbumSettings: Codable {
+    /// Indicates whether the album is visible.
     var isVisible: Bool
-    var color: Color
 
+    /// Coding keys for encoding and decoding.
     enum CodingKeys: String, CodingKey {
         case isVisible
-        case color
     }
 
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        isVisible = try container.decode(Bool.self, forKey: .isVisible)
-
-        let colorString = try container.decode(String.self, forKey: .color)
-        color = Color(colorString)
+    /// Initializes a new instance of `AlbumSettings`.
+    /// - Parameter isVisible: A Boolean value indicating whether the album is visible. Defaults to `true`.
+    init(isVisible: Bool = true) {
+        self.isVisible = isVisible
     }
 
+    /// Initializes a new instance of `AlbumSettings` from a decoder.
+    /// - Parameter decoder: The decoder to read data from.
+    /// - Throws: An error if decoding fails.
     init(from decoder: Decoder? = nil) {
         isVisible = true
-        color = Color.clear
 
         if let decoder = decoder {
             do {
                 let container = try decoder.container(keyedBy: CodingKeys.self)
                 isVisible = try container.decode(Bool.self, forKey: .isVisible)
-
-                let colorString = try container.decode(String.self, forKey: .color)
-                color = Color(colorString)
             } catch {
                 print("Error decoding AlbumSettings: \(error)")
             }
         }
     }
 
+    /// Encodes this instance into the given encoder.
+    /// - Parameter encoder: The encoder to write data to.
+    /// - Throws: An error if encoding fails.
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(isVisible, forKey: .isVisible)
-
-        try container.encode(color.description, forKey: .color)
     }
 }
