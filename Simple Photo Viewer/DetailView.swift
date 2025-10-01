@@ -30,6 +30,10 @@ struct DetailView: View {
 
     @State private var swipeDirection: SwipeDirection = .right // need to set an initial direction for the first asset loaded to work
 
+    // Delay between cleanup and loading next asset to prevent race conditions
+    // Ensures video player observers are fully removed before new asset loads
+    private let transitionDelay: TimeInterval = 0.1
+
     enum SwipeDirection {
         case left, right, none
     }
@@ -345,7 +349,7 @@ struct DetailView: View {
                             self.currentIndex -= 1
                         }
                         // Delay loadAsset to ensure cleanup completes
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + transitionDelay) {
                             self.loadAsset()
                             self.isTransitioning = false
                         }
@@ -361,7 +365,7 @@ struct DetailView: View {
                             self.currentIndex += 1
                         }
                         // Delay loadAsset to ensure cleanup completes
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + transitionDelay) {
                             self.loadAsset()
                             self.isTransitioning = false
                         }
