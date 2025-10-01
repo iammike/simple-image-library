@@ -266,6 +266,7 @@ class ViewModel: ObservableObject {
 
         if let requestID = videoRequestID {
             PHImageManager.default().cancelImageRequest(requestID)
+            videoRequestID = nil
         }
 
         videoRequestID = PHImageManager.default().requestAVAsset(forVideo: asset, options: options) { (avAsset, audioMix, info) in
