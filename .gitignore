@@ -16,3 +16,7 @@ DerivedData
 .idea/
 *.hmap
 xcuserdata/*
+
+# Claude Code
+.claude/
+CLAUDE.md

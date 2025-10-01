@@ -18,7 +18,9 @@ struct DetailView: View {
     @State private var image: UIImage? = nil
     @State private var player: AVPlayer? = nil
     @State private var playerItemStatusObserver: Any?
+    @State private var playerEndObserver: Any?
     @State private var isAssetLoading: Bool = false
+    @State private var isTransitioning: Bool = false
 
     @State private var isZoomed: Bool = false
     @State private var offset = CGSize.zero
@@ -202,6 +204,9 @@ struct DetailView: View {
     }
 
     private func setupPlayer(with playerItem: AVPlayerItem) {
+        // Clean up any existing observers first
+        cleanupPlayerObservers()
+
         playerItemStatusObserver = playerItem.observe(\.status, options: [.new, .old]) { item, _ in
             if item.status == .readyToPlay {
                 DispatchQueue.main.async {
@@ -211,7 +216,7 @@ struct DetailView: View {
             }
         }
 
-        NotificationCenter.default.addObserver(
+        playerEndObserver = NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime,
             object: playerItem,
             queue: .main
@@ -222,11 +227,23 @@ struct DetailView: View {
         self.player = AVPlayer(playerItem: playerItem)
     }
 
+    private func cleanupPlayerObservers() {
+        if let observer = playerItemStatusObserver {
+            // Note: KVO observer invalidation happens automatically when observer is deallocated
+            playerItemStatusObserver = nil
+        }
+
+        if let observer = playerEndObserver {
+            NotificationCenter.default.removeObserver(observer)
+            playerEndObserver = nil
+        }
+    }
+
     private func stopAndReleasePlayer() {
         DispatchQueue.main.async {
             self.player?.pause()
             self.player = nil
-            self.playerItemStatusObserver = nil
+            self.cleanupPlayerObservers()
         }
     }
 
@@ -316,28 +333,38 @@ struct DetailView: View {
     private var swipeGesture: some Gesture {
         DragGesture()
             .onEnded { gesture in
-                guard !self.isAssetLoading && self.scale == 1.0 else { return }
+                guard !self.isAssetLoading && !self.isTransitioning && self.scale == 1.0 else { return }
                 if gesture.translation.width > 100 {
                     // logic for swiping right
                     if self.currentIndex > 0 {
+                        self.isTransitioning = true
                         self.stopAndReleasePlayer()
                         self.viewModel.cancelVideoLoading()
                         self.swipeDirection = .right
                         withAnimation {
                             self.currentIndex -= 1
                         }
-                        self.loadAsset()
+                        // Delay loadAsset to ensure cleanup completes
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            self.loadAsset()
+                            self.isTransitioning = false
+                        }
                     }
                 } else if gesture.translation.width < -100 {
                     // logic for swiping left
                     if self.currentIndex < self.viewModel.images.count - 1 {
+                        self.isTransitioning = true
                         self.stopAndReleasePlayer()
                         self.viewModel.cancelVideoLoading()
                         self.swipeDirection = .left
                         withAnimation {
                             self.currentIndex += 1
                         }
-                        self.loadAsset()
+                        // Delay loadAsset to ensure cleanup completes
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            self.loadAsset()
+                            self.isTransitioning = false
+                        }
                     }
                 }
             }
