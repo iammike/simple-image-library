@@ -21,9 +21,9 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-            if viewModel.hasPhotoLibraryAccess && !isShowingLoader {
+            if viewModel.hasPhotoLibraryAccess && viewModel.albumsLoaded && !isShowingLoader {
                 MainContentView(viewModel: viewModel, selectedAsset: $selectedAsset, isDetailViewPresented: $isDetailViewPresented)
-            } else if viewModel.photoLibraryAccessHasBeenChecked && !isShowingLoader {
+            } else if viewModel.photoLibraryAccessHasBeenChecked && !viewModel.hasPhotoLibraryAccess && !isShowingLoader {
                 AccessDeniedView()
                     .onAppear {
                         setupAccessCheckTimer()
