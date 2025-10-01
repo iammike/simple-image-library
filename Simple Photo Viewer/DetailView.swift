@@ -17,8 +17,8 @@ struct DetailView: View {
     @State private var currentIndex: Int = 0
     @State private var image: UIImage? = nil
     @State private var player: AVPlayer? = nil
-    @State private var playerItemStatusObserver: Any?
-    @State private var playerEndObserver: Any?
+    @State private var playerItemStatusObserver: NSKeyValueObservation?
+    @State private var playerEndObserver: NSObjectProtocol?
     @State private var isAssetLoading: Bool = false
     @State private var isTransitioning: Bool = false
 
@@ -233,7 +233,7 @@ struct DetailView: View {
 
     private func cleanupPlayerObservers() {
         if let observer = playerItemStatusObserver {
-            // Note: KVO observer invalidation happens automatically when observer is deallocated
+            observer.invalidate()
             playerItemStatusObserver = nil
         }
 
