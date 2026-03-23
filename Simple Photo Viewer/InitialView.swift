@@ -3,19 +3,75 @@ import UIKit
 
 struct InitialView: View {
     @Binding var isFirstLaunch: Bool
+    @State private var currentPage = 0
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                header
-                aboutSection
-                guidedAccessCard
-                footerNote
-                ctaButton
+        TabView(selection: $currentPage) {
+            welcomePage.tag(0)
+            setupPage.tag(1)
+        }
+        .tabViewStyle(.page(indexDisplayMode: .always))
+        .indexViewStyle(.page(backgroundDisplayMode: .always))
+        .background(Color(UIColor.systemBackground).ignoresSafeArea())
+    }
+
+    // MARK: - Page 1: Welcome
+
+    private var welcomePage: some View {
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 32)
+                    header
+
+                    VStack(spacing: 0) {
+                        featureRow(
+                            icon: "checkmark.shield.fill",
+                            title: "Safe & Read-Only",
+                            description: "Nothing can be deleted, edited, or shared. Your photos and albums are completely protected."
+                        )
+                        featureRow(
+                            icon: "photo.on.rectangle",
+                            title: "Photos, Videos & Live Photos",
+                            description: "Browse your entire library in a clean, distraction-free layout — no cluttered menus or extra buttons."
+                        )
+                        featureRow(
+                            icon: "rectangle.stack",
+                            title: "Album Control",
+                            description: "Choose exactly which albums are visible. All settings are managed in the Settings app — never inside LE Viewer."
+                        )
+                        featureRow(
+                            icon: "lock.iphone",
+                            title: "Guided Access Ready",
+                            description: "Pair with iOS Guided Access to lock the device to this app, preventing access to anything else."
+                        )
+                    }
+                    .padding(.top, 8)
+
+                    Spacer(minLength: 32)
+                    nextButton
+                }
+                .frame(minHeight: geometry.size.height)
             }
         }
-        .background(Color(UIColor.systemBackground))
-        .ignoresSafeArea()
+    }
+
+    // MARK: - Page 2: Setup
+
+    private var setupPage: some View {
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 32)
+                    guidedAccessCard
+                    Spacer(minLength: 32)
+                    ctaButton
+                }
+                .frame(maxWidth: 600)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: geometry.size.height)
+            }
+        }
     }
 
     // MARK: - Header
@@ -36,27 +92,37 @@ struct InitialView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-                .frame(maxWidth: 300)
+                .frame(maxWidth: 340)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 32)
-        .padding(.bottom, 24)
-        .padding(.horizontal, 20)
+        .padding(.top, 8)
+        .padding(.bottom, 28)
+        .padding(.horizontal, 24)
     }
 
-    // MARK: - About
+    // MARK: - Feature Rows
 
-    private var aboutSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("ABOUT")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+    private func featureRow(icon: String, title: String, description: String) -> some View {
+        HStack(alignment: .top, spacing: 16) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundStyle(.tint)
+                .frame(width: 36, alignment: .top)
+                .padding(.top, 2)
 
-            Text("All of your albums are visible by default. On the next screen you can hide individual albums. To change album visibility later, enable Show Album Settings in Settings → LE Viewer.")
-                .font(.body)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.body)
+                    .fontWeight(.semibold)
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer()
         }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 8)
+        .padding(.horizontal, 32)
+        .padding(.vertical, 12)
     }
 
     // MARK: - Guided Access Card
@@ -86,17 +152,29 @@ struct InitialView: View {
     }
 
     private var cardHeader: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Set Up Guided Access")
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(.tint)
-            Text("Locks the device to this app. Set up once in the Shortcuts app.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        Button {
+            if let url = URL(string: "shortcuts://") {
+                UIApplication.shared.open(url)
+            }
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Set Up Guided Access")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.tint)
+                    Text("Tap to open the Shortcuts app.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.caption)
+                    .foregroundStyle(.tint)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 12)
+        .padding(.vertical, 10)
         .padding(.horizontal, 16)
     }
 
@@ -132,16 +210,20 @@ struct InitialView: View {
         ]
     }
 
-    // MARK: - Footer + CTA
+    // MARK: - Buttons
 
-    private var footerNote: some View {
-        Text("Album visibility can be changed later in Settings → LE Viewer.")
-            .font(.footnote)
-            .foregroundStyle(.secondary)
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 20)
-            .padding(.top, 12)
+    private var nextButton: some View {
+        Button("Next") {
+            withAnimation {
+                currentPage = 1
+            }
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+        .padding(.bottom, 72)
     }
 
     private var ctaButton: some View {
@@ -152,7 +234,7 @@ struct InitialView: View {
         .controlSize(.large)
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 16)
-        .padding(.top, 16)
-        .padding(.bottom, 32)
+        .padding(.top, 12)
+        .padding(.bottom, 72)
     }
 }
