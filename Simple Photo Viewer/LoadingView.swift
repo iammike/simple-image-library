@@ -1,10 +1,3 @@
-//
-//  LoadingView.swift
-//  Simple Photo Viewer
-//
-//  Created by Michael Collins on 1/24/24.
-//
-
 import SwiftUI
 
 struct LoadingView: View {
