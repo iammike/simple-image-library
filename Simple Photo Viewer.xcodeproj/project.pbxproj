@@ -24,6 +24,7 @@
 		EFCDF8BE2B614CA90007C3BB /* AccessDeniedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCDF8BD2B614CA90007C3BB /* AccessDeniedView.swift */; };
 		EFCDF8C02B614CBC0007C3BB /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCDF8BF2B614CBC0007C3BB /* LoadingView.swift */; };
 		EFD5D21C2C52CD7A0028F269 /* LivePhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD5D21B2C52CD7A0028F269 /* LivePhotoView.swift */; };
+		EFD5D21E2C52CD7A0028F269 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD5D21D2C52CD7A0028F269 /* Color+Hex.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +48,7 @@
 		EFCDF8BD2B614CA90007C3BB /* AccessDeniedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessDeniedView.swift; sourceTree = "<group>"; };
 		EFCDF8BF2B614CBC0007C3BB /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		EFD5D21B2C52CD7A0028F269 /* LivePhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePhotoView.swift; sourceTree = "<group>"; };
+		EFD5D21D2C52CD7A0028F269 /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +84,7 @@
 				EFA87E852B62AA2C00F1D761 /* Simple-Photo-Viewer-Info.plist */,
 				EFCDF8BD2B614CA90007C3BB /* AccessDeniedView.swift */,
 				EFCDF8B52B60260C0007C3BB /* AlbumView.swift */,
+				EFD5D21D2C52CD7A0028F269 /* Color+Hex.swift */,
 				EF69CC642B6A80F4005A99AF /* AlbumRowView.swift */,
 				EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */,
 				EF6CA38D2B5EC229005CBF53 /* DetailView.swift */,
@@ -195,6 +198,7 @@
 				EF6CA38E2B5EC229005CBF53 /* DetailView.swift in Sources */,
 				EFCDF8B82B6026620007C3BB /* ViewModel.swift in Sources */,
 				EFD5D21C2C52CD7A0028F269 /* LivePhotoView.swift in Sources */,
+				EFD5D21E2C52CD7A0028F269 /* Color+Hex.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
