@@ -14,6 +14,7 @@ struct Simple_Photo_ViewerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .tint(Color(hex: "#FF8C42"))
         }
     }
 

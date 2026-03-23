@@ -1,18 +1,36 @@
-//
-//  AccessDeniedView.swift
-//  Simple Photo Viewer
-//
-//  Created by Michael Collins on 1/24/24.
-//
-
 import SwiftUI
+import UIKit
 
 struct AccessDeniedView: View {
     var body: some View {
-        Text("Full Access to the photo library is required.\nIf you just granted it, please wait a moment for the application to load your data.\nOtherwise, please enable access in iOS Settings.")
-            .multilineTextAlignment(.center)
-            .lineSpacing(10)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding()
+        VStack(spacing: 16) {
+            Image(systemName: "photo.fill")
+                .font(.system(size: 56))
+                .foregroundStyle(.tint)
+
+            Text("Photo Access Needed")
+                .font(.title3)
+                .fontWeight(.semibold)
+
+            Text("LE Viewer needs full access to your photo library to show photos.")
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+
+            Text("Already granted? This screen updates automatically.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
