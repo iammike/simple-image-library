@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct InitialView: View {
     @Binding var isFirstLaunch: Bool
