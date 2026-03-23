@@ -90,7 +90,7 @@ struct InitialView: View {
             Text("Set Up Guided Access")
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundColor(Color(hex: "#FF6B35"))
+                .foregroundStyle(.tint)
             Text("Locks the device to this app. Set up once in the Shortcuts app.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -109,7 +109,7 @@ struct InitialView: View {
                 Text("\(number)")
                     .font(.caption)
                     .bold()
-                    .foregroundColor(.white)
+                    .foregroundStyle(.white)
             }
             text.font(.callout)
             Spacer()
