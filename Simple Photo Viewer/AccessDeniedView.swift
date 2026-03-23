@@ -18,7 +18,9 @@ struct AccessDeniedView: View {
                 .multilineTextAlignment(.center)
 
             Button("Open Settings") {
-                UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
