@@ -17,3 +17,7 @@ DerivedData
 *.hmap
 xcuserdata/*
 .superpowers/
+
+# Claude Code
+.claude/
+CLAUDE.md

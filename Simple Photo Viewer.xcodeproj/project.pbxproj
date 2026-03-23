@@ -326,7 +326,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Simple Photo Viewer/Simple_Photo_Viewer.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"Simple Photo Viewer/Preview Content\"";
 				DEVELOPMENT_TEAM = 9ED5E567X5;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -369,7 +369,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Simple Photo Viewer/Simple_Photo_Viewer.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"Simple Photo Viewer/Preview Content\"";
 				DEVELOPMENT_TEAM = 9ED5E567X5;
 				ENABLE_HARDENED_RUNTIME = YES;
