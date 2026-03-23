@@ -41,7 +41,7 @@ struct LoadingView: View {
     @ViewBuilder
     private var background: some View {
         if colorScheme == .dark {
-            Color(.systemBackground)
+            Color(UIColor.systemBackground)
                 .ignoresSafeArea()
         } else {
             LinearGradient(
