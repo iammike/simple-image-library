@@ -64,6 +64,7 @@ struct InitialView: View {
                 VStack(spacing: 0) {
                     Spacer(minLength: 32)
                     guidedAccessCard
+                    accessibilityCard
                     Spacer(minLength: 32)
                     ctaButton
                 }
@@ -176,6 +177,74 @@ struct InitialView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 10)
         .padding(.horizontal, 16)
+    }
+
+    // MARK: - Accessibility Card
+
+    private var accessibilityCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("ACCESSIBILITY")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 20)
+
+            VStack(spacing: 0) {
+                accessibilityCardHeader
+                Divider()
+                accessibilityOptionRow(icon: "speaker.wave.2.fill", text: "Read names aloud on tap")
+                Divider()
+                accessibilityOptionRow(icon: "xmark.circle.fill", text: "Large media close button")
+            }
+            .background(Color(UIColor.secondarySystemBackground))
+            .cornerRadius(12)
+            .padding(.horizontal, 16)
+        }
+        .padding(.bottom, 16)
+    }
+
+    private var accessibilityCardHeader: some View {
+        Button {
+            openAppSettings()
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Accessibility Options")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.tint)
+                    Text("Tap to open Settings.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.caption)
+                    .foregroundStyle(.tint)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 16)
+    }
+
+    private func accessibilityOptionRow(icon: String, text: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.callout)
+                .foregroundStyle(.tint)
+                .frame(width: 24)
+            Text(text)
+                .font(.callout)
+            Spacer()
+        }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 16)
+    }
+
+    private func openAppSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
     }
 
     private func stepRow(number: Int, text: Text) -> some View {
