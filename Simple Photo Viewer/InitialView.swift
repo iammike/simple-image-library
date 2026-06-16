@@ -41,6 +41,11 @@ struct InitialView: View {
                             description: "Choose exactly which albums are visible. All settings are managed in the Settings app — never inside LE Viewer."
                         )
                         featureRow(
+                            icon: "accessibility",
+                            title: "Accessibility Built In",
+                            description: "Hear album and photo names read aloud, color-code albums for non-readers, and enlarge the close button to fit every ability."
+                        )
+                        featureRow(
                             icon: "lock.iphone",
                             title: "Guided Access Ready",
                             description: "Pair with iOS Guided Access to lock the device to this app, preventing access to anything else."
