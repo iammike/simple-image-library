@@ -17,11 +17,20 @@ struct AlbumRowView: View {
     var toggleVisibility: () -> Void
     var selectAlbum: () -> Void
 
+    private var albumTitle: String {
+        album.localizedTitle ?? "Unknown Album"
+    }
+
+    private func selectAndSpeak() {
+        SpeechManager.shared.speak(albumTitle)
+        selectAlbum()
+    }
+
     var body: some View {
         HStack {
-            Text(album.localizedTitle ?? "Unknown Album")
+            Text(albumTitle)
                 .onTapGesture {
-                    selectAlbum()
+                    selectAndSpeak()
                 }
 
             Spacer()
@@ -39,7 +48,7 @@ struct AlbumRowView: View {
         .overlay(
             Group {
                 if !viewModel.showAlbumViewSettings {
-                    Button(action: selectAlbum) {
+                    Button(action: selectAndSpeak) {
                         Rectangle().foregroundColor(Color.clear)
                     }
                 }

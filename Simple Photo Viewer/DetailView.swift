@@ -55,6 +55,7 @@ struct DetailView: View {
         }
         .onAppear {
             loadAsset()
+            SpeechManager.shared.speak(ReadAloud.spokenDateString(for: currentAsset.creationDate) ?? "")
         }
         .onDisappear {
             cleanup()
