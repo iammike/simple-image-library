@@ -146,6 +146,7 @@ struct DetailView: View {
                 .background(Color.gray.opacity(buttonOpacity))
                 .clipShape(Circle())
         }
+        .accessibilityLabel("Close")
         .padding(.top, 70)
         .padding(.trailing, 20)
     }
