@@ -192,7 +192,19 @@ class ViewModel: ObservableObject {
         } else {
             print("Album didn't exist")
         }
-        saveAlbumSettings() // will need this in the color toggle too
+        saveAlbumSettings()
+    }
+
+    /// Cycles the album's assigned color (none -> palette colors -> none) and persists it.
+    func setAlbumColor(_ albumIdentifier: String) {
+        if var settings = albumSettings[albumIdentifier] {
+            settings.colorHex = AlbumColorPalette.next(after: settings.colorHex)
+            albumSettings[albumIdentifier] = settings
+            objectWillChange.send()
+        } else {
+            print("Album didn't exist")
+        }
+        saveAlbumSettings()
     }
 
     private func loadMorePhotosFromAlbum(_ album: PHAssetCollection) {
@@ -367,32 +379,41 @@ class ViewModel: ObservableObject {
     }
 }
 
-/// A struct representing the settings for an album, including its visibility.
+/// A struct representing the settings for an album, including its visibility and optional color.
 struct AlbumSettings: Codable {
     /// Indicates whether the album is visible.
     var isVisible: Bool
 
+    /// Optional color (hex string) assigned to the album, or `nil` for no color.
+    var colorHex: String?
+
     /// Coding keys for encoding and decoding.
     enum CodingKeys: String, CodingKey {
         case isVisible
+        case colorHex
     }
 
     /// Initializes a new instance of `AlbumSettings`.
-    /// - Parameter isVisible: A Boolean value indicating whether the album is visible. Defaults to `true`.
-    init(isVisible: Bool = true) {
+    /// - Parameters:
+    ///   - isVisible: Whether the album is visible. Defaults to `true`.
+    ///   - colorHex: Optional assigned color as a hex string. Defaults to `nil`.
+    init(isVisible: Bool = true, colorHex: String? = nil) {
         self.isVisible = isVisible
+        self.colorHex = colorHex
     }
 
     /// Initializes a new instance of `AlbumSettings` from a decoder.
-    /// - Parameter decoder: The decoder to read data from.
-    /// - Throws: An error if decoding fails.
-    init(from decoder: Decoder? = nil) {
+    /// Tolerates data persisted by earlier versions that lacks newer keys.
+    /// - Parameter decoder: The decoder to read data from, or `nil` for defaults.
+    init(from decoder: Decoder?) {
         isVisible = true
+        colorHex = nil
 
         if let decoder = decoder {
             do {
                 let container = try decoder.container(keyedBy: CodingKeys.self)
-                isVisible = try container.decode(Bool.self, forKey: .isVisible)
+                isVisible = try container.decodeIfPresent(Bool.self, forKey: .isVisible) ?? true
+                colorHex = try container.decodeIfPresent(String.self, forKey: .colorHex)
             } catch {
                 print("Error decoding AlbumSettings: \(error)")
             }
@@ -405,5 +426,6 @@ struct AlbumSettings: Codable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(isVisible, forKey: .isVisible)
+        try container.encodeIfPresent(colorHex, forKey: .colorHex)
     }
 }

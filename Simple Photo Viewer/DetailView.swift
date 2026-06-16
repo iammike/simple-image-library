@@ -55,6 +55,7 @@ struct DetailView: View {
         }
         .onAppear {
             loadAsset()
+            SpeechManager.shared.speak(ReadAloud.spokenDateString(for: currentAsset.creationDate) ?? "")
         }
         .onDisappear {
             cleanup()
@@ -145,6 +146,7 @@ struct DetailView: View {
                 .background(Color.gray.opacity(buttonOpacity))
                 .clipShape(Circle())
         }
+        .accessibilityLabel("Close")
         .padding(.top, 70)
         .padding(.trailing, 20)
     }

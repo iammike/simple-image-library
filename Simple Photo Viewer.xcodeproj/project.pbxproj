@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		269B77DB8F473850A2AA75B2 /* AlbumColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56EAA2D0CEB59DC2E9696385 /* AlbumColorTests.swift */; };
+		35C738D16DD033CA51785E98 /* AlbumColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 087F88478B4AE885C2B7C991 /* AlbumColor.swift */; };
+		59CC35C7E0EEB24ED0BD8D7B /* AlbumSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */; };
+		76EB7D2C7268BAF4E71FF5B7 /* ReadAloudTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3AB0AA3C5DE76B928B04A9C /* ReadAloudTests.swift */; };
+		7D0BE497DA0E67BA33371ADF /* SanityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6217792CE256837FF4FE1B5F /* SanityTests.swift */; };
+		925E6E2D952FA24C9D0DCCF1 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C7EECADEB76F84287708A09 /* SpeechManager.swift */; };
+		A10C50B57ED8AF0BA14F4510 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEA39E4F3788F56FEF563F0C /* Foundation.framework */; };
 		EF69CC652B6A80F4005A99AF /* AlbumRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF69CC642B6A80F4005A99AF /* AlbumRowView.swift */; };
 		EF69CC672B6AB16F005A99AF /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = EF69CC662B6AB16F005A99AF /* Settings.bundle */; };
 		EF6CA37B2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6CA37A2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift */; };
@@ -25,9 +32,29 @@
 		EFCDF8C02B614CBC0007C3BB /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCDF8BF2B614CBC0007C3BB /* LoadingView.swift */; };
 		EFD5D21C2C52CD7A0028F269 /* LivePhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD5D21B2C52CD7A0028F269 /* LivePhotoView.swift */; };
 		EFD5D21E2C52CD7A0028F269 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD5D21D2C52CD7A0028F269 /* Color+Hex.swift */; };
+		F0FFAF4262AFF9DD6F509B95 /* ReadAloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9621EF0EBC48E9C1D3CC05E1 /* ReadAloud.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		9589644FBDCC9A8435AE09EF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EF6CA36F2B5EBEE0005CBF53 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EF6CA3762B5EBEE0005CBF53;
+			remoteInfo = "Simple Photo Viewer";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		087F88478B4AE885C2B7C991 /* AlbumColor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumColor.swift; sourceTree = "<group>"; };
+		127A19E441D584DDDC516C8F /* Simple Photo ViewerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Simple Photo ViewerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C7EECADEB76F84287708A09 /* SpeechManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpeechManager.swift; sourceTree = "<group>"; };
+		56EAA2D0CEB59DC2E9696385 /* AlbumColorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumColorTests.swift; sourceTree = "<group>"; };
+		6217792CE256837FF4FE1B5F /* SanityTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SanityTests.swift; sourceTree = "<group>"; };
+		9621EF0EBC48E9C1D3CC05E1 /* ReadAloud.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReadAloud.swift; sourceTree = "<group>"; };
+		D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumSettingsTests.swift; sourceTree = "<group>"; };
+		D3AB0AA3C5DE76B928B04A9C /* ReadAloudTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReadAloudTests.swift; sourceTree = "<group>"; };
+		DEA39E4F3788F56FEF563F0C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		EF69CC642B6A80F4005A99AF /* AlbumRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumRowView.swift; sourceTree = "<group>"; };
 		EF69CC662B6AB16F005A99AF /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		EF6CA3772B5EBEE0005CBF53 /* Simple Photo Viewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Simple Photo Viewer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -52,6 +79,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		29E5518C9278AF14938A6E5A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10C50B57ED8AF0BA14F4510 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EF6CA3742B5EBEE0005CBF53 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -62,11 +97,40 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		16AD86E4B0FBC5BAD6D01B9E /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				DEA39E4F3788F56FEF563F0C /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		5758D57AC1A8D97072F53C2E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				16AD86E4B0FBC5BAD6D01B9E /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		B0C4F1BF9E0B7406BE8991E7 /* Simple Photo ViewerTests */ = {
+			isa = PBXGroup;
+			children = (
+				6217792CE256837FF4FE1B5F /* SanityTests.swift */,
+				56EAA2D0CEB59DC2E9696385 /* AlbumColorTests.swift */,
+				D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */,
+				D3AB0AA3C5DE76B928B04A9C /* ReadAloudTests.swift */,
+			);
+			path = "Simple Photo ViewerTests";
+			sourceTree = SOURCE_ROOT;
+		};
 		EF6CA36E2B5EBEE0005CBF53 = {
 			isa = PBXGroup;
 			children = (
 				EF6CA3792B5EBEE0005CBF53 /* Simple Photo Viewer */,
 				EF6CA3782B5EBEE0005CBF53 /* Products */,
+				5758D57AC1A8D97072F53C2E /* Frameworks */,
+				B0C4F1BF9E0B7406BE8991E7 /* Simple Photo ViewerTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -74,6 +138,7 @@
 			isa = PBXGroup;
 			children = (
 				EF6CA3772B5EBEE0005CBF53 /* Simple Photo Viewer.app */,
+				127A19E441D584DDDC516C8F /* Simple Photo ViewerTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -101,6 +166,9 @@
 				EF6CA3802B5EBEE2005CBF53 /* Simple_Photo_Viewer.entitlements */,
 				EF6CA3812B5EBEE2005CBF53 /* Preview Content */,
 				EF69CC662B6AB16F005A99AF /* Settings.bundle */,
+				087F88478B4AE885C2B7C991 /* AlbumColor.swift */,
+				9621EF0EBC48E9C1D3CC05E1 /* ReadAloud.swift */,
+				4C7EECADEB76F84287708A09 /* SpeechManager.swift */,
 			);
 			path = "Simple Photo Viewer";
 			sourceTree = "<group>";
@@ -116,6 +184,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		56CDB7C4852C4CE280A4B9D8 /* Simple Photo ViewerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 669BF8E76C98BBEAFD87A965 /* Build configuration list for PBXNativeTarget "Simple Photo ViewerTests" */;
+			buildPhases = (
+				613869A190E399BC76A6440F /* Sources */,
+				29E5518C9278AF14938A6E5A /* Frameworks */,
+				79602BD4181EDE564E2ABB0C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				208B14C99C41D1BA271D6A63 /* PBXTargetDependency */,
+			);
+			name = "Simple Photo ViewerTests";
+			productName = "Simple Photo ViewerTests";
+			productReference = 127A19E441D584DDDC516C8F /* Simple Photo ViewerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		EF6CA3762B5EBEE0005CBF53 /* Simple Photo Viewer */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = EF6CA3862B5EBEE2005CBF53 /* Build configuration list for PBXNativeTarget "Simple Photo Viewer" */;
@@ -141,8 +227,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1520;
-				LastUpgradeCheck = 1520;
+				LastUpgradeCheck = 2650;
 				TargetAttributes = {
+					56CDB7C4852C4CE280A4B9D8 = {
+						TestTargetID = EF6CA3762B5EBEE0005CBF53;
+					};
 					EF6CA3762B5EBEE0005CBF53 = {
 						CreatedOnToolsVersion = 15.2;
 					};
@@ -162,11 +251,19 @@
 			projectRoot = "";
 			targets = (
 				EF6CA3762B5EBEE0005CBF53 /* Simple Photo Viewer */,
+				56CDB7C4852C4CE280A4B9D8 /* Simple Photo ViewerTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		79602BD4181EDE564E2ABB0C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EF6CA3752B5EBEE0005CBF53 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -180,6 +277,17 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		613869A190E399BC76A6440F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7D0BE497DA0E67BA33371ADF /* SanityTests.swift in Sources */,
+				269B77DB8F473850A2AA75B2 /* AlbumColorTests.swift in Sources */,
+				59CC35C7E0EEB24ED0BD8D7B /* AlbumSettingsTests.swift in Sources */,
+				76EB7D2C7268BAF4E71FF5B7 /* ReadAloudTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EF6CA3732B5EBEE0005CBF53 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -199,12 +307,59 @@
 				EFCDF8B82B6026620007C3BB /* ViewModel.swift in Sources */,
 				EFD5D21C2C52CD7A0028F269 /* LivePhotoView.swift in Sources */,
 				EFD5D21E2C52CD7A0028F269 /* Color+Hex.swift in Sources */,
+				35C738D16DD033CA51785E98 /* AlbumColor.swift in Sources */,
+				F0FFAF4262AFF9DD6F509B95 /* ReadAloud.swift in Sources */,
+				925E6E2D952FA24C9D0DCCF1 /* SpeechManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		208B14C99C41D1BA271D6A63 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "Simple Photo Viewer";
+			target = EF6CA3762B5EBEE0005CBF53 /* Simple Photo Viewer */;
+			targetProxy = 9589644FBDCC9A8435AE09EF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		29D20946612A9AB2ABDCFD7E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iammike.SimplePhotoViewerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Simple Photo Viewer.app/Simple Photo Viewer";
+			};
+			name = Debug;
+		};
+		78CCFF7DE4148205D5172136 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.iammike.SimplePhotoViewerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Simple Photo Viewer.app/Simple Photo Viewer";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		EF6CA3842B5EBEE2005CBF53 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -239,7 +394,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 9ED5E567X5;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -261,6 +418,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -300,7 +458,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 9ED5E567X5;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -315,6 +475,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -327,8 +488,8 @@
 				CODE_SIGN_ENTITLEMENTS = "Simple Photo Viewer/Simple_Photo_Viewer.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Simple Photo Viewer/Preview Content\"";
-				DEVELOPMENT_TEAM = 9ED5E567X5;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -350,7 +511,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.2;
-				MARKETING_VERSION = 1.4;
+				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.iammike.LE-Viewer";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -370,8 +531,8 @@
 				CODE_SIGN_ENTITLEMENTS = "Simple Photo Viewer/Simple_Photo_Viewer.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Simple Photo Viewer/Preview Content\"";
-				DEVELOPMENT_TEAM = 9ED5E567X5;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -393,7 +554,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.2;
-				MARKETING_VERSION = 1.4;
+				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.iammike.LE-Viewer";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -408,6 +569,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		669BF8E76C98BBEAFD87A965 /* Build configuration list for PBXNativeTarget "Simple Photo ViewerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				78CCFF7DE4148205D5172136 /* Release */,
+				29D20946612A9AB2ABDCFD7E /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		EF6CA3722B5EBEE0005CBF53 /* Build configuration list for PBXProject "Simple Photo Viewer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -31,8 +31,20 @@ struct ThumbnailView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 6))
         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray, lineWidth: 1))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityDescription)
         .onAppear {
             loadThumbnailImage()
+        }
+    }
+
+    private var accessibilityDescription: String {
+        if asset.mediaType == .video {
+            return "Video, \(videoDurationText)"
+        } else if asset.mediaSubtypes.contains(.photoLive) {
+            return "Live Photo"
+        } else {
+            return "Photo"
         }
     }
 
