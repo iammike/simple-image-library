@@ -21,12 +21,25 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-            if viewModel.hasPhotoLibraryAccess && viewModel.albumsLoaded && !isShowingLoader {
-                MainContentView(viewModel: viewModel, selectedAsset: $selectedAsset, isDetailViewPresented: $isDetailViewPresented)
-            } else if viewModel.photoLibraryAccessHasBeenChecked && !viewModel.hasPhotoLibraryAccess && !isShowingLoader {
+            if viewModel.hasPhotoLibraryAccess {
+                // Access granted: keep the loading screen up until albums are ready,
+                // then show the main content. Never fall back to the denied screen here.
+                if viewModel.albumsLoaded && !isShowingLoader {
+                    MainContentView(viewModel: viewModel, selectedAsset: $selectedAsset, isDetailViewPresented: $isDetailViewPresented)
+                } else {
+                    LoadingView()
+                        .onAppear {
+                            setupLoadingTimer()
+                        }
+                }
+            } else if viewModel.photoLibraryAccessHasBeenChecked && !isShowingLoader {
                 AccessDeniedView()
                     .onAppear {
                         setupAccessCheckTimer()
+                    }
+                    .onDisappear {
+                        accessCheckTimer?.invalidate()
+                        accessCheckTimer = nil
                     }
             } else {
                 LoadingView()
@@ -56,10 +69,11 @@ struct ContentView: View {
             viewModel.checkPhotoLibraryAccess()
 
             if viewModel.hasPhotoLibraryAccess {
-                DispatchQueue.main.asyncAfter(deadline: .now() + (self.minLoaderTime - Date().timeIntervalSince(self.loadingStartTime))) {
-                    self.accessCheckTimer?.invalidate()
-                    self.isShowingLoader = false
-                }
+                // Access just granted: stop polling and drop the loader gate so the
+                // loading screen (then main content once albums load) takes over.
+                self.accessCheckTimer?.invalidate()
+                self.accessCheckTimer = nil
+                self.isShowingLoader = false
             }
         }
     }
