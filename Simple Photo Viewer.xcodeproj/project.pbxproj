@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		269B77DB8F473850A2AA75B2 /* AlbumColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56EAA2D0CEB59DC2E9696385 /* AlbumColorTests.swift */; };
+		35C738D16DD033CA51785E98 /* AlbumColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 087F88478B4AE885C2B7C991 /* AlbumColor.swift */; };
+		59CC35C7E0EEB24ED0BD8D7B /* AlbumSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */; };
 		7D0BE497DA0E67BA33371ADF /* SanityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6217792CE256837FF4FE1B5F /* SanityTests.swift */; };
 		A10C50B57ED8AF0BA14F4510 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEA39E4F3788F56FEF563F0C /* Foundation.framework */; };
 		EF69CC652B6A80F4005A99AF /* AlbumRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF69CC642B6A80F4005A99AF /* AlbumRowView.swift */; };
@@ -40,8 +43,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		087F88478B4AE885C2B7C991 /* AlbumColor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumColor.swift; sourceTree = "<group>"; };
 		127A19E441D584DDDC516C8F /* Simple Photo ViewerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = "Simple Photo ViewerTests.xctest"; path = "Simple Photo ViewerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		56EAA2D0CEB59DC2E9696385 /* AlbumColorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumColorTests.swift; sourceTree = "<group>"; };
 		6217792CE256837FF4FE1B5F /* SanityTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SanityTests.swift; sourceTree = "<group>"; };
+		D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumSettingsTests.swift; sourceTree = "<group>"; };
 		DEA39E4F3788F56FEF563F0C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		EF69CC642B6A80F4005A99AF /* AlbumRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumRowView.swift; sourceTree = "<group>"; };
 		EF69CC662B6AB16F005A99AF /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
@@ -105,6 +111,8 @@
 			isa = PBXGroup;
 			children = (
 				6217792CE256837FF4FE1B5F /* SanityTests.swift */,
+				56EAA2D0CEB59DC2E9696385 /* AlbumColorTests.swift */,
+				D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */,
 			);
 			name = "Simple Photo ViewerTests";
 			path = "Simple Photo ViewerTests";
@@ -152,6 +160,7 @@
 				EF6CA3802B5EBEE2005CBF53 /* Simple_Photo_Viewer.entitlements */,
 				EF6CA3812B5EBEE2005CBF53 /* Preview Content */,
 				EF69CC662B6AB16F005A99AF /* Settings.bundle */,
+				087F88478B4AE885C2B7C991 /* AlbumColor.swift */,
 			);
 			path = "Simple Photo Viewer";
 			sourceTree = "<group>";
@@ -265,6 +274,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				7D0BE497DA0E67BA33371ADF /* SanityTests.swift in Sources */,
+				269B77DB8F473850A2AA75B2 /* AlbumColorTests.swift in Sources */,
+				59CC35C7E0EEB24ED0BD8D7B /* AlbumSettingsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -287,6 +298,7 @@
 				EFCDF8B82B6026620007C3BB /* ViewModel.swift in Sources */,
 				EFD5D21C2C52CD7A0028F269 /* LivePhotoView.swift in Sources */,
 				EFD5D21E2C52CD7A0028F269 /* Color+Hex.swift in Sources */,
+				35C738D16DD033CA51785E98 /* AlbumColor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
