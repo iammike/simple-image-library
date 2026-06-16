@@ -192,7 +192,19 @@ class ViewModel: ObservableObject {
         } else {
             print("Album didn't exist")
         }
-        saveAlbumSettings() // will need this in the color toggle too
+        saveAlbumSettings()
+    }
+
+    /// Cycles the album's assigned color (none -> palette colors -> none) and persists it.
+    func setAlbumColor(_ albumIdentifier: String) {
+        if var settings = albumSettings[albumIdentifier] {
+            settings.colorHex = AlbumColorPalette.next(after: settings.colorHex)
+            albumSettings[albumIdentifier] = settings
+            objectWillChange.send()
+        } else {
+            print("Album didn't exist")
+        }
+        saveAlbumSettings()
     }
 
     private func loadMorePhotosFromAlbum(_ album: PHAssetCollection) {
