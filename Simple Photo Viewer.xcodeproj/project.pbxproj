@@ -21,7 +21,6 @@
 		925E6E2D952FA24C9D0DCCF1 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C7EECADEB76F84287708A09 /* SpeechManager.swift */; };
 		A10C50B57ED8AF0BA14F4510 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEA39E4F3788F56FEF563F0C /* Foundation.framework */; };
 		EF69CC652B6A80F4005A99AF /* AlbumRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF69CC642B6A80F4005A99AF /* AlbumRowView.swift */; };
-		EF69CC672B6AB16F005A99AF /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = EF69CC662B6AB16F005A99AF /* Settings.bundle */; };
 		EF6CA37B2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6CA37A2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift */; };
 		EF6CA37D2B5EBEE0005CBF53 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */; };
 		EF6CA37F2B5EBEE2005CBF53 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EF6CA37E2B5EBEE2005CBF53 /* Assets.xcassets */; };
@@ -68,7 +67,6 @@
 		D3AB0AA3C5DE76B928B04A9C /* ReadAloudTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReadAloudTests.swift; sourceTree = "<group>"; };
 		DEA39E4F3788F56FEF563F0C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		EF69CC642B6A80F4005A99AF /* AlbumRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumRowView.swift; sourceTree = "<group>"; };
-		EF69CC662B6AB16F005A99AF /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		EF6CA3772B5EBEE0005CBF53 /* Simple Photo Viewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Simple Photo Viewer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF6CA37A2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Simple_Photo_ViewerApp.swift; sourceTree = "<group>"; };
 		EF6CA37C2B5EBEE0005CBF53 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -180,7 +178,6 @@
 				EF6CA37E2B5EBEE2005CBF53 /* Assets.xcassets */,
 				EF6CA3802B5EBEE2005CBF53 /* Simple_Photo_Viewer.entitlements */,
 				EF6CA3812B5EBEE2005CBF53 /* Preview Content */,
-				EF69CC662B6AB16F005A99AF /* Settings.bundle */,
 				087F88478B4AE885C2B7C991 /* AlbumColor.swift */,
 				97C466BD70924FCAB1789194 /* AlbumNameTextSize.swift */,
 				9621EF0EBC48E9C1D3CC05E1 /* ReadAloud.swift */,
@@ -287,7 +284,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				EF6CA3832B5EBEE2005CBF53 /* Preview Assets.xcassets in Resources */,
-				EF69CC672B6AB16F005A99AF /* Settings.bundle in Resources */,
 				EF6CA37F2B5EBEE2005CBF53 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
