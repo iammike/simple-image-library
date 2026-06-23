@@ -11,6 +11,12 @@ import Photos
 struct AlbumRowView: View {
     @ObservedObject var viewModel: ViewModel
 
+    @AppStorage("albumNameTextSize") private var albumNameTextSizeRaw = AlbumNameTextSize.defaultValue.rawValue
+
+    private var albumNameTextSize: AlbumNameTextSize {
+        AlbumNameTextSize(rawValue: albumNameTextSizeRaw) ?? .defaultValue
+    }
+
     let album: PHAssetCollection
     let isSelected: Bool
     let isVisible: Bool
@@ -48,11 +54,13 @@ struct AlbumRowView: View {
             if !viewModel.isSetupMode, let hex = albumColorHex {
                 Circle()
                     .fill(Color(hex: hex))
-                    .frame(width: 14, height: 14)
+                    .frame(width: albumNameTextSize.recognitionDotSize,
+                           height: albumNameTextSize.recognitionDotSize)
                     .accessibilityHidden(true)
             }
 
             Text(albumTitle)
+                .font(.system(size: albumNameTextSize.pointSize))
                 .onTapGesture {
                     selectAndSpeak()
                 }
