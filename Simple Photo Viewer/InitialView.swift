@@ -38,12 +38,12 @@ struct InitialView: View {
                         featureRow(
                             icon: "rectangle.stack",
                             title: "Album Control",
-                            description: "Choose exactly which albums are visible. All settings are managed in the Settings app — never inside LE Viewer."
+                            description: "Choose exactly which albums are visible. An adult sets everything up inside the app, behind a child-proof gate."
                         )
                         featureRow(
                             icon: "accessibility",
                             title: "Accessibility Built In",
-                            description: "Hear album and photo names read aloud, color-code albums for non-readers, and enlarge the close button to fit every ability."
+                            description: "Hear album and photo names read aloud, color-code albums for non-readers, resize album name text, and enlarge the close button to fit every ability."
                         )
                         featureRow(
                             icon: "lock.iphone",
@@ -208,24 +208,20 @@ struct InitialView: View {
     }
 
     private var accessibilityCardHeader: some View {
-        Button {
-            openAppSettings()
-        } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Accessibility Options")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.tint)
-                    Text("Tap to open Settings.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Image(systemName: "arrow.up.right")
-                    .font(.caption)
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Setup Lives in the App")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
                     .foregroundStyle(.tint)
+                Text("Press and hold the gear, then answer a quick question to open Setup.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
+            Spacer()
+            Image(systemName: "gearshape")
+                .font(.caption)
+                .foregroundStyle(.tint)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 10)
@@ -244,12 +240,6 @@ struct InitialView: View {
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 16)
-    }
-
-    private func openAppSettings() {
-        if let url = URL(string: UIApplication.openSettingsURLString) {
-            UIApplication.shared.open(url)
-        }
     }
 
     private func stepRow(number: Int, text: Text) -> some View {
