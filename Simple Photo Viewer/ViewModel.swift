@@ -16,7 +16,7 @@ class ViewModel: ObservableObject {
     @Published var hasPhotoLibraryAccess: Bool = false
     @Published var photoLibraryAccessHasBeenChecked: Bool = false
     @Published var albumsLoaded: Bool = false
-    @Published var showAlbumViewSettings: Bool = true
+    @Published var isSetupMode: Bool = true
     @Published var prefetchedImage: UIImage?
     @Published var livePhoto: PHLivePhoto?
 
@@ -28,10 +28,11 @@ class ViewModel: ObservableObject {
     var videoRequestID: PHImageRequestID?
 
     init() {
-        if UserDefaults.standard.object(forKey: "showAlbumViewSettings") != nil {
-            showAlbumViewSettings = UserDefaults.standard.bool(forKey: "showAlbumViewSettings")
+        ViewModel.migrateSetupModeKey(in: .standard)
+        if UserDefaults.standard.object(forKey: "isSetupMode") != nil {
+            isSetupMode = UserDefaults.standard.bool(forKey: "isSetupMode")
         } else {
-            showAlbumViewSettings = true
+            isSetupMode = true
         }
         loadAlbumSettings()
         checkPhotoLibraryAccess()
@@ -51,14 +52,30 @@ class ViewModel: ObservableObject {
     }
 
     func toggleIsSettingsComplete() {
-        showAlbumViewSettings.toggle()
-        UserDefaults.standard.set(showAlbumViewSettings, forKey: "showAlbumViewSettings")
+        isSetupMode.toggle()
+        UserDefaults.standard.set(isSetupMode, forKey: "isSetupMode")
 
         if let currentAlbumIdentifier = currentAlbum?.localIdentifier,
            let isCurrentAlbumVisible = albumSettings[currentAlbumIdentifier]?.isVisible,
            !isCurrentAlbumVisible {
             selectFirstVisibleAlbum()
         }
+    }
+
+    /// Opens Setup after the parental gate succeeds.
+    func enterSetup() {
+        isSetupMode = true
+        UserDefaults.standard.set(true, forKey: "isSetupMode")
+    }
+
+    /// One-time migration: rename the legacy `showAlbumViewSettings` key to `isSetupMode`.
+    static func migrateSetupModeKey(in defaults: UserDefaults) {
+        let legacyKey = "showAlbumViewSettings"
+        let newKey = "isSetupMode"
+        guard defaults.object(forKey: newKey) == nil,
+              defaults.object(forKey: legacyKey) != nil else { return }
+        defaults.set(defaults.bool(forKey: legacyKey), forKey: newKey)
+        defaults.removeObject(forKey: legacyKey)
     }
 
     func selectFirstVisibleAlbum() {
@@ -91,10 +108,10 @@ class ViewModel: ObservableObject {
     }
 
     func loadShowAlbumViewSettings() {
-        if UserDefaults.standard.object(forKey: "showAlbumViewSettings") != nil {
-            showAlbumViewSettings = UserDefaults.standard.bool(forKey: "showAlbumViewSettings")
+        if UserDefaults.standard.object(forKey: "isSetupMode") != nil {
+            isSetupMode = UserDefaults.standard.bool(forKey: "isSetupMode")
         } else {
-            showAlbumViewSettings = true // Default value for fresh installs
+            isSetupMode = true // Default value for fresh installs
         }
     }
 

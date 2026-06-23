@@ -45,7 +45,7 @@ struct AlbumRowView: View {
     var body: some View {
         HStack {
             // In normal use, a colored dot lets non-readers recognize albums by color.
-            if !viewModel.showAlbumViewSettings, let hex = albumColorHex {
+            if !viewModel.isSetupMode, let hex = albumColorHex {
                 Circle()
                     .fill(Color(hex: hex))
                     .frame(width: 14, height: 14)
@@ -59,7 +59,7 @@ struct AlbumRowView: View {
 
             Spacer()
 
-            if viewModel.showAlbumViewSettings {
+            if viewModel.isSetupMode {
                 Button(action: { viewModel.setAlbumColor(album.localIdentifier) }) {
                     colorSwatch
                 }
@@ -79,7 +79,7 @@ struct AlbumRowView: View {
         .cornerRadius(6)
         .overlay(
             Group {
-                if !viewModel.showAlbumViewSettings {
+                if !viewModel.isSetupMode {
                     Button(action: selectAndSpeak) {
                         Rectangle().foregroundColor(Color.clear)
                     }

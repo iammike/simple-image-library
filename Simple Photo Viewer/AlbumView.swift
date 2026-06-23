@@ -13,7 +13,7 @@ struct AlbumView: View {
 
     var body: some View {
         List {
-            if viewModel.showAlbumViewSettings {
+            if viewModel.isSetupMode {
                 Text("Once saved, view settings can be modified again by enabling 'Show album view settings' in this app's section within the iOS Settings application.")
                 Button(action: {
                     viewModel.toggleIsSettingsComplete()
@@ -35,7 +35,7 @@ struct AlbumView: View {
 
             ForEach(viewModel.albums, id: \.localIdentifier) { album in
                 let isVisible = viewModel.albumSettings[album.localIdentifier]?.isVisible ?? true
-                if viewModel.showAlbumViewSettings || isVisible {
+                if viewModel.isSetupMode || isVisible {
                     AlbumRowView(
                         viewModel: viewModel,
                         album: album,
