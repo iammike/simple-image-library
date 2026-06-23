@@ -8,7 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		269B77DB8F473850A2AA75B2 /* AlbumColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56EAA2D0CEB59DC2E9696385 /* AlbumColorTests.swift */; };
+		2E44B6E971174926B0318C93 /* AlbumNameTextSizeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 337446C61AE148BC996CCA9C /* AlbumNameTextSizeTests.swift */; };
 		35C738D16DD033CA51785E98 /* AlbumColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 087F88478B4AE885C2B7C991 /* AlbumColor.swift */; };
+		3C8C7DC186EA4BFEA0B33C41 /* AlbumNameTextSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97C466BD70924FCAB1789194 /* AlbumNameTextSize.swift */; };
 		59CC35C7E0EEB24ED0BD8D7B /* AlbumSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */; };
 		76EB7D2C7268BAF4E71FF5B7 /* ReadAloudTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3AB0AA3C5DE76B928B04A9C /* ReadAloudTests.swift */; };
 		7D0BE497DA0E67BA33371ADF /* SanityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6217792CE256837FF4FE1B5F /* SanityTests.swift */; };
@@ -47,8 +49,10 @@
 
 /* Begin PBXFileReference section */
 		087F88478B4AE885C2B7C991 /* AlbumColor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumColor.swift; sourceTree = "<group>"; };
+		97C466BD70924FCAB1789194 /* AlbumNameTextSize.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumNameTextSize.swift; sourceTree = "<group>"; };
 		127A19E441D584DDDC516C8F /* Simple Photo ViewerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Simple Photo ViewerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C7EECADEB76F84287708A09 /* SpeechManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpeechManager.swift; sourceTree = "<group>"; };
+		337446C61AE148BC996CCA9C /* AlbumNameTextSizeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumNameTextSizeTests.swift; sourceTree = "<group>"; };
 		56EAA2D0CEB59DC2E9696385 /* AlbumColorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumColorTests.swift; sourceTree = "<group>"; };
 		6217792CE256837FF4FE1B5F /* SanityTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SanityTests.swift; sourceTree = "<group>"; };
 		9621EF0EBC48E9C1D3CC05E1 /* ReadAloud.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReadAloud.swift; sourceTree = "<group>"; };
@@ -118,6 +122,7 @@
 			children = (
 				6217792CE256837FF4FE1B5F /* SanityTests.swift */,
 				56EAA2D0CEB59DC2E9696385 /* AlbumColorTests.swift */,
+				337446C61AE148BC996CCA9C /* AlbumNameTextSizeTests.swift */,
 				D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */,
 				D3AB0AA3C5DE76B928B04A9C /* ReadAloudTests.swift */,
 			);
@@ -167,6 +172,7 @@
 				EF6CA3812B5EBEE2005CBF53 /* Preview Content */,
 				EF69CC662B6AB16F005A99AF /* Settings.bundle */,
 				087F88478B4AE885C2B7C991 /* AlbumColor.swift */,
+				97C466BD70924FCAB1789194 /* AlbumNameTextSize.swift */,
 				9621EF0EBC48E9C1D3CC05E1 /* ReadAloud.swift */,
 				4C7EECADEB76F84287708A09 /* SpeechManager.swift */,
 			);
@@ -283,6 +289,7 @@
 			files = (
 				7D0BE497DA0E67BA33371ADF /* SanityTests.swift in Sources */,
 				269B77DB8F473850A2AA75B2 /* AlbumColorTests.swift in Sources */,
+				2E44B6E971174926B0318C93 /* AlbumNameTextSizeTests.swift in Sources */,
 				59CC35C7E0EEB24ED0BD8D7B /* AlbumSettingsTests.swift in Sources */,
 				76EB7D2C7268BAF4E71FF5B7 /* ReadAloudTests.swift in Sources */,
 			);
@@ -308,6 +315,7 @@
 				EFD5D21C2C52CD7A0028F269 /* LivePhotoView.swift in Sources */,
 				EFD5D21E2C52CD7A0028F269 /* Color+Hex.swift in Sources */,
 				35C738D16DD033CA51785E98 /* AlbumColor.swift in Sources */,
+				3C8C7DC186EA4BFEA0B33C41 /* AlbumNameTextSize.swift in Sources */,
 				F0FFAF4262AFF9DD6F509B95 /* ReadAloud.swift in Sources */,
 				925E6E2D952FA24C9D0DCCF1 /* SpeechManager.swift in Sources */,
 			);
