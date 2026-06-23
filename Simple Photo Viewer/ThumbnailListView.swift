@@ -13,7 +13,11 @@ struct ThumbnailListView: View {
     @Binding var selectedAsset: PHAsset?
     @Binding var isDetailViewPresented: Bool
 
-    let minThumbnailWidth: CGFloat = 200
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var minThumbnailWidth: CGFloat {
+        horizontalSizeClass == .compact ? 115 : 200
+    }
 
     var body: some View {
         ScrollView {
