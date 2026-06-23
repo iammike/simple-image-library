@@ -10,15 +10,31 @@ import Photos
 
 struct AlbumView: View {
     @ObservedObject var viewModel: ViewModel
+    @AppStorage("readAloudOnTap") private var readAloudOnTap = false
+    @AppStorage("visionImpairedCloseButton") private var visionImpairedCloseButton = false
+    @AppStorage("albumNameTextSize") private var albumNameTextSizeRaw = AlbumNameTextSize.defaultValue.rawValue
 
     var body: some View {
         List {
             if viewModel.isSetupMode {
-                Text("Once saved, view settings can be modified again by enabling 'Show album view settings' in this app's section within the iOS Settings application.")
+                Section(header: Text("Setup")) {
+                    Toggle("Read names aloud on tap", isOn: $readAloudOnTap)
+                    Toggle("Large media close button", isOn: $visionImpairedCloseButton)
+                    Picker("Album name text size", selection: $albumNameTextSizeRaw) {
+                        ForEach(AlbumNameTextSize.allCases) { size in
+                            Text(size.label).tag(size.rawValue)
+                        }
+                    }
+                }
+
+                Text("Tap Done when finished. To return to Setup later, press and hold the gear, then answer the quick question.")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+
                 Button(action: {
                     viewModel.toggleIsSettingsComplete()
                 }) {
-                    Text("Save View Settings")
+                    Text("Done")
                         .font(.headline)
                         .foregroundColor(.white)
                         .padding()
