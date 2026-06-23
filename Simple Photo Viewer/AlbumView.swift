@@ -13,6 +13,8 @@ struct AlbumView: View {
     @AppStorage("readAloudOnTap") private var readAloudOnTap = false
     @AppStorage("visionImpairedCloseButton") private var visionImpairedCloseButton = false
     @AppStorage("albumNameTextSize") private var albumNameTextSizeRaw = AlbumNameTextSize.defaultValue.rawValue
+    @State private var showingGate = false
+    @State private var holdProgress = false
 
     var body: some View {
         List {
@@ -71,6 +73,31 @@ struct AlbumView: View {
         }
         .refreshable {
             viewModel.refreshAlbums()
+        }
+        .toolbar {
+            if !viewModel.isSetupMode {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    ZStack {
+                        Circle()
+                            .trim(from: 0, to: holdProgress ? 1 : 0)
+                            .stroke(Color.accentColor, lineWidth: 2)
+                            .frame(width: 30, height: 30)
+                            .rotationEffect(.degrees(-90))
+                            .animation(.linear(duration: 3), value: holdProgress)
+                        Image(systemName: "gearshape")
+                            .accessibilityLabel("Open Setup (press and hold)")
+                    }
+                    .onLongPressGesture(minimumDuration: 3, maximumDistance: 50) {
+                        holdProgress = false
+                        showingGate = true
+                    } onPressingChanged: { pressing in
+                        holdProgress = pressing
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingGate) {
+            ParentalGateView { viewModel.enterSetup() }
         }
     }
 }
