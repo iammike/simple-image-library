@@ -14,7 +14,7 @@ struct AlbumView: View {
     @AppStorage("visionImpairedCloseButton") private var visionImpairedCloseButton = false
     @AppStorage("albumNameTextSize") private var albumNameTextSizeRaw = AlbumNameTextSize.defaultValue.rawValue
     @State private var showingGate = false
-    @State private var holdProgress = false
+    @State private var holdProgress: CGFloat = 0
 
     var body: some View {
         List {
@@ -79,19 +79,19 @@ struct AlbumView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     ZStack {
                         Circle()
-                            .trim(from: 0, to: holdProgress ? 1 : 0)
+                            .trim(from: 0, to: holdProgress)
                             .stroke(Color.accentColor, lineWidth: 2)
                             .frame(width: 30, height: 30)
                             .rotationEffect(.degrees(-90))
-                            .animation(.linear(duration: 3), value: holdProgress)
+                            .animation(.linear(duration: holdProgress == 0 ? 0.2 : 3), value: holdProgress)
                         Image(systemName: "gearshape")
                             .accessibilityLabel("Open Setup (press and hold)")
                     }
                     .onLongPressGesture(minimumDuration: 3, maximumDistance: 50) {
-                        holdProgress = false
+                        holdProgress = 0
                         showingGate = true
                     } onPressingChanged: { pressing in
-                        holdProgress = pressing
+                        holdProgress = pressing ? 1 : 0
                     }
                 }
             }

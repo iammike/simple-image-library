@@ -33,7 +33,7 @@ struct InitialView: View {
                         featureRow(
                             icon: "photo.on.rectangle",
                             title: "Photos, Videos & Live Photos",
-                            description: "Browse your entire library in a clean, distraction-free layout — no cluttered menus or extra buttons."
+                            description: "Browse your entire library in a clean, distraction-free layout with no cluttered menus or extra buttons."
                         )
                         featureRow(
                             icon: "rectangle.stack",

@@ -47,7 +47,7 @@ class ViewModel: ObservableObject {
         NotificationCenter.default.addObserver(
             forName: UIApplication.didBecomeActiveNotification,
             object: nil, queue: .main) { [weak self] _ in
-                self?.loadShowAlbumViewSettings()
+                self?.loadIsSetupModeFromDefaults()
             }
     }
 
@@ -107,7 +107,7 @@ class ViewModel: ObservableObject {
         }
     }
 
-    func loadShowAlbumViewSettings() {
+    func loadIsSetupModeFromDefaults() {
         if UserDefaults.standard.object(forKey: "isSetupMode") != nil {
             isSetupMode = UserDefaults.standard.bool(forKey: "isSetupMode")
         } else {

@@ -33,6 +33,7 @@ final class SetupModeMigrationTests: XCTestCase {
         defaults.set(true, forKey: "showAlbumViewSettings")
         ViewModel.migrateSetupModeKey(in: defaults)
         XCTAssertEqual(defaults.object(forKey: "isSetupMode") as? Bool, true)
+        XCTAssertNil(defaults.object(forKey: "showAlbumViewSettings"))
     }
 
     func testNoLegacyKeyLeavesNewKeyUnset() {
