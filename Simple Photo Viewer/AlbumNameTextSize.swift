@@ -6,7 +6,7 @@
 //  The raw value is what gets persisted in UserDefaults.
 //
 
-import CoreGraphics
+import SwiftUI
 
 enum AlbumNameTextSize: String, CaseIterable, Identifiable {
     case small
@@ -39,6 +39,13 @@ enum AlbumNameTextSize: String, CaseIterable, Identifiable {
 
     /// Diameter of the color recognition dot, scaled to stay balanced with the text.
     var recognitionDotSize: CGFloat { (pointSize * 0.8).rounded() }
+
+    /// The preset as a font that still responds to the system text-size setting.
+    /// Relative to `.body` so a caregiver's choice and Dynamic Type compose rather
+    /// than the preset pinning the label to a fixed size.
+    var font: Font {
+        .custom("", size: pointSize, relativeTo: .body)
+    }
 
     /// Default for fresh installs and unrecognized stored values.
     static var defaultValue: AlbumNameTextSize { .medium }

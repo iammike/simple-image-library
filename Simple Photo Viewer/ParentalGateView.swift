@@ -15,8 +15,23 @@ struct ParentalGateView: View {
     @State private var challenge = ParentalGateChallenge.random()
     @State private var entry = ""
     @State private var showError = false
+    @FocusState private var isEntryFocused: Bool
 
     var body: some View {
+        // The number pad has no Return key and covers most of a small iPhone, so the
+        // content scrolls and the keyboard carries an explicit dismiss.
+        ScrollView {
+            content
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { isEntryFocused = false }
+            }
+        }
+    }
+
+    private var content: some View {
         VStack(spacing: 24) {
             Text("Adult Check")
                 .font(.title2).bold()
@@ -34,6 +49,7 @@ struct ParentalGateView: View {
                 .font(.title)
                 .frame(maxWidth: 160)
                 .textFieldStyle(.roundedBorder)
+                .focused($isEntryFocused)
 
             if showError {
                 Text("Try again")
@@ -51,6 +67,7 @@ struct ParentalGateView: View {
     }
 
     private func verify() {
+        isEntryFocused = false
         guard let value = Int(entry), challenge.isCorrect(value) else {
             showError = true
             entry = ""

@@ -36,19 +36,6 @@ class ViewModel: ObservableObject {
         }
         loadAlbumSettings()
         checkPhotoLibraryAccess()
-        setupAppActiveObserver()
-    }
-
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-
-    private func setupAppActiveObserver() {
-        NotificationCenter.default.addObserver(
-            forName: UIApplication.didBecomeActiveNotification,
-            object: nil, queue: .main) { [weak self] _ in
-                self?.loadIsSetupModeFromDefaults()
-            }
     }
 
     func toggleIsSettingsComplete() {
@@ -104,14 +91,6 @@ class ViewModel: ObservableObject {
             UserDefaults.standard.set(data, forKey: "albumSettings")
         } catch {
             print("Error saving album settings: \(error)")
-        }
-    }
-
-    func loadIsSetupModeFromDefaults() {
-        if UserDefaults.standard.object(forKey: "isSetupMode") != nil {
-            isSetupMode = UserDefaults.standard.bool(forKey: "isSetupMode")
-        } else {
-            isSetupMode = true // Default value for fresh installs
         }
     }
 

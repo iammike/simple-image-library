@@ -85,13 +85,27 @@ struct AlbumView: View {
                             .rotationEffect(.degrees(-90))
                             .animation(.linear(duration: holdProgress == 0 ? 0.2 : 3), value: holdProgress)
                         Image(systemName: "gearshape")
-                            .accessibilityLabel("Open Setup (press and hold)")
                     }
+                    // At rest the progress ring draws nothing, so without an explicit
+                    // shape only the glyph itself is touchable, well under 44pt, and
+                    // this is the only route into Setup.
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
                     .onLongPressGesture(minimumDuration: 3, maximumDistance: 50) {
                         holdProgress = 0
                         showingGate = true
                     } onPressingChanged: { pressing in
                         holdProgress = pressing ? 1 : 0
+                    }
+                    // The label and action belong on the element carrying the gesture:
+                    // VoiceOver cannot perform a long press, so give it a direct action.
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Open Setup")
+                    .accessibilityHint("Press and hold to open Setup")
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityAction {
+                        holdProgress = 0
+                        showingGate = true
                     }
                 }
             }

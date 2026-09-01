@@ -17,6 +17,14 @@ struct AlbumRowView: View {
         AlbumNameTextSize(rawValue: albumNameTextSizeRaw) ?? .defaultValue
     }
 
+    /// Scales the recognition dot with the system text-size setting, matching the
+    /// Dynamic Type response of the album name it sits beside.
+    @ScaledMetric(relativeTo: .body) private var dynamicTypeScale: CGFloat = 1
+
+    private var recognitionDotSize: CGFloat {
+        albumNameTextSize.recognitionDotSize * dynamicTypeScale
+    }
+
     let album: PHAssetCollection
     let isSelected: Bool
     let isVisible: Bool
@@ -54,13 +62,13 @@ struct AlbumRowView: View {
             if !viewModel.isSetupMode, let hex = albumColorHex {
                 Circle()
                     .fill(Color(hex: hex))
-                    .frame(width: albumNameTextSize.recognitionDotSize,
-                           height: albumNameTextSize.recognitionDotSize)
+                    .frame(width: recognitionDotSize,
+                           height: recognitionDotSize)
                     .accessibilityHidden(true)
             }
 
             Text(albumTitle)
-                .font(.system(size: albumNameTextSize.pointSize))
+                .font(albumNameTextSize.font)
                 .onTapGesture {
                     selectAndSpeak()
                 }
