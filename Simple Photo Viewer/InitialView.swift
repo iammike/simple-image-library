@@ -4,11 +4,31 @@ import UIKit
 struct InitialView: View {
     @Binding var isFirstLaunch: Bool
     @State private var currentPage = 0
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private struct Feature: Identifiable {
+        let id = UUID()
+        let icon: String
+        let title: String
+        let description: String
+    }
+
+    /// All five feature rows fit one page on iPad. On iPhone they overflow and slide
+    /// under the page indicator, so compact width spreads them across more pages.
+    /// Each page still scrolls, which is what catches large Dynamic Type sizes.
+    private var featurePages: [[Feature]] {
+        guard horizontalSizeClass == .compact else { return [features] }
+        return stride(from: 0, to: features.count, by: 2).map { start in
+            Array(features[start..<min(start + 2, features.count)])
+        }
+    }
 
     var body: some View {
         TabView(selection: $currentPage) {
-            welcomePage.tag(0)
-            setupPage.tag(1)
+            ForEach(Array(featurePages.enumerated()), id: \.offset) { index, page in
+                welcomePage(features: page, showsHeader: index == 0).tag(index)
+            }
+            setupPage.tag(featurePages.count)
         }
         .tabViewStyle(.page(indexDisplayMode: .always))
         .indexViewStyle(.page(backgroundDisplayMode: .always))
@@ -17,39 +37,53 @@ struct InitialView: View {
 
     // MARK: - Page 1: Welcome
 
-    private var welcomePage: some View {
+    private var features: [Feature] {
+        [
+            Feature(
+                icon: "checkmark.shield.fill",
+                title: "Safe & Read-Only",
+                description: "Nothing can be deleted, edited, or shared. Your photos and albums are completely protected."
+            ),
+            Feature(
+                icon: "photo.on.rectangle",
+                title: "Photos, Videos & Live Photos",
+                description: "Browse your entire library in a clean, distraction-free layout with no cluttered menus or extra buttons."
+            ),
+            Feature(
+                icon: "rectangle.stack",
+                title: "Album Control",
+                description: "Choose exactly which albums are visible. An adult sets everything up inside the app, behind a child-proof gate."
+            ),
+            Feature(
+                icon: "accessibility",
+                title: "Accessibility Built In",
+                description: "Hear album and photo names read aloud, color-code albums for non-readers, resize album name text, and enlarge the close button to fit every ability."
+            ),
+            Feature(
+                icon: "lock.iphone",
+                title: "Guided Access Ready",
+                description: "Pair with iOS Guided Access to lock the device to this app, preventing access to anything else."
+            ),
+        ]
+    }
+
+    private func welcomePage(features pageFeatures: [Feature], showsHeader: Bool) -> some View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(spacing: 0) {
                     Spacer(minLength: 32)
-                    header
+                    if showsHeader {
+                        header
+                    }
 
                     VStack(spacing: 0) {
-                        featureRow(
-                            icon: "checkmark.shield.fill",
-                            title: "Safe & Read-Only",
-                            description: "Nothing can be deleted, edited, or shared. Your photos and albums are completely protected."
-                        )
-                        featureRow(
-                            icon: "photo.on.rectangle",
-                            title: "Photos, Videos & Live Photos",
-                            description: "Browse your entire library in a clean, distraction-free layout with no cluttered menus or extra buttons."
-                        )
-                        featureRow(
-                            icon: "rectangle.stack",
-                            title: "Album Control",
-                            description: "Choose exactly which albums are visible. An adult sets everything up inside the app, behind a child-proof gate."
-                        )
-                        featureRow(
-                            icon: "accessibility",
-                            title: "Accessibility Built In",
-                            description: "Hear album and photo names read aloud, color-code albums for non-readers, resize album name text, and enlarge the close button to fit every ability."
-                        )
-                        featureRow(
-                            icon: "lock.iphone",
-                            title: "Guided Access Ready",
-                            description: "Pair with iOS Guided Access to lock the device to this app, preventing access to anything else."
-                        )
+                        ForEach(pageFeatures) { feature in
+                            featureRow(
+                                icon: feature.icon,
+                                title: feature.title,
+                                description: feature.description
+                            )
+                        }
                     }
                     .padding(.top, 8)
 
@@ -279,7 +313,7 @@ struct InitialView: View {
     private var nextButton: some View {
         Button("Next") {
             withAnimation {
-                currentPage = 1
+                currentPage += 1
             }
         }
         .buttonStyle(.borderedProminent)

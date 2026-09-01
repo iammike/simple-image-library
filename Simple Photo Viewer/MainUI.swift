@@ -17,11 +17,17 @@ struct MainUI: View {
 
     // Selecting an album only sets state on the view model, which the iPad's second
     // column reads. On iPhone there is no second column, so drive a push from the
-    // same state and clear it when the user taps Back.
+    // same state and clear it when the user taps Back. Only a tap pushes: the app
+    // also selects an album on its own at launch, which must not skip the album list.
     private var isAlbumPresented: Binding<Bool> {
         Binding(
-            get: { viewModel.selectedAlbumIdentifier != nil },
-            set: { if !$0 { viewModel.selectedAlbumIdentifier = nil } }
+            get: { viewModel.selectedAlbumIdentifier != nil && viewModel.albumSelectionWasExplicit },
+            set: {
+                if !$0 {
+                    viewModel.albumSelectionWasExplicit = false
+                    viewModel.selectedAlbumIdentifier = nil
+                }
+            }
         )
     }
 

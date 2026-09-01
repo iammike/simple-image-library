@@ -13,6 +13,9 @@ class ViewModel: ObservableObject {
     @Published var albums: [PHAssetCollection] = []
     @Published var albumSettings: [String: AlbumSettings] = [:]
     @Published var selectedAlbumIdentifier: String?
+    /// True when the current selection came from a tap rather than from the automatic
+    /// selection made at launch or after a refresh.
+    @Published var albumSelectionWasExplicit = false
     @Published var hasPhotoLibraryAccess: Bool = false
     @Published var photoLibraryAccessHasBeenChecked: Bool = false
     @Published var albumsLoaded: Bool = false
@@ -71,7 +74,7 @@ class ViewModel: ObservableObject {
         if let firstVisibleAlbum = albums.first(where: { album in
             return albumSettings[album.localIdentifier]?.isVisible ?? false
         }) {
-            selectAlbum(firstVisibleAlbum)
+            selectAlbum(firstVisibleAlbum, explicit: false)
         }
     }
 
@@ -306,7 +309,11 @@ class ViewModel: ObservableObject {
         return assetCount > 0
     }
 
-    func selectAlbum(_ album: PHAssetCollection) {
+    /// - Parameter explicit: whether the selection came from the user tapping an album.
+    ///   The app also selects an album on its own at launch and after a refresh, which
+    ///   fills the iPad's second column but must not push the grid on iPhone.
+    func selectAlbum(_ album: PHAssetCollection, explicit: Bool = true) {
+        albumSelectionWasExplicit = explicit
         selectedAlbumIdentifier = album.localIdentifier
         currentAlbum = album
         fetchOffset = 0
