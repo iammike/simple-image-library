@@ -44,6 +44,9 @@ class ViewModel: ObservableObject {
     func toggleIsSettingsComplete() {
         isSetupMode.toggle()
         UserDefaults.standard.set(isSetupMode, forKey: "isSetupMode")
+        // Tapping an album name during setup also selects it. Clear that so leaving
+        // setup lands on the album list rather than pushing straight into a grid.
+        albumSelectionWasExplicit = false
 
         if let currentAlbumIdentifier = currentAlbum?.localIdentifier,
            let isCurrentAlbumVisible = albumSettings[currentAlbumIdentifier]?.isVisible,
@@ -307,6 +310,17 @@ class ViewModel: ObservableObject {
         fetchOptions.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
         let assetCount = PHAsset.fetchAssets(in: album, options: fetchOptions).count
         return assetCount > 0
+    }
+
+    /// Handles a tap on an album row. The album may already be selected, because the
+    /// app selects one on its own at launch, so this records the tap either way:
+    /// otherwise tapping the album iPhone starts on would never open it.
+    func openAlbum(_ album: PHAssetCollection) {
+        if selectedAlbumIdentifier == album.localIdentifier {
+            albumSelectionWasExplicit = true
+        } else {
+            selectAlbum(album, explicit: true)
+        }
     }
 
     /// - Parameter explicit: whether the selection came from the user tapping an album.

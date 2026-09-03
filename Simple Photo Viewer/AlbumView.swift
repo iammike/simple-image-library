@@ -63,9 +63,7 @@ struct AlbumView: View {
                             viewModel.toggleAlbumVisibility(album.localIdentifier)
                         },
                         selectAlbum: {
-                            if viewModel.selectedAlbumIdentifier != album.localIdentifier {
-                                viewModel.selectAlbum(album)
-                            }
+                            viewModel.openAlbum(album)
                         }
                     )
                 }

@@ -32,9 +32,15 @@ struct MainUI: View {
     }
 
     var body: some View {
-        // A two-column NavigationView collapses to the album list on compact width,
-        // leaving the photo grid unreachable, so iPhone gets push navigation instead.
-        if horizontalSizeClass == .compact {
+        // Setup lives in the album list, which is the first column of the split view
+        // and so is hidden behind a toggle on iPad in portrait. Show it full screen
+        // instead, which reaches it in any orientation on either device. Normal
+        // viewing keeps the split view below.
+        if viewModel.isSetupMode {
+            NavigationStack {
+                AlbumView(viewModel: viewModel)
+            }
+        } else if horizontalSizeClass == .compact {
             NavigationStack {
                 AlbumView(viewModel: viewModel)
                     .navigationDestination(isPresented: isAlbumPresented) {
