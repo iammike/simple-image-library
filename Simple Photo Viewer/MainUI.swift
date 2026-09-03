@@ -37,9 +37,7 @@ struct MainUI: View {
         // instead, which reaches it in any orientation on either device. Normal
         // viewing keeps the split view below.
         if viewModel.isSetupMode {
-            NavigationStack {
-                AlbumView(viewModel: viewModel)
-            }
+            SetupView(viewModel: viewModel)
         } else if horizontalSizeClass == .compact {
             NavigationStack {
                 AlbumView(viewModel: viewModel)

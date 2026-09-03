@@ -91,7 +91,9 @@ struct AlbumRowView: View {
             }
         }
         .padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10))
-        .background(isSelected ? Color.accentColor.opacity(0.3) : Color.clear)
+        // Which album is open matters to a viewer, not to an adult configuring the
+        // app, where the highlight is just noise in a settings form.
+        .background(isSelected && !viewModel.isSetupMode ? Color.accentColor.opacity(0.3) : Color.clear)
         .cornerRadius(6)
         .overlay(
             Group {
