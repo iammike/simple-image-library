@@ -10,6 +10,7 @@ import Photos
 
 struct AlbumView: View {
     @ObservedObject var viewModel: ViewModel
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var showingGate = false
     @State private var holdProgress: CGFloat = 0
 
@@ -56,11 +57,13 @@ struct AlbumView: View {
                     }
                     // At rest the progress ring draws nothing, so without an explicit
                     // shape only the glyph itself is touchable, well under 44pt, and
-                    // this is the only route into Setup. The trailing inset keeps the
-                    // 30pt ring clear of the screen edge on a small phone.
+                    // this is the only route into Setup.
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
-                    .padding(.trailing, 6)
+                    // In landscape on a phone the bar is short and its trailing edge
+                    // sits close to the glyph, so the progress ring collides with the
+                    // screen edge. iPad has room already and looks over-inset if padded.
+                    .padding(.trailing, horizontalSizeClass == .compact ? 10 : 0)
                     .onLongPressGesture(minimumDuration: 3, maximumDistance: 50) {
                         holdProgress = 0
                         showingGate = true

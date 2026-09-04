@@ -50,11 +50,25 @@ class ViewModel: ObservableObject {
         // setup lands on the album list rather than pushing straight into a grid.
         albumSelectionWasExplicit = false
 
-        if let currentAlbumIdentifier = currentAlbum?.localIdentifier,
-           let isCurrentAlbumVisible = albumSettings[currentAlbumIdentifier]?.isVisible,
-           !isCurrentAlbumVisible {
-            selectFirstVisibleAlbum()
+        // On the way out of setup the loaded album must still be one the viewer is
+        // allowed to see. Re-picking also covers the case where nothing is visible,
+        // which clears the photos rather than leaving them on screen.
+        if !isSetupMode {
+            let currentAlbumIsVisible = currentAlbum
+                .map { albumSettings[$0.localIdentifier]?.isVisible ?? false } ?? false
+            if !currentAlbumIsVisible {
+                selectFirstVisibleAlbum()
+            }
         }
+    }
+
+    /// Drops the current album and the photos loaded from it.
+    func clearSelectedAlbum() {
+        selectedAlbumIdentifier = nil
+        albumSelectionWasExplicit = false
+        currentAlbum = nil
+        fetchOffset = 0
+        images = []
     }
 
     /// Opens Setup after the parental gate succeeds.
@@ -80,6 +94,11 @@ class ViewModel: ObservableObject {
             return albumSettings[album.localIdentifier]?.isVisible ?? false
         }) {
             selectAlbum(firstVisibleAlbum, explicit: false)
+        } else {
+            // Nothing is visible. Hiding albums is how an adult decides what the
+            // viewer may see, so the previous album's photos must not stay on
+            // screen and browsable.
+            clearSelectedAlbum()
         }
     }
 
