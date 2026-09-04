@@ -37,9 +37,6 @@ enum AlbumNameTextSize: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Diameter of the color recognition dot, scaled to stay balanced with the text.
-    var recognitionDotSize: CGFloat { (pointSize * 0.8).rounded() }
-
     /// The preset as a font that still responds to the system text-size setting.
     /// Relative to `.body` so a caregiver's choice and Dynamic Type compose rather
     /// than the preset pinning the label to a fixed size.

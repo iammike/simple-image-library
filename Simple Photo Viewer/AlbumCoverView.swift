@@ -12,8 +12,14 @@ import Photos
 struct AlbumCoverView: View {
     let asset: PHAsset?
     let size: CGFloat
+    /// The album's assigned color, drawn as a ring around the cover. A separate dot
+    /// alongside a photo gave non-readers two cues for one job, so the color rides
+    /// on the thumbnail instead of competing with it.
+    var accentColor: Color?
 
     @State private var image: UIImage?
+
+    private var ringWidth: CGFloat { max(3, (size * 0.08).rounded()) }
 
     var body: some View {
         Group {
@@ -32,6 +38,10 @@ struct AlbumCoverView: View {
         }
         .frame(width: size, height: size)
         .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(accentColor ?? .clear, lineWidth: ringWidth)
+        )
         .accessibilityHidden(true)
         .onAppear(perform: loadCover)
     }

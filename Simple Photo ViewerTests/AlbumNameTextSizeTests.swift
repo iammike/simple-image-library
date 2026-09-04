@@ -29,9 +29,4 @@ final class AlbumNameTextSizeTests: XCTestCase {
     func testUnknownRawValueIsNil() {
         XCTAssertNil(AlbumNameTextSize(rawValue: "gigantic"))
     }
-
-    func testDotScalesWithText() {
-        XCTAssertLessThan(AlbumNameTextSize.small.recognitionDotSize,
-                          AlbumNameTextSize.extraLarge.recognitionDotSize)
-    }
 }

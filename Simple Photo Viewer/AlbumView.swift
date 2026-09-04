@@ -56,9 +56,11 @@ struct AlbumView: View {
                     }
                     // At rest the progress ring draws nothing, so without an explicit
                     // shape only the glyph itself is touchable, well under 44pt, and
-                    // this is the only route into Setup.
+                    // this is the only route into Setup. The trailing inset keeps the
+                    // 30pt ring clear of the screen edge on a small phone.
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
+                    .padding(.trailing, 6)
                     .onLongPressGesture(minimumDuration: 3, maximumDistance: 50) {
                         holdProgress = 0
                         showingGate = true
