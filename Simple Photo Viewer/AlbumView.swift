@@ -10,6 +10,7 @@ import Photos
 
 struct AlbumView: View {
     @ObservedObject var viewModel: ViewModel
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var showingGate = false
     @State private var holdProgress: CGFloat = 0
 
@@ -19,8 +20,13 @@ struct AlbumView: View {
                 .font(.title)
                 .fontWeight(.bold)
 
+            if viewModel.albumsLoaded && !viewModel.hasVisibleAlbums {
+                NoVisibleAlbumsView()
+                    .listRowBackground(Color.clear)
+            }
+
             ForEach(viewModel.albums, id: \.localIdentifier) { album in
-                let isVisible = viewModel.albumSettings[album.localIdentifier]?.isVisible ?? true
+                let isVisible = viewModel.isVisible(album)
                 // Setup has its own screen now, so this list only ever shows the
                 // albums a viewer is allowed to see.
                 if isVisible {
@@ -63,6 +69,11 @@ struct AlbumView: View {
                     // phone, so the width stays that of the ring the toolbar lays out.
                     .frame(width: 30, height: 44)
                     .contentShape(Rectangle())
+                    // Landscape on a phone is the only place the bar is short enough
+                    // for the ring to reach the screen edge, and it is the only
+                    // configuration with a compact vertical size class: iPad is
+                    // always regular, as is a phone in portrait.
+                    .padding(.trailing, verticalSizeClass == .compact ? 12 : 0)
                     .onLongPressGesture(minimumDuration: 3, maximumDistance: 50) {
                         holdProgress = 0
                         showingGate = true

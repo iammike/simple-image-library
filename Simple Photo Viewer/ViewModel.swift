@@ -62,6 +62,19 @@ class ViewModel: ObservableObject {
         }
     }
 
+    /// Whether an album may be shown to the viewer. An album with no stored settings
+    /// yet counts as visible, which is what the album list already assumed; the
+    /// selection code used to assume the opposite, so an album could appear in the
+    /// list and still never be picked.
+    func isVisible(_ album: PHAssetCollection) -> Bool {
+        albumSettings[album.localIdentifier]?.isVisible ?? true
+    }
+
+    /// False once an adult has hidden every album.
+    var hasVisibleAlbums: Bool {
+        albums.contains(where: isVisible)
+    }
+
     /// Drops the current album and the photos loaded from it.
     func clearSelectedAlbum() {
         selectedAlbumIdentifier = nil
@@ -91,7 +104,7 @@ class ViewModel: ObservableObject {
         guard !albums.isEmpty else { return }
 
         if let firstVisibleAlbum = albums.first(where: { album in
-            return albumSettings[album.localIdentifier]?.isVisible ?? false
+            return isVisible(album)
         }) {
             selectAlbum(firstVisibleAlbum, explicit: false)
         } else {

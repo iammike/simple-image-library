@@ -21,6 +21,12 @@ struct ThumbnailListView: View {
 
     var body: some View {
         ScrollView {
+            // On iPad the photo pane is what an adult is looking at after hiding
+            // everything, so the explanation belongs here too.
+            if viewModel.albumsLoaded && !viewModel.hasVisibleAlbums {
+                NoVisibleAlbumsView()
+            }
+
             LazyVGrid(columns: [GridItem(.adaptive(minimum: minThumbnailWidth))]) {
                 ForEach(viewModel.images, id: \.localIdentifier) { asset in
                     ZStack {
