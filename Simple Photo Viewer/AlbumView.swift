@@ -12,6 +12,18 @@ struct AlbumView: View {
     @ObservedObject var viewModel: ViewModel
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var showingGate = false
+
+    /// A phone in landscape gets a short navigation bar, roughly 32pt, and a 30pt
+    /// ring plus its stroke fills that entirely, so the ring was clipped by the top
+    /// of the screen. It shrinks to fit the bar it is drawn in.
+    private var ringDiameter: CGFloat {
+        verticalSizeClass == .compact ? 22 : 30
+    }
+
+    /// Matches the bar so the item is never laid out taller than what contains it.
+    private var barHeight: CGFloat {
+        verticalSizeClass == .compact ? 32 : 44
+    }
     @State private var holdProgress: CGFloat = 0
 
     var body: some View {
@@ -55,25 +67,18 @@ struct AlbumView: View {
                         Circle()
                             .trim(from: 0, to: holdProgress)
                             .stroke(Color.accentColor, lineWidth: 2)
-                            .frame(width: 30, height: 30)
+                            .frame(width: ringDiameter, height: ringDiameter)
                             .rotationEffect(.degrees(-90))
                             .animation(.linear(duration: holdProgress == 0 ? 0.2 : 3), value: holdProgress)
                         Image(systemName: "gearshape")
                     }
                     // At rest the progress ring draws nothing, so without an explicit
                     // shape only the glyph itself is touchable, well under 44pt, and
-                    // this is the only route into Setup. The height gives a taller
-                    // target without widening the item: a 44pt-wide box pushed the
-                    // glyph well inside the bar's normal trailing margin on iPad and
-                    // crowded the ring against the screen edge in landscape on a
-                    // phone, so the width stays that of the ring the toolbar lays out.
-                    .frame(width: 30, height: 44)
+                    // this is the only route into Setup. Width stays that of the ring:
+                    // a 44pt-wide box pushed the glyph inside the bar's normal
+                    // trailing margin.
+                    .frame(width: ringDiameter, height: barHeight)
                     .contentShape(Rectangle())
-                    // Landscape on a phone is the only place the bar is short enough
-                    // for the ring to reach the screen edge, and it is the only
-                    // configuration with a compact vertical size class: iPad is
-                    // always regular, as is a phone in portrait.
-                    .padding(.trailing, verticalSizeClass == .compact ? 12 : 0)
                     .onLongPressGesture(minimumDuration: 3, maximumDistance: 50) {
                         holdProgress = 0
                         showingGate = true
