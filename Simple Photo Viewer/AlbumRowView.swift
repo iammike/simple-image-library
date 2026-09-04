@@ -25,6 +25,18 @@ struct AlbumRowView: View {
         albumNameTextSize.recognitionDotSize * dynamicTypeScale
     }
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    /// Covers are an iPhone-only prototype: iPad keeps the list its users know.
+    private var showsCover: Bool {
+        horizontalSizeClass == .compact && !viewModel.isSetupMode
+    }
+
+    /// Sized against the album name so the row grows with the caregiver's preset.
+    private var coverSize: CGFloat {
+        max(44, albumNameTextSize.pointSize * 2.5 * dynamicTypeScale)
+    }
+
     let album: PHAssetCollection
     let isSelected: Bool
     let isVisible: Bool
@@ -58,6 +70,15 @@ struct AlbumRowView: View {
 
     var body: some View {
         HStack {
+            // Prototype, iPhone only for now: a cover image gives non-readers
+            // something to recognise an album by before any colour is assigned.
+            if showsCover {
+                AlbumCoverView(
+                    asset: viewModel.albumCoverAssets[album.localIdentifier],
+                    size: coverSize
+                )
+            }
+
             // In normal use, a colored dot lets non-readers recognize albums by color.
             if !viewModel.isSetupMode, let hex = albumColorHex {
                 Circle()

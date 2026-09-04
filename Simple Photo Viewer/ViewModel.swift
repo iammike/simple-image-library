@@ -13,6 +13,8 @@ class ViewModel: ObservableObject {
     @Published var albums: [PHAssetCollection] = []
     @Published var albumSettings: [String: AlbumSettings] = [:]
     @Published var selectedAlbumIdentifier: String?
+    /// Most recent asset in each album, keyed by album identifier, used as a cover.
+    @Published var albumCoverAssets: [String: PHAsset] = [:]
     /// True when the current selection came from a tap rather than from the automatic
     /// selection made at launch or after a refresh.
     @Published var albumSelectionWasExplicit = false
@@ -147,31 +149,44 @@ class ViewModel: ObservableObject {
         }
     }
 
+    /// Every album holding media, newest first, with the most recent asset in each.
+    /// That asset is fetched once per album instead of inside the sort comparator,
+    /// which refetched it on every comparison, and doubles as the album's cover.
+    private func fetchAlbumsWithCovers() -> (albums: [PHAssetCollection], covers: [String: PHAsset]) {
+        let fetchOptions = PHFetchOptions()
+
+        let allAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
+        let allSmartAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: fetchOptions)
+
+        let allAlbums = (allAlbumsFetchResult.objects(at: IndexSet(0..<allAlbumsFetchResult.count)) +
+                         allSmartAlbumsFetchResult.objects(at: IndexSet(0..<allSmartAlbumsFetchResult.count)))
+            .filter(albumContainsImagesAndVideos)
+
+        var covers: [String: PHAsset] = [:]
+        for album in allAlbums {
+            let assetsFetchOptions = PHFetchOptions()
+            assetsFetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+            assetsFetchOptions.fetchLimit = 1
+            if let asset = PHAsset.fetchAssets(in: album, options: assetsFetchOptions).firstObject {
+                covers[album.localIdentifier] = asset
+            }
+        }
+
+        let sortedAlbums = allAlbums.sorted {
+            (covers[$0.localIdentifier]?.creationDate ?? Date.distantPast)
+                > (covers[$1.localIdentifier]?.creationDate ?? Date.distantPast)
+        }
+
+        return (sortedAlbums, covers)
+    }
+
     func fetchAlbums() {
         DispatchQueue.global(qos: .userInitiated).async {
-            let fetchOptions = PHFetchOptions()
-
-            let allAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
-            let allSmartAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: fetchOptions)
-
-            let allAlbums = (allAlbumsFetchResult.objects(at: IndexSet(0..<allAlbumsFetchResult.count)) +
-                             allSmartAlbumsFetchResult.objects(at: IndexSet(0..<allSmartAlbumsFetchResult.count)))
-                .filter(self.albumContainsImagesAndVideos)
-
-            func latestAssetDate(in album: PHAssetCollection) -> Date? {
-                let assetsFetchOptions = PHFetchOptions()
-                assetsFetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-                assetsFetchOptions.fetchLimit = 1
-                let assets = PHAsset.fetchAssets(in: album, options: assetsFetchOptions)
-                return assets.firstObject?.creationDate
-            }
-
-            let sortedAlbums = allAlbums.sorted {
-                latestAssetDate(in: $0) ?? Date.distantPast > latestAssetDate(in: $1) ?? Date.distantPast
-            }
+            let (sortedAlbums, covers) = self.fetchAlbumsWithCovers()
 
             DispatchQueue.main.async {
                 self.albums = sortedAlbums
+                self.albumCoverAssets = covers
 
                 sortedAlbums.forEach { album in
                     if self.albumSettings[album.localIdentifier] == nil {
@@ -345,30 +360,12 @@ class ViewModel: ObservableObject {
 
     func refreshAlbums() {
         DispatchQueue.global(qos: .userInitiated).async {
-            let fetchOptions = PHFetchOptions()
-
-            let allAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
-            let allSmartAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: fetchOptions)
-
-            let allAlbums = (allAlbumsFetchResult.objects(at: IndexSet(0..<allAlbumsFetchResult.count)) +
-                             allSmartAlbumsFetchResult.objects(at: IndexSet(0..<allSmartAlbumsFetchResult.count)))
-                .filter(self.albumContainsImagesAndVideos)
-
-            func latestAssetDate(in album: PHAssetCollection) -> Date? {
-                let assetsFetchOptions = PHFetchOptions()
-                assetsFetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-                assetsFetchOptions.fetchLimit = 1
-                let assets = PHAsset.fetchAssets(in: album, options: assetsFetchOptions)
-                return assets.firstObject?.creationDate
-            }
-
-            let sortedAlbums = allAlbums.sorted {
-                latestAssetDate(in: $0) ?? Date.distantPast > latestAssetDate(in: $1) ?? Date.distantPast
-            }
+            let (sortedAlbums, covers) = self.fetchAlbumsWithCovers()
 
             DispatchQueue.main.async {
                 let currentAlbumIdentifier = self.selectedAlbumIdentifier
                 self.albums = sortedAlbums
+                self.albumCoverAssets = covers
 
                 sortedAlbums.forEach { album in
                     if self.albumSettings[album.localIdentifier] == nil {
