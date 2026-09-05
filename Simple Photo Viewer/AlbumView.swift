@@ -12,6 +12,7 @@ struct AlbumView: View {
     @ObservedObject var viewModel: ViewModel
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var showingGate = false
+    @State private var gatePassed = false
 
     /// A phone's landscape navigation bar is about 32pt, which a 30pt ring plus its
     /// stroke overflows.
@@ -93,8 +94,16 @@ struct AlbumView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingGate) {
-            ParentalGateView { viewModel.enterSetup() }
+        // Entering setup replaces this navigation stack with Setup's. Doing that while
+        // the sheet is still dismissing leaves iOS 16 drawing the old bar and placing
+        // the new one below it, so Done cannot be hit. Wait for the dismissal.
+        .sheet(isPresented: $showingGate, onDismiss: {
+            if gatePassed {
+                gatePassed = false
+                viewModel.enterSetup()
+            }
+        }) {
+            ParentalGateView { gatePassed = true }
         }
     }
 }
