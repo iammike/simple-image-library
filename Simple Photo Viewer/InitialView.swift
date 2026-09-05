@@ -55,8 +55,7 @@ struct InitialView: View {
                 description: "Choose exactly which albums are visible. An adult sets everything up inside the app, behind a child-proof gate."
             ),
             Feature(
-                // "accessibility" is iOS 17+; the deployment target is 16.0.
-                icon: "figure.wave",
+                icon: "accessibility",
                 title: "Accessibility Built In",
                 description: "Hear album and photo names read aloud, color-code albums for non-readers, resize album name text, and enlarge the close button to fit every ability."
             ),
