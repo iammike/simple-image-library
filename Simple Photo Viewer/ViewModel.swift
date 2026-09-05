@@ -51,8 +51,7 @@ class ViewModel: ObservableObject {
 
         // The loaded album must still be one the viewer may see.
         if !isSetupMode {
-            let currentAlbumIsVisible = currentAlbum
-                .map { albumSettings[$0.localIdentifier]?.isVisible ?? false } ?? false
+            let currentAlbumIsVisible = currentAlbum.map(isVisible) ?? false
             if !currentAlbumIsVisible {
                 selectFirstVisibleAlbum()
             }
