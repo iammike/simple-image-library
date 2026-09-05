@@ -52,6 +52,16 @@
                ReferencedContainer = "container:Simple Photo Viewer.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "779FCC02D5A5A852EDE6360C"
+               BuildableName = "Simple Photo ViewerUITests.xctest"
+               BlueprintName = "Simple Photo ViewerUITests"
+               ReferencedContainer = "container:Simple Photo Viewer.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
