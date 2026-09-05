@@ -37,9 +37,8 @@ enum AlbumNameTextSize: String, CaseIterable, Identifiable {
         }
     }
 
-    /// The preset as a font that still responds to the system text-size setting.
-    /// Relative to `.body` so a caregiver's choice and Dynamic Type compose rather
-    /// than the preset pinning the label to a fixed size.
+    /// Body-relative so the preset and Dynamic Type compose. An empty font name
+    /// falls back to the system font, which is what makes the scaling work.
     var font: Font {
         .custom("", size: pointSize, relativeTo: .body)
     }

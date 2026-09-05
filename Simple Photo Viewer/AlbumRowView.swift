@@ -17,8 +17,7 @@ struct AlbumRowView: View {
         AlbumNameTextSize(rawValue: albumNameTextSizeRaw) ?? .defaultValue
     }
 
-    /// Scales the recognition dot with the system text-size setting, matching the
-    /// Dynamic Type response of the album name it sits beside.
+    /// Scales the cover with the system text-size setting, matching the name beside it.
     @ScaledMetric(relativeTo: .body) private var dynamicTypeScale: CGFloat = 1
 
     private var showsCover: Bool {
@@ -63,8 +62,6 @@ struct AlbumRowView: View {
 
     var body: some View {
         HStack {
-            // A cover image gives non-readers something to recognise an album by,
-            // with any assigned colour drawn around it rather than as a second dot.
             if showsCover {
                 AlbumCoverView(
                     asset: viewModel.albumCoverAssets[album.localIdentifier],
@@ -97,8 +94,7 @@ struct AlbumRowView: View {
             }
         }
         .padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10))
-        // Which album is open matters to a viewer, not to an adult configuring the
-        // app, where the highlight is just noise in a settings form.
+        // The open-album highlight means nothing while configuring.
         .background(isSelected && !viewModel.isSetupMode ? Color.accentColor.opacity(0.3) : Color.clear)
         .cornerRadius(6)
         .overlay(

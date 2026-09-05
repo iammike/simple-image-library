@@ -21,6 +21,16 @@ struct SetupView: View {
     /// keeps a readable measure and the grouped background fills the rest.
     private let maximumContentWidth: CGFloat = 700
 
+    private var selectedTextSize: AlbumNameTextSize {
+        AlbumNameTextSize(rawValue: albumNameTextSizeRaw) ?? .defaultValue
+    }
+
+    /// Previews against one of the caregiver's own album names where there is one,
+    /// so the sample is the length and shape they will actually be reading.
+    private var previewAlbumName: String {
+        viewModel.albums.first?.localizedTitle ?? "Album name"
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -52,6 +62,20 @@ struct SetupView: View {
                     Text(size.label).tag(size.rawValue)
                 }
             }
+
+            // The album names this affects are further down the same screen, often
+            // below the fold on a phone, so the picker looked inert. This shows the
+            // result where the caregiver is already looking.
+            HStack {
+                Text("Preview")
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text(previewAlbumName)
+                    .font(selectedTextSize.font)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+            .accessibilityElement(children: .combine)
         } header: {
             Text("Display")
         } footer: {
@@ -66,7 +90,7 @@ struct SetupView: View {
                     viewModel: viewModel,
                     album: album,
                     isSelected: viewModel.selectedAlbumIdentifier == album.localIdentifier,
-                    isVisible: viewModel.albumSettings[album.localIdentifier]?.isVisible ?? true,
+                    isVisible: viewModel.isVisible(album),
                     toggleVisibility: {
                         viewModel.toggleAlbumVisibility(album.localIdentifier)
                     },

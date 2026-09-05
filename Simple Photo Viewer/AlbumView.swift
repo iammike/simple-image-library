@@ -13,9 +13,8 @@ struct AlbumView: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var showingGate = false
 
-    /// A phone in landscape gets a short navigation bar, roughly 32pt, and a 30pt
-    /// ring plus its stroke fills that entirely, so the ring was clipped by the top
-    /// of the screen. It shrinks to fit the bar it is drawn in.
+    /// A phone's landscape navigation bar is about 32pt, which a 30pt ring plus its
+    /// stroke overflows.
     private var ringDiameter: CGFloat {
         verticalSizeClass == .compact ? 22 : 30
     }
@@ -39,8 +38,7 @@ struct AlbumView: View {
 
             ForEach(viewModel.albums, id: \.localIdentifier) { album in
                 let isVisible = viewModel.isVisible(album)
-                // Setup has its own screen now, so this list only ever shows the
-                // albums a viewer is allowed to see.
+                // Setup has its own screen, so this list shows only visible albums.
                 if isVisible {
                     AlbumRowView(
                         viewModel: viewModel,
@@ -72,11 +70,9 @@ struct AlbumView: View {
                             .animation(.linear(duration: holdProgress == 0 ? 0.2 : 3), value: holdProgress)
                         Image(systemName: "gearshape")
                     }
-                    // At rest the progress ring draws nothing, so without an explicit
-                    // shape only the glyph itself is touchable, well under 44pt, and
-                    // this is the only route into Setup. Width stays that of the ring:
-                    // a 44pt-wide box pushed the glyph inside the bar's normal
-                    // trailing margin.
+                    // At rest the ring draws nothing, so an explicit shape is needed for
+                    // a usable target. Width stays the ring's, or the glyph sits inside
+                    // the bar's trailing margin.
                     .frame(width: ringDiameter, height: barHeight)
                     .contentShape(Rectangle())
                     .onLongPressGesture(minimumDuration: 3, maximumDistance: 50) {
@@ -85,8 +81,7 @@ struct AlbumView: View {
                     } onPressingChanged: { pressing in
                         holdProgress = pressing ? 1 : 0
                     }
-                    // The label and action belong on the element carrying the gesture:
-                    // VoiceOver cannot perform a long press, so give it a direct action.
+                    // VoiceOver cannot perform a long press, so it gets a direct action.
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel("Open Setup")
                     .accessibilityHint("Press and hold to open Setup")

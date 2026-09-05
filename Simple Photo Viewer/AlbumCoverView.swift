@@ -2,8 +2,7 @@
 //  AlbumCoverView.swift
 //  Simple Photo Viewer
 //
-//  A small square cover image for an album row. The app's users are described as
-//  non-readers, so a picture carries more than the album's name does.
+//  A small square cover image for an album row.
 //
 
 import SwiftUI
@@ -12,9 +11,7 @@ import Photos
 struct AlbumCoverView: View {
     let asset: PHAsset?
     let size: CGFloat
-    /// The album's assigned color, drawn as a ring around the cover. A separate dot
-    /// alongside a photo gave non-readers two cues for one job, so the color rides
-    /// on the thumbnail instead of competing with it.
+    /// The album's assigned color, drawn as a ring around the cover.
     var accentColor: Color?
 
     @State private var image: UIImage?
