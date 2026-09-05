@@ -19,6 +19,7 @@
 		3C8C7DC186EA4BFEA0B33C41 /* AlbumNameTextSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97C466BD70924FCAB1789194 /* AlbumNameTextSize.swift */; };
 		59CC35C7E0EEB24ED0BD8D7B /* AlbumSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */; };
 		7C2ABDF954EF4B6A88ED8386 /* SetupModeMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7058A1C60C894C7E864E6D97 /* SetupModeMigrationTests.swift */; };
+		C1D2E3F4A5B6C7D8E9FAABBC /* AlbumVisibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E3F4A5B6C7D8E9FAABBCCD /* AlbumVisibilityTests.swift */; };
 		76EB7D2C7268BAF4E71FF5B7 /* ReadAloudTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3AB0AA3C5DE76B928B04A9C /* ReadAloudTests.swift */; };
 		7D0BE497DA0E67BA33371ADF /* SanityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6217792CE256837FF4FE1B5F /* SanityTests.swift */; };
 		925E6E2D952FA24C9D0DCCF1 /* SpeechManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C7EECADEB76F84287708A09 /* SpeechManager.swift */; };
@@ -69,6 +70,7 @@
 		6217792CE256837FF4FE1B5F /* SanityTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SanityTests.swift; sourceTree = "<group>"; };
 		9621EF0EBC48E9C1D3CC05E1 /* ReadAloud.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReadAloud.swift; sourceTree = "<group>"; };
 		7058A1C60C894C7E864E6D97 /* SetupModeMigrationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SetupModeMigrationTests.swift; sourceTree = "<group>"; };
+		D2E3F4A5B6C7D8E9FAABBCCD /* AlbumVisibilityTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumVisibilityTests.swift; sourceTree = "<group>"; };
 		D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumSettingsTests.swift; sourceTree = "<group>"; };
 		D3AB0AA3C5DE76B928B04A9C /* ReadAloudTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReadAloudTests.swift; sourceTree = "<group>"; };
 		DEA39E4F3788F56FEF563F0C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -137,6 +139,7 @@
 				337446C61AE148BC996CCA9C /* AlbumNameTextSizeTests.swift */,
 				D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */,
 				7058A1C60C894C7E864E6D97 /* SetupModeMigrationTests.swift */,
+				D2E3F4A5B6C7D8E9FAABBCCD /* AlbumVisibilityTests.swift */,
 				D3AB0AA3C5DE76B928B04A9C /* ReadAloudTests.swift */,
 				218172395DC14FA4A9F6C819 /* ParentalGateTests.swift */,
 			);
@@ -309,6 +312,7 @@
 				2E44B6E971174926B0318C93 /* AlbumNameTextSizeTests.swift in Sources */,
 				59CC35C7E0EEB24ED0BD8D7B /* AlbumSettingsTests.swift in Sources */,
 				7C2ABDF954EF4B6A88ED8386 /* SetupModeMigrationTests.swift in Sources */,
+				C1D2E3F4A5B6C7D8E9FAABBC /* AlbumVisibilityTests.swift in Sources */,
 				76EB7D2C7268BAF4E71FF5B7 /* ReadAloudTests.swift in Sources */,
 				211746014272465DB1D7558A /* ParentalGateTests.swift in Sources */,
 			);

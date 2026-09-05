@@ -7,15 +7,15 @@ struct InitialView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private struct Feature: Identifiable {
-        let id = UUID()
+        /// Stable across body evaluations, unlike a fresh UUID, so rows are not rebuilt.
+        var id: String { icon }
         let icon: String
         let title: String
         let description: String
     }
 
-    /// All five feature rows fit one page on iPad. On iPhone they overflow and slide
-    /// under the page indicator, so compact width spreads them across more pages.
-    /// Each page still scrolls, which is what catches large Dynamic Type sizes.
+    /// The rows fit one page at regular width and overflow on a phone, so compact
+    /// width spreads them across pages. Pages still scroll, for large Dynamic Type.
     private var featurePages: [[Feature]] {
         guard horizontalSizeClass == .compact else { return [features] }
         return stride(from: 0, to: features.count, by: 2).map { start in
@@ -55,8 +55,7 @@ struct InitialView: View {
                 description: "Choose exactly which albums are visible. An adult sets everything up inside the app, behind a child-proof gate."
             ),
             Feature(
-                // "accessibility" only exists from iOS 17, and the deployment target
-                // is 16.0, so on iOS 16 that row rendered with no icon at all.
+                // "accessibility" is iOS 17+; the deployment target is 16.0.
                 icon: "figure.wave",
                 title: "Accessibility Built In",
                 description: "Hear album and photo names read aloud, color-code albums for non-readers, resize album name text, and enlarge the close button to fit every ability."

@@ -15,27 +15,22 @@ struct MainUI: View {
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-    // Selecting an album only sets state on the view model, which the iPad's second
-    // column reads. On iPhone there is no second column, so drive a push from the
-    // same state and clear it when the user taps Back. Only a tap pushes: the app
-    // also selects an album on its own at launch, which must not skip the album list.
+    // The iPad's second column reads this state directly; iPhone has none, so a tap
+    // drives a push. Only an explicit tap: launch-time selection must not skip the list.
     private var isAlbumPresented: Binding<Bool> {
         Binding(
             get: { viewModel.selectedAlbumIdentifier != nil && viewModel.albumSelectionWasExplicit },
             set: {
                 if !$0 {
-                    viewModel.albumSelectionWasExplicit = false
-                    viewModel.selectedAlbumIdentifier = nil
+                    viewModel.clearSelectedAlbum()
                 }
             }
         )
     }
 
     var body: some View {
-        // Setup lives in the album list, which is the first column of the split view
-        // and so is hidden behind a toggle on iPad in portrait. Show it full screen
-        // instead, which reaches it in any orientation on either device. Normal
-        // viewing keeps the split view below.
+        // The split view's first column is hidden on iPad in portrait, so Setup is full
+        // screen rather than living inside the album list.
         if viewModel.isSetupMode {
             SetupView(viewModel: viewModel)
         } else if horizontalSizeClass == .compact {

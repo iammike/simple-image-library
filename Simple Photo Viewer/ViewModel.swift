@@ -46,13 +46,10 @@ class ViewModel: ObservableObject {
     func toggleIsSettingsComplete() {
         isSetupMode.toggle()
         UserDefaults.standard.set(isSetupMode, forKey: "isSetupMode")
-        // Tapping an album name during setup also selects it. Clear that so leaving
-        // setup lands on the album list rather than pushing straight into a grid.
+        // Tapping a name in setup also selects it; clearing keeps Done from pushing a grid.
         albumSelectionWasExplicit = false
 
-        // On the way out of setup the loaded album must still be one the viewer is
-        // allowed to see. Re-picking also covers the case where nothing is visible,
-        // which clears the photos rather than leaving them on screen.
+        // The loaded album must still be one the viewer may see.
         if !isSetupMode {
             let currentAlbumIsVisible = currentAlbum
                 .map { albumSettings[$0.localIdentifier]?.isVisible ?? false } ?? false
@@ -62,12 +59,23 @@ class ViewModel: ObservableObject {
         }
     }
 
-    /// Whether an album may be shown to the viewer. An album with no stored settings
-    /// yet counts as visible, which is what the album list already assumed; the
-    /// selection code used to assume the opposite, so an album could appear in the
-    /// list and still never be picked.
+    /// Default settings for albums not seen before. Both the initial fetch and the
+    /// refresh must seed through here, or an album gets no entry and cannot be hidden.
+    func seedMissingAlbumSettings(for albums: [PHAssetCollection]) {
+        for album in albums where albumSettings[album.localIdentifier] == nil {
+            albumSettings[album.localIdentifier] = AlbumSettings()
+        }
+    }
+
+    /// An album with no stored settings counts as visible. Every visibility check
+    /// goes through here so the default cannot diverge between call sites.
     func isVisible(_ album: PHAssetCollection) -> Bool {
-        albumSettings[album.localIdentifier]?.isVisible ?? true
+        isVisibleAlbum(identifiedBy: album.localIdentifier)
+    }
+
+    /// Keyed by identifier so the rule can be exercised without a Photos object.
+    func isVisibleAlbum(identifiedBy identifier: String) -> Bool {
+        albumSettings[identifier]?.isVisible ?? true
     }
 
     /// False once an adult has hidden every album.
@@ -101,16 +109,18 @@ class ViewModel: ObservableObject {
     }
 
     func selectFirstVisibleAlbum() {
-        guard !albums.isEmpty else { return }
+        // Albums can all vanish from Photos; clearing keeps stale photos off screen.
+        guard !albums.isEmpty else {
+            clearSelectedAlbum()
+            return
+        }
 
         if let firstVisibleAlbum = albums.first(where: { album in
             return isVisible(album)
         }) {
             selectAlbum(firstVisibleAlbum, explicit: false)
         } else {
-            // Nothing is visible. Hiding albums is how an adult decides what the
-            // viewer may see, so the previous album's photos must not stay on
-            // screen and browsable.
+            // Hiding albums gates what the viewer sees, so photos must not survive it.
             clearSelectedAlbum()
         }
     }
@@ -181,9 +191,8 @@ class ViewModel: ObservableObject {
         }
     }
 
-    /// Every album holding media, newest first, with the most recent asset in each.
-    /// That asset is fetched once per album instead of inside the sort comparator,
-    /// which refetched it on every comparison, and doubles as the album's cover.
+    /// Every album holding media, newest first, with each album's newest asset, which
+    /// also serves as its cover. Fetch once per album here, never in the sort comparator.
     private func fetchAlbumsWithCovers() -> (albums: [PHAssetCollection], covers: [String: PHAsset]) {
         let fetchOptions = PHFetchOptions()
 
@@ -220,11 +229,7 @@ class ViewModel: ObservableObject {
                 self.albums = sortedAlbums
                 self.albumCoverAssets = covers
 
-                sortedAlbums.forEach { album in
-                    if self.albumSettings[album.localIdentifier] == nil {
-                        self.albumSettings[album.localIdentifier] = AlbumSettings(from: nil)
-                    }
-                }
+                self.seedMissingAlbumSettings(for: sortedAlbums)
 
                 self.selectFirstVisibleAlbum()
                 self.albumsLoaded = true
@@ -233,14 +238,11 @@ class ViewModel: ObservableObject {
     }
 
     func toggleAlbumVisibility(_ albumIdentifier: String) {
-        if let settings = albumSettings[albumIdentifier] {
-            var updatedSettings = settings
-            updatedSettings.isVisible.toggle()
-            albumSettings[albumIdentifier] = updatedSettings
-            objectWillChange.send()
-        } else {
-            print("Album didn't exist")
-        }
+        // A missing entry means visible, so hiding must create one rather than bail.
+        var updatedSettings = albumSettings[albumIdentifier] ?? AlbumSettings()
+        updatedSettings.isVisible.toggle()
+        albumSettings[albumIdentifier] = updatedSettings
+        objectWillChange.send()
         saveAlbumSettings()
     }
 
@@ -359,9 +361,8 @@ class ViewModel: ObservableObject {
         return assetCount > 0
     }
 
-    /// Handles a tap on an album row. The album may already be selected, because the
-    /// app selects one on its own at launch, so this records the tap either way:
-    /// otherwise tapping the album iPhone starts on would never open it.
+    /// A tap on an album row. The album may already be selected from launch, so the
+    /// tap is recorded either way; the iPhone push depends on it.
     func openAlbum(_ album: PHAssetCollection) {
         if selectedAlbumIdentifier == album.localIdentifier {
             albumSelectionWasExplicit = true
@@ -370,9 +371,8 @@ class ViewModel: ObservableObject {
         }
     }
 
-    /// - Parameter explicit: whether the selection came from the user tapping an album.
-    ///   The app also selects an album on its own at launch and after a refresh, which
-    ///   fills the iPad's second column but must not push the grid on iPhone.
+    /// - Parameter explicit: true for a user tap. Automatic selection fills the iPad's
+    ///   second column but must not push a grid on iPhone.
     func selectAlbum(_ album: PHAssetCollection, explicit: Bool = true) {
         albumSelectionWasExplicit = explicit
         selectedAlbumIdentifier = album.localIdentifier
@@ -399,19 +399,7 @@ class ViewModel: ObservableObject {
                 self.albums = sortedAlbums
                 self.albumCoverAssets = covers
 
-                sortedAlbums.forEach { album in
-                    if self.albumSettings[album.localIdentifier] == nil {
-                        if let data = UserDefaults.standard.data(forKey: "albumSettings") {
-                            let jsonDecoder = JSONDecoder()
-                            if let decodedSettings = try? jsonDecoder.decode(AlbumSettings.self, from: data) {
-                                self.albumSettings[album.localIdentifier] = decodedSettings
-                            }
-                        } else {
-                            let dummyDecoder: Decoder? = nil
-                            self.albumSettings[album.localIdentifier] = AlbumSettings(from: dummyDecoder)
-                        }
-                    }
-                }
+                self.seedMissingAlbumSettings(for: sortedAlbums)
 
                 if let currentAlbumIdentifier = currentAlbumIdentifier,
                    self.albums.contains(where: { $0.localIdentifier == currentAlbumIdentifier }) {
