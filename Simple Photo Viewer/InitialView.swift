@@ -14,25 +14,73 @@ struct InitialView: View {
         let description: String
     }
 
-    /// The rows fit one page at regular width and overflow on a phone, so compact
-    /// width spreads them across pages. Pages still scroll, for large Dynamic Type.
+    /// The rows fit one page at regular width and overflow on a phone, so compact width
+    /// spreads them across pages. The welcome header costs about a row's worth of
+    /// height, so the page carrying it holds one fewer than the rest. Pages still
+    /// scroll, which is what catches large Dynamic Type.
     private var featurePages: [[Feature]] {
         guard horizontalSizeClass == .compact else { return [features] }
-        return stride(from: 0, to: features.count, by: 2).map { start in
-            Array(features[start..<min(start + 2, features.count)])
-        }
+
+        let headerPageCount = 2
+        let rowsPerPage = 3
+        let remainder = Array(features.dropFirst(headerPageCount))
+
+        return [Array(features.prefix(headerPageCount))]
+            + stride(from: 0, to: remainder.count, by: rowsPerPage).map { start in
+                Array(remainder[start..<min(start + rowsPerPage, remainder.count)])
+            }
     }
 
-    var body: some View {
-        TabView(selection: $currentPage) {
-            ForEach(Array(featurePages.enumerated()), id: \.offset) { index, page in
-                welcomePage(features: page, showsHeader: index == 0).tag(index)
+    private var lastPageIndex: Int { featurePages.count }
+
+    /// Drawn in the layout rather than as the TabView's own overlay, which sat on top
+    /// of pages long enough to scroll underneath it.
+    private var pageDots: some View {
+        HStack(spacing: 9) {
+            ForEach(0...lastPageIndex, id: \.self) { index in
+                Circle()
+                    .fill(index == currentPage ? Color.accentColor : Color.secondary.opacity(0.3))
+                    .frame(width: 8, height: 8)
             }
-            setupPage.tag(featurePages.count)
         }
-        .tabViewStyle(.page(indexDisplayMode: .always))
-        .indexViewStyle(.page(backgroundDisplayMode: .always))
+        .padding(.top, 10)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Page \(currentPage + 1) of \(lastPageIndex + 1)")
+    }
+
+    /// The button sits below the TabView rather than inside a page. The page indicator
+    /// is drawn over the bottom of the TabView, and a button inside the scrolling
+    /// content ends up underneath it.
+    var body: some View {
+        VStack(spacing: 0) {
+            TabView(selection: $currentPage) {
+                ForEach(Array(featurePages.enumerated()), id: \.offset) { index, page in
+                    welcomePage(features: page, showsHeader: index == 0).tag(index)
+                }
+                setupPage.tag(featurePages.count)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+
+            pageDots
+            primaryButton
+        }
         .background(Color(UIColor.systemBackground).ignoresSafeArea())
+    }
+
+    private var primaryButton: some View {
+        Button(currentPage == lastPageIndex ? "Get Started" : "Next") {
+            if currentPage == lastPageIndex {
+                isFirstLaunch = false
+            } else {
+                withAnimation { currentPage += 1 }
+            }
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .padding(.bottom, 12)
     }
 
     // MARK: - Page 1: Welcome
@@ -88,7 +136,6 @@ struct InitialView: View {
                     .padding(.top, 8)
 
                     Spacer(minLength: 32)
-                    nextButton
                 }
                 .frame(minHeight: geometry.size.height)
             }
@@ -105,7 +152,6 @@ struct InitialView: View {
                     guidedAccessCard
                     accessibilityCard
                     Spacer(minLength: 32)
-                    ctaButton
                 }
                 .frame(maxWidth: 600)
                 .frame(maxWidth: .infinity)
@@ -310,29 +356,5 @@ struct InitialView: View {
 
     // MARK: - Buttons
 
-    private var nextButton: some View {
-        Button("Next") {
-            withAnimation {
-                currentPage += 1
-            }
-        }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 72)
-    }
 
-    private var ctaButton: some View {
-        Button("Get Started") {
-            isFirstLaunch = false
-        }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 72)
-    }
 }
