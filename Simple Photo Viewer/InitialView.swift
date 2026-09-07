@@ -95,6 +95,29 @@ struct InitialView: View {
         .padding(.bottom, 12)
     }
 
+    /// A page can run past the bottom of a short screen, and a card ending flush with
+    /// the screen edge reads as the end of the page. Fading the cut and keeping the
+    /// scroll indicator on say there is more.
+    private func scrollCue<Content: View>(_ content: Content) -> some View {
+        content
+            .scrollIndicators(.visible)
+            // Indicators are hidden while idle, so flash them on arrival: that is the
+            // system's own way of saying a view scrolls.
+            .scrollIndicatorsFlash(onAppear: true)
+            .overlay(alignment: .bottom) {
+                LinearGradient(
+                    colors: [
+                        Color(UIColor.systemBackground).opacity(0),
+                        Color(UIColor.systemBackground)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 26)
+                .allowsHitTesting(false)
+            }
+    }
+
     // MARK: - Page 1: Welcome
 
     private var features: [Feature] {
@@ -129,7 +152,7 @@ struct InitialView: View {
 
     private func welcomePage(features pageFeatures: [Feature], showsHeader: Bool) -> some View {
         GeometryReader { geometry in
-            ScrollView {
+            scrollCue(ScrollView {
                 VStack(spacing: 0) {
                     Spacer(minLength: isShort ? 8 : 32)
                     if showsHeader {
@@ -150,7 +173,7 @@ struct InitialView: View {
                     Spacer(minLength: 32)
                 }
                 .frame(minHeight: geometry.size.height)
-            }
+            })
         }
     }
 
@@ -158,7 +181,7 @@ struct InitialView: View {
 
     private var setupPage: some View {
         GeometryReader { geometry in
-            ScrollView {
+            scrollCue(ScrollView {
                 VStack(spacing: 0) {
                     Spacer(minLength: 32)
                     guidedAccessCard
@@ -168,7 +191,7 @@ struct InitialView: View {
                 .frame(maxWidth: 600)
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: geometry.size.height)
-            }
+            })
         }
     }
 
