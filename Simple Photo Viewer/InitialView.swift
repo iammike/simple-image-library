@@ -5,6 +5,13 @@ struct InitialView: View {
     @Binding var isFirstLaunch: Bool
     @State private var currentPage = 0
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    /// A phone in landscape has roughly half the height, so the welcome header shrinks
+    /// rather than the pages being split differently. Page count must not depend on
+    /// orientation: rotating would otherwise change what the current page index means,
+    /// moving the reader somewhere else mid-onboarding.
+    private var isShort: Bool { verticalSizeClass == .compact }
 
     private struct Feature: Identifiable {
         /// Stable across body evaluations, unlike a fresh UUID, so rows are not rebuilt.
@@ -65,6 +72,11 @@ struct InitialView: View {
             primaryButton
         }
         .background(Color(UIColor.systemBackground).ignoresSafeArea())
+        // A large phone in landscape is regular width, where every row fits one page,
+        // so the page count can drop while the reader is past the new last page.
+        .onChange(of: featurePages.count) { _, _ in
+            currentPage = min(currentPage, lastPageIndex)
+        }
     }
 
     private var primaryButton: some View {
@@ -119,7 +131,7 @@ struct InitialView: View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(spacing: 0) {
-                    Spacer(minLength: 32)
+                    Spacer(minLength: isShort ? 8 : 32)
                     if showsHeader {
                         header
                     }
@@ -163,15 +175,15 @@ struct InitialView: View {
     // MARK: - Header
 
     private var header: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: isShort ? 6 : 12) {
             Image("Logo")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 80, height: 80)
+                .frame(width: isShort ? 44 : 80, height: isShort ? 44 : 80)
                 .shadow(color: Color(hex: "#FF8C42").opacity(0.25), radius: 12, x: 0, y: 6)
 
             Text("Welcome to LE Viewer")
-                .font(.title2)
+                .font(isShort ? .headline : .title2)
                 .bold()
 
             Text("A simplified photo viewer for children and people with special needs.")
@@ -181,8 +193,8 @@ struct InitialView: View {
                 .frame(maxWidth: 340)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 8)
-        .padding(.bottom, 28)
+        .padding(.top, isShort ? 2 : 8)
+        .padding(.bottom, isShort ? 12 : 28)
         .padding(.horizontal, 24)
     }
 
@@ -208,7 +220,7 @@ struct InitialView: View {
             Spacer()
         }
         .padding(.horizontal, 32)
-        .padding(.vertical, 12)
+        .padding(.vertical, isShort ? 7 : 12)
     }
 
     // MARK: - Guided Access Card
