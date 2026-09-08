@@ -50,9 +50,56 @@ struct InitialView: View {
                     .frame(width: 8, height: 8)
             }
         }
-        .padding(.top, 10)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Page \(currentPage + 1) of \(lastPageIndex + 1)")
+    }
+
+    /// Back, dots and forward on one row, so the chrome costs a single row of height
+    /// rather than two. At large text sizes that will not fit, and it stacks instead.
+    private var pageControls: some View {
+        ViewThatFits(in: .horizontal) {
+            // Equal side slots, so the dots sit centred whatever the buttons are
+            // labelled: "Get Started" is wider than "Back" and would push them off.
+            HStack(spacing: 12) {
+                backButton.frame(maxWidth: .infinity, alignment: .leading)
+                pageDots
+                forwardButton.frame(maxWidth: .infinity, alignment: .trailing)
+            }
+            VStack(spacing: 10) {
+                pageDots
+                HStack {
+                    backButton
+                    Spacer()
+                    forwardButton
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 10)
+        .padding(.bottom, 12)
+    }
+
+    /// Kept in the layout on the first page so the dots stay centred and the forward
+    /// button does not move as the reader pages through.
+    private var backButton: some View {
+        Button("Back") {
+            withAnimation { currentPage -= 1 }
+        }
+        .opacity(currentPage == 0 ? 0 : 1)
+        .disabled(currentPage == 0)
+        .accessibilityHidden(currentPage == 0)
+    }
+
+    private var forwardButton: some View {
+        Button(currentPage == lastPageIndex ? "Get Started" : "Next") {
+            if currentPage == lastPageIndex {
+                isFirstLaunch = false
+            } else {
+                withAnimation { currentPage += 1 }
+            }
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
     }
 
     /// The button sits below the TabView rather than inside a page. The page indicator
@@ -68,8 +115,7 @@ struct InitialView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
-            pageDots
-            primaryButton
+            pageControls
         }
         .background(Color(UIColor.systemBackground).ignoresSafeArea())
         // A large phone in landscape is regular width, where every row fits one page,
@@ -79,21 +125,6 @@ struct InitialView: View {
         }
     }
 
-    private var primaryButton: some View {
-        Button(currentPage == lastPageIndex ? "Get Started" : "Next") {
-            if currentPage == lastPageIndex {
-                isFirstLaunch = false
-            } else {
-                withAnimation { currentPage += 1 }
-            }
-        }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 12)
-    }
 
     /// A page can run past the bottom of a short screen, and a card ending flush with
     /// the screen edge reads as the end of the page. Fading the cut and keeping the
