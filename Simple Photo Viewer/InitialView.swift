@@ -54,49 +54,32 @@ struct InitialView: View {
         .accessibilityLabel("Page \(currentPage + 1) of \(lastPageIndex + 1)")
     }
 
-    /// Back, dots and forward on one row, so the chrome costs a single row of height
-    /// rather than two. At large text sizes that will not fit, and it stacks instead.
+    /// Dots above a single prominent button, which is what iOS onboarding looks like.
+    /// Paging back is a swipe, as it is elsewhere on the platform. The chrome is
+    /// tighter on a short screen, where height rather than convention is the problem.
     private var pageControls: some View {
-        ViewThatFits(in: .horizontal) {
-            // Equal side slots, so the dots sit centred whatever the buttons are
-            // labelled: "Get Started" is wider than "Back" and would push them off.
-            HStack(spacing: 12) {
-                backButton.frame(maxWidth: .infinity, alignment: .leading)
-                pageDots
-                forwardButton.frame(maxWidth: .infinity, alignment: .trailing)
-            }
-            VStack(spacing: 10) {
-                pageDots
-                HStack {
-                    backButton
-                    Spacer()
-                    forwardButton
-                }
-            }
+        VStack(spacing: isShort ? 6 : 10) {
+            pageDots
+            forwardButton
         }
         .padding(.horizontal, 16)
-        .padding(.top, 10)
-        .padding(.bottom, 12)
-    }
-
-    /// Kept in the layout on the first page so the dots stay centred and the forward
-    /// button does not move as the reader pages through.
-    private var backButton: some View {
-        Button("Back") {
-            withAnimation { currentPage -= 1 }
-        }
-        .opacity(currentPage == 0 ? 0 : 1)
-        .disabled(currentPage == 0)
-        .accessibilityHidden(currentPage == 0)
+        .padding(.top, isShort ? 6 : 10)
+        .padding(.bottom, isShort ? 6 : 12)
     }
 
     private var forwardButton: some View {
-        Button(currentPage == lastPageIndex ? "Get Started" : "Next") {
+        Button {
             if currentPage == lastPageIndex {
                 isFirstLaunch = false
             } else {
                 withAnimation { currentPage += 1 }
             }
+        } label: {
+            // The width belongs on the label: outside the button style it stretches
+            // the tap area while the filled pill keeps its intrinsic width.
+            Text(currentPage == lastPageIndex ? "Get Started" : "Next")
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
