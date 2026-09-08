@@ -3,7 +3,8 @@
 //  Simple Photo Viewer
 //
 //  Sheet shown after the press-and-hold. A correct answer opens Setup.
-//  A large Cancel and swipe-to-dismiss ensure no one can get stuck here.
+//  Cancel is the way out that always exists: a sheet presents full screen on a phone
+//  in landscape and while the keyboard is up, where it cannot be swiped away.
 //
 
 import SwiftUI
