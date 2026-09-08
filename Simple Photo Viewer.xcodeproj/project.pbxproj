@@ -11,6 +11,7 @@
 		269B77DB8F473850A2AA75B2 /* AlbumColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56EAA2D0CEB59DC2E9696385 /* AlbumColorTests.swift */; };
 		2E44B6E971174926B0318C93 /* AlbumNameTextSizeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 337446C61AE148BC996CCA9C /* AlbumNameTextSizeTests.swift */; };
 		30B850068B81E67BCD26D213 /* ParentalGateUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC45ACF66899377928AF5286 /* ParentalGateUITests.swift */; };
+		E3F4A5B6C7D8E9FAABBCCDDE /* AccessibilityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A5B6C7D8E9FAABBCCDDEEF /* AccessibilityUITests.swift */; };
 		31AF5435426840B6A89D8170 /* ParentalGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5600A79C9B6E4E59B51AC5F8 /* ParentalGate.swift */; };
 		A2B3C4D5E6F7A8B9C0D1E2F3 /* ParentalGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C4D5E6F7A8B9C0D1E2F3A4 /* ParentalGateView.swift */; };
 		C5D6E7F8A9B0C1D2E3F4A5B6 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E7F8A9B0C1D2E3F4A5B6C7 /* SetupView.swift */; };
@@ -121,6 +122,7 @@
 		DEA39E4F3788F56FEF563F0C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		E6CFB31B9B72FC7C898EB339 /* SystemAlerts.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SystemAlerts.swift; sourceTree = "<group>"; };
 		EC45ACF66899377928AF5286 /* ParentalGateUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ParentalGateUITests.swift; sourceTree = "<group>"; };
+		F4A5B6C7D8E9FAABBCCDDEEF /* AccessibilityUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccessibilityUITests.swift; sourceTree = "<group>"; };
 		EF69CC642B6A80F4005A99AF /* AlbumRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumRowView.swift; sourceTree = "<group>"; };
 		EF6CA3772B5EBEE0005CBF53 /* Simple Photo Viewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Simple Photo Viewer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF6CA37A2B5EBEE0005CBF53 /* Simple_Photo_ViewerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Simple_Photo_ViewerApp.swift; sourceTree = "<group>"; };
@@ -190,6 +192,7 @@
 				28331CD5E78D6735664A5625 /* ViewerApp.swift */,
 				B27FDD41A650C75A6F86E352 /* AlbumVisibilityUITests.swift */,
 				EC45ACF66899377928AF5286 /* ParentalGateUITests.swift */,
+				F4A5B6C7D8E9FAABBCCDDEEF /* AccessibilityUITests.swift */,
 				02C72FFBA06AE7BB47D2DE35 /* XCUIApplication+Viewer.swift */,
 				26CF100E9DCBE8EB52191773 /* DynamicTypeUITests.swift */,
 				C21EA27E92C9CA86EE24267E /* LayoutUITests.swift */,
@@ -422,6 +425,7 @@
 				C20F8B3E0C0E18DA152074EB /* ViewerApp.swift in Sources */,
 				5813136D21AC8A683A93DA75 /* AlbumVisibilityUITests.swift in Sources */,
 				30B850068B81E67BCD26D213 /* ParentalGateUITests.swift in Sources */,
+				E3F4A5B6C7D8E9FAABBCCDDE /* AccessibilityUITests.swift in Sources */,
 				A58E4542B53D880C1F1E6A09 /* XCUIApplication+Viewer.swift in Sources */,
 				9105E69A34DFECFC265CB8AD /* DynamicTypeUITests.swift in Sources */,
 				71BF64B063C7006B17D0AFCD /* LayoutUITests.swift in Sources */,
