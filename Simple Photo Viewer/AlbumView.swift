@@ -73,7 +73,11 @@ struct AlbumView: View {
                             .frame(width: ringDiameter, height: ringDiameter)
                             .rotationEffect(.degrees(-90))
                             .animation(.linear(duration: holdProgress == 0 ? 0.2 : 3), value: holdProgress)
+                        // Tinted rather than the default black, which is the highest
+                        // contrast thing on a light screen and drew more attention
+                        // than the one control a child is not meant to use should.
                         Image(systemName: "gearshape")
+                            .foregroundStyle(.tint)
                     }
                     // At rest the ring draws nothing, so an explicit shape is needed for
                     // a usable target. Width stays the ring's, or the glyph sits inside
