@@ -61,6 +61,24 @@ struct AlbumRowView: View {
     }
 
     var body: some View {
+        if viewModel.isSetupMode {
+            // Setup's rows hold their own colour and visibility buttons, which have to
+            // stay separately reachable, so the row is not combined into one element.
+            rowContent
+        } else {
+            // One labelled button rather than an invisible overlay button, which laid
+            // out at zero size and so could not be focused by assistive technology.
+            rowContent
+                .contentShape(Rectangle())
+                .onTapGesture(perform: selectAndSpeak)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(albumTitle)
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction(.default, selectAndSpeak)
+        }
+    }
+
+    private var rowContent: some View {
         HStack {
             if showsCover {
                 AlbumCoverView(
@@ -96,14 +114,5 @@ struct AlbumRowView: View {
         .padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10))
         .background(isSelected ? Color.accentColor.opacity(0.3) : Color.clear)
         .cornerRadius(6)
-        .overlay(
-            Group {
-                if !viewModel.isSetupMode {
-                    Button(action: selectAndSpeak) {
-                        Rectangle().foregroundColor(Color.clear)
-                    }
-                }
-            }
-        )
     }
 }
