@@ -35,14 +35,14 @@ struct MainUI: View {
             SetupView(viewModel: viewModel)
         } else if horizontalSizeClass == .compact {
             NavigationStack {
-                AlbumView(viewModel: viewModel)
+                AlbumView(viewModel: viewModel, showsSelection: false)
                     .navigationDestination(isPresented: isAlbumPresented) {
                         ThumbnailListView(viewModel: viewModel, selectedAsset: selectedAsset, isDetailViewPresented: isDetailViewPresented)
                     }
             }
         } else {
             NavigationView {
-                AlbumView(viewModel: viewModel)
+                AlbumView(viewModel: viewModel, showsSelection: true)
                 ThumbnailListView(viewModel: viewModel, selectedAsset: selectedAsset, isDetailViewPresented: isDetailViewPresented)
             }
         }

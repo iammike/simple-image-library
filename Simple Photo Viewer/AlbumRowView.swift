@@ -94,8 +94,7 @@ struct AlbumRowView: View {
             }
         }
         .padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10))
-        // The open-album highlight means nothing while configuring.
-        .background(isSelected && !viewModel.isSetupMode ? Color.accentColor.opacity(0.3) : Color.clear)
+        .background(isSelected ? Color.accentColor.opacity(0.3) : Color.clear)
         .cornerRadius(6)
         .overlay(
             Group {

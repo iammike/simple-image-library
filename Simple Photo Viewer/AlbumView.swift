@@ -10,6 +10,10 @@ import Photos
 
 struct AlbumView: View {
     @ObservedObject var viewModel: ViewModel
+    /// The highlight says which album fills the second column, so it means nothing
+    /// where there is no second column. The split view's sidebar reports a compact
+    /// size class of its own, so only the layout's owner can tell.
+    let showsSelection: Bool
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var showingGate = false
     @State private var gatePassed = false
@@ -44,7 +48,7 @@ struct AlbumView: View {
                     AlbumRowView(
                         viewModel: viewModel,
                         album: album,
-                        isSelected: viewModel.selectedAlbumIdentifier == album.localIdentifier,
+                        isSelected: showsSelection && viewModel.selectedAlbumIdentifier == album.localIdentifier,
                         isVisible: isVisible,
                         toggleVisibility: {
                             viewModel.toggleAlbumVisibility(album.localIdentifier)

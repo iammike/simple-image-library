@@ -93,7 +93,7 @@ struct SetupView: View {
                 AlbumRowView(
                     viewModel: viewModel,
                     album: album,
-                    isSelected: viewModel.selectedAlbumIdentifier == album.localIdentifier,
+                    isSelected: false,
                     isVisible: viewModel.isVisible(album),
                     toggleVisibility: {
                         viewModel.toggleAlbumVisibility(album.localIdentifier)
