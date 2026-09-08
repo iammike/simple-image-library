@@ -149,7 +149,7 @@ struct InitialView: View {
             Feature(
                 icon: "rectangle.stack",
                 title: "Album Control",
-                description: "Choose exactly which albums are visible. An adult sets everything up inside the app, behind a child-proof gate."
+                description: "Choose exactly which albums are visible. Setup lives inside the app, behind a child-proof gate."
             ),
             Feature(
                 icon: "accessibility",

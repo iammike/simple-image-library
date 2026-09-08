@@ -19,7 +19,7 @@ struct NoVisibleAlbumsView: View {
             Text("No albums to show")
                 .font(.headline)
 
-            Text("An adult can show albums again in Setup, by pressing and holding the gear.")
+            Text("To show albums again, press and hold the gear to open Setup.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
