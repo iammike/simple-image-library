@@ -268,7 +268,11 @@ class ViewModel: ObservableObject {
 
         let assets = PHAsset.fetchAssets(in: album, options: options)
         let count = assets.count
-        currentAlbumIsEmpty = count == 0
+        // Only a fresh load decides emptiness: a paging fetch under thumbnails that are
+        // still on screen must not put an empty note above them.
+        if fetchOffset == 0 {
+            currentAlbumIsEmpty = count == 0
+        }
         guard fetchOffset < count else {
             return // No more photos to fetch
         }
