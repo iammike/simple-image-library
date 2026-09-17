@@ -21,4 +21,11 @@ struct LivePhotoView: UIViewRepresentable {
     func updateUIView(_ uiView: PHLivePhotoView, context: Context) {
         uiView.livePhoto = livePhoto
     }
+
+    /// The view must take the space it is offered, not the photo's pixel size, which
+    /// is what it asks for on its own: that laid it out thousands of points wide and
+    /// carried the close button off screen with it.
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: PHLivePhotoView, context: Context) -> CGSize? {
+        proposal.replacingUnspecifiedDimensions()
+    }
 }
