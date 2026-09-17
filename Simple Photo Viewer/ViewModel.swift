@@ -21,6 +21,9 @@ class ViewModel: ObservableObject {
     @Published var hasPhotoLibraryAccess: Bool = false
     @Published var photoLibraryAccessHasBeenChecked: Bool = false
     @Published var albumsLoaded: Bool = false
+    /// True once the open album's fetch has come back with nothing to show. `images`
+    /// is also empty while the first page is still loading, which must not read as empty.
+    @Published var currentAlbumIsEmpty = false
     @Published var isSetupMode: Bool = true
     @Published var prefetchedImage: UIImage?
     @Published var livePhoto: PHLivePhoto?
@@ -89,6 +92,7 @@ class ViewModel: ObservableObject {
         currentAlbum = nil
         fetchOffset = 0
         images = []
+        currentAlbumIsEmpty = false
     }
 
     /// Opens Setup after the parental gate succeeds.
@@ -264,6 +268,7 @@ class ViewModel: ObservableObject {
 
         let assets = PHAsset.fetchAssets(in: album, options: options)
         let count = assets.count
+        currentAlbumIsEmpty = count == 0
         guard fetchOffset < count else {
             return // No more photos to fetch
         }
@@ -378,6 +383,7 @@ class ViewModel: ObservableObject {
         currentAlbum = album
         fetchOffset = 0
         images = []
+        currentAlbumIsEmpty = false
         loadMorePhotosFromAlbum(album)
     }
 

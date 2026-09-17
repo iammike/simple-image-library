@@ -27,6 +27,10 @@ struct ThumbnailListView: View {
                 NoVisibleAlbumsView()
             }
 
+            if viewModel.currentAlbumIsEmpty {
+                EmptyAlbumView()
+            }
+
             LazyVGrid(columns: [GridItem(.adaptive(minimum: minThumbnailWidth))]) {
                 ForEach(viewModel.images, id: \.localIdentifier) { asset in
                     ZStack {
