@@ -9,14 +9,42 @@ import SwiftUI
 import Photos
 
 struct MainUI: View {
-    var viewModel: ViewModel
+    @ObservedObject var viewModel: ViewModel
     var selectedAsset: Binding<PHAsset?>
     var isDetailViewPresented: Binding<Bool>
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    // The iPad's second column reads this state directly; iPhone has none, so a tap
+    // drives a push. Only an explicit tap: launch-time selection must not skip the list.
+    private var isAlbumPresented: Binding<Bool> {
+        Binding(
+            get: { viewModel.selectedAlbumIdentifier != nil && viewModel.albumSelectionWasExplicit },
+            set: {
+                if !$0 {
+                    viewModel.clearSelectedAlbum()
+                }
+            }
+        )
+    }
+
     var body: some View {
-        NavigationView {
-            AlbumView(viewModel: viewModel)
-            ThumbnailListView(viewModel: viewModel, selectedAsset: selectedAsset, isDetailViewPresented: isDetailViewPresented)
+        // The split view's first column is hidden on iPad in portrait, so Setup is full
+        // screen rather than living inside the album list.
+        if viewModel.isSetupMode {
+            SetupView(viewModel: viewModel)
+        } else if horizontalSizeClass == .compact {
+            NavigationStack {
+                AlbumView(viewModel: viewModel, showsSelection: false)
+                    .navigationDestination(isPresented: isAlbumPresented) {
+                        ThumbnailListView(viewModel: viewModel, selectedAsset: selectedAsset, isDetailViewPresented: isDetailViewPresented)
+                    }
+            }
+        } else {
+            NavigationView {
+                AlbumView(viewModel: viewModel, showsSelection: true)
+                ThumbnailListView(viewModel: viewModel, selectedAsset: selectedAsset, isDetailViewPresented: isDetailViewPresented)
+            }
         }
 
         if isDetailViewPresented.wrappedValue, let selectedAsset = selectedAsset.wrappedValue {

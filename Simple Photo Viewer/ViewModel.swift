@@ -13,10 +13,18 @@ class ViewModel: ObservableObject {
     @Published var albums: [PHAssetCollection] = []
     @Published var albumSettings: [String: AlbumSettings] = [:]
     @Published var selectedAlbumIdentifier: String?
+    /// Most recent asset in each album, keyed by album identifier, used as a cover.
+    @Published var albumCoverAssets: [String: PHAsset] = [:]
+    /// True when the current selection came from a tap rather than from the automatic
+    /// selection made at launch or after a refresh.
+    @Published var albumSelectionWasExplicit = false
     @Published var hasPhotoLibraryAccess: Bool = false
     @Published var photoLibraryAccessHasBeenChecked: Bool = false
     @Published var albumsLoaded: Bool = false
-    @Published var showAlbumViewSettings: Bool = true
+    /// True once the open album's fetch has come back with nothing to show. `images`
+    /// is also empty while the first page is still loading, which must not read as empty.
+    @Published var currentAlbumIsEmpty = false
+    @Published var isSetupMode: Bool = true
     @Published var prefetchedImage: UIImage?
     @Published var livePhoto: PHLivePhoto?
 
@@ -27,52 +35,106 @@ class ViewModel: ObservableObject {
     private let decoder = JSONDecoder()
     var videoRequestID: PHImageRequestID?
 
-    init() {
-        if UserDefaults.standard.object(forKey: "showAlbumViewSettings") != nil {
-            showAlbumViewSettings = UserDefaults.standard.bool(forKey: "showAlbumViewSettings")
+    /// Where settings persist. Tests pass their own suite so they never touch the
+    /// configuration of the app installed on the same simulator.
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        ViewModel.migrateSetupModeKey(in: defaults)
+        if defaults.object(forKey: "isSetupMode") != nil {
+            isSetupMode = defaults.bool(forKey: "isSetupMode")
         } else {
-            showAlbumViewSettings = true
+            isSetupMode = true
         }
         loadAlbumSettings()
         checkPhotoLibraryAccess()
-        setupAppActiveObserver()
-    }
-
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-
-    private func setupAppActiveObserver() {
-        NotificationCenter.default.addObserver(
-            forName: UIApplication.didBecomeActiveNotification,
-            object: nil, queue: .main) { [weak self] _ in
-                self?.loadShowAlbumViewSettings()
-            }
     }
 
     func toggleIsSettingsComplete() {
-        showAlbumViewSettings.toggle()
-        UserDefaults.standard.set(showAlbumViewSettings, forKey: "showAlbumViewSettings")
+        isSetupMode.toggle()
+        defaults.set(isSetupMode, forKey: "isSetupMode")
+        // Tapping a name in setup also selects it; clearing keeps Done from pushing a grid.
+        albumSelectionWasExplicit = false
 
-        if let currentAlbumIdentifier = currentAlbum?.localIdentifier,
-           let isCurrentAlbumVisible = albumSettings[currentAlbumIdentifier]?.isVisible,
-           !isCurrentAlbumVisible {
-            selectFirstVisibleAlbum()
+        // The loaded album must still be one the viewer may see.
+        if !isSetupMode {
+            let currentAlbumIsVisible = currentAlbum.map(isVisible) ?? false
+            if !currentAlbumIsVisible {
+                selectFirstVisibleAlbum()
+            }
         }
     }
 
+    /// Default settings for albums not seen before. Both the initial fetch and the
+    /// refresh must seed through here, or an album gets no entry and cannot be hidden.
+    func seedMissingAlbumSettings(for albums: [PHAssetCollection]) {
+        for album in albums where albumSettings[album.localIdentifier] == nil {
+            albumSettings[album.localIdentifier] = AlbumSettings()
+        }
+    }
+
+    /// An album with no stored settings counts as visible. Every visibility check
+    /// goes through here so the default cannot diverge between call sites.
+    func isVisible(_ album: PHAssetCollection) -> Bool {
+        isVisibleAlbum(identifiedBy: album.localIdentifier)
+    }
+
+    /// Keyed by identifier so the rule can be exercised without a Photos object.
+    func isVisibleAlbum(identifiedBy identifier: String) -> Bool {
+        albumSettings[identifier]?.isVisible ?? true
+    }
+
+    /// False once an adult has hidden every album.
+    var hasVisibleAlbums: Bool {
+        albums.contains(where: isVisible)
+    }
+
+    /// Drops the current album and the photos loaded from it.
+    func clearSelectedAlbum() {
+        selectedAlbumIdentifier = nil
+        albumSelectionWasExplicit = false
+        currentAlbum = nil
+        fetchOffset = 0
+        images = []
+        currentAlbumIsEmpty = false
+    }
+
+    /// Opens Setup after the parental gate succeeds.
+    func enterSetup() {
+        isSetupMode = true
+        defaults.set(true, forKey: "isSetupMode")
+    }
+
+    /// One-time migration: rename the legacy `showAlbumViewSettings` key to `isSetupMode`.
+    static func migrateSetupModeKey(in defaults: UserDefaults) {
+        let legacyKey = "showAlbumViewSettings"
+        let newKey = "isSetupMode"
+        guard defaults.object(forKey: newKey) == nil,
+              defaults.object(forKey: legacyKey) != nil else { return }
+        defaults.set(defaults.bool(forKey: legacyKey), forKey: newKey)
+        defaults.removeObject(forKey: legacyKey)
+    }
+
     func selectFirstVisibleAlbum() {
-        guard !albums.isEmpty else { return }
+        // Albums can all vanish from Photos; clearing keeps stale photos off screen.
+        guard !albums.isEmpty else {
+            clearSelectedAlbum()
+            return
+        }
 
         if let firstVisibleAlbum = albums.first(where: { album in
-            return albumSettings[album.localIdentifier]?.isVisible ?? false
+            return isVisible(album)
         }) {
-            selectAlbum(firstVisibleAlbum)
+            selectAlbum(firstVisibleAlbum, explicit: false)
+        } else {
+            // Hiding albums gates what the viewer sees, so photos must not survive it.
+            clearSelectedAlbum()
         }
     }
 
     private func loadAlbumSettings() {
-        if let data = UserDefaults.standard.data(forKey: "albumSettings") {
+        if let data = defaults.data(forKey: "albumSettings") {
             let jsonDecoder = JSONDecoder()
             if let decodedSettings = try? jsonDecoder.decode([String: AlbumSettings].self, from: data) {
                 self.albumSettings = decodedSettings
@@ -84,17 +146,9 @@ class ViewModel: ObservableObject {
         do {
             let jsonEncoder = JSONEncoder()
             let data = try jsonEncoder.encode(albumSettings)
-            UserDefaults.standard.set(data, forKey: "albumSettings")
+            defaults.set(data, forKey: "albumSettings")
         } catch {
             print("Error saving album settings: \(error)")
-        }
-    }
-
-    func loadShowAlbumViewSettings() {
-        if UserDefaults.standard.object(forKey: "showAlbumViewSettings") != nil {
-            showAlbumViewSettings = UserDefaults.standard.bool(forKey: "showAlbumViewSettings")
-        } else {
-            showAlbumViewSettings = true // Default value for fresh installs
         }
     }
 
@@ -145,37 +199,45 @@ class ViewModel: ObservableObject {
         }
     }
 
+    /// Every album holding media, newest first, with each album's newest asset, which
+    /// also serves as its cover. Fetch once per album here, never in the sort comparator.
+    private func fetchAlbumsWithCovers() -> (albums: [PHAssetCollection], covers: [String: PHAsset]) {
+        let fetchOptions = PHFetchOptions()
+
+        let allAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
+        let allSmartAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: fetchOptions)
+
+        let allAlbums = (allAlbumsFetchResult.objects(at: IndexSet(0..<allAlbumsFetchResult.count)) +
+                         allSmartAlbumsFetchResult.objects(at: IndexSet(0..<allSmartAlbumsFetchResult.count)))
+            .filter(albumContainsImagesAndVideos)
+
+        var covers: [String: PHAsset] = [:]
+        for album in allAlbums {
+            let assetsFetchOptions = PHFetchOptions()
+            assetsFetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+            assetsFetchOptions.fetchLimit = 1
+            if let asset = PHAsset.fetchAssets(in: album, options: assetsFetchOptions).firstObject {
+                covers[album.localIdentifier] = asset
+            }
+        }
+
+        let sortedAlbums = allAlbums.sorted {
+            (covers[$0.localIdentifier]?.creationDate ?? Date.distantPast)
+                > (covers[$1.localIdentifier]?.creationDate ?? Date.distantPast)
+        }
+
+        return (sortedAlbums, covers)
+    }
+
     func fetchAlbums() {
         DispatchQueue.global(qos: .userInitiated).async {
-            let fetchOptions = PHFetchOptions()
-
-            let allAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
-            let allSmartAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: fetchOptions)
-
-            let allAlbums = (allAlbumsFetchResult.objects(at: IndexSet(0..<allAlbumsFetchResult.count)) +
-                             allSmartAlbumsFetchResult.objects(at: IndexSet(0..<allSmartAlbumsFetchResult.count)))
-                .filter(self.albumContainsImagesAndVideos)
-
-            func latestAssetDate(in album: PHAssetCollection) -> Date? {
-                let assetsFetchOptions = PHFetchOptions()
-                assetsFetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-                assetsFetchOptions.fetchLimit = 1
-                let assets = PHAsset.fetchAssets(in: album, options: assetsFetchOptions)
-                return assets.firstObject?.creationDate
-            }
-
-            let sortedAlbums = allAlbums.sorted {
-                latestAssetDate(in: $0) ?? Date.distantPast > latestAssetDate(in: $1) ?? Date.distantPast
-            }
+            let (sortedAlbums, covers) = self.fetchAlbumsWithCovers()
 
             DispatchQueue.main.async {
                 self.albums = sortedAlbums
+                self.albumCoverAssets = covers
 
-                sortedAlbums.forEach { album in
-                    if self.albumSettings[album.localIdentifier] == nil {
-                        self.albumSettings[album.localIdentifier] = AlbumSettings(from: nil)
-                    }
-                }
+                self.seedMissingAlbumSettings(for: sortedAlbums)
 
                 self.selectFirstVisibleAlbum()
                 self.albumsLoaded = true
@@ -184,14 +246,11 @@ class ViewModel: ObservableObject {
     }
 
     func toggleAlbumVisibility(_ albumIdentifier: String) {
-        if let settings = albumSettings[albumIdentifier] {
-            var updatedSettings = settings
-            updatedSettings.isVisible.toggle()
-            albumSettings[albumIdentifier] = updatedSettings
-            objectWillChange.send()
-        } else {
-            print("Album didn't exist")
-        }
+        // A missing entry means visible, so hiding must create one rather than bail.
+        var updatedSettings = albumSettings[albumIdentifier] ?? AlbumSettings()
+        updatedSettings.isVisible.toggle()
+        albumSettings[albumIdentifier] = updatedSettings
+        objectWillChange.send()
         saveAlbumSettings()
     }
 
@@ -214,6 +273,11 @@ class ViewModel: ObservableObject {
 
         let assets = PHAsset.fetchAssets(in: album, options: options)
         let count = assets.count
+        // Only a fresh load decides emptiness: a paging fetch under thumbnails that are
+        // still on screen must not put an empty note above them.
+        if fetchOffset == 0 {
+            currentAlbumIsEmpty = count == 0
+        }
         guard fetchOffset < count else {
             return // No more photos to fetch
         }
@@ -310,11 +374,25 @@ class ViewModel: ObservableObject {
         return assetCount > 0
     }
 
-    func selectAlbum(_ album: PHAssetCollection) {
+    /// A tap on an album row. The album may already be selected from launch, so the
+    /// tap is recorded either way; the iPhone push depends on it.
+    func openAlbum(_ album: PHAssetCollection) {
+        if selectedAlbumIdentifier == album.localIdentifier {
+            albumSelectionWasExplicit = true
+        } else {
+            selectAlbum(album, explicit: true)
+        }
+    }
+
+    /// - Parameter explicit: true for a user tap. Automatic selection fills the iPad's
+    ///   second column but must not push a grid on iPhone.
+    func selectAlbum(_ album: PHAssetCollection, explicit: Bool = true) {
+        albumSelectionWasExplicit = explicit
         selectedAlbumIdentifier = album.localIdentifier
         currentAlbum = album
         fetchOffset = 0
         images = []
+        currentAlbumIsEmpty = false
         loadMorePhotosFromAlbum(album)
     }
 
@@ -328,44 +406,14 @@ class ViewModel: ObservableObject {
 
     func refreshAlbums() {
         DispatchQueue.global(qos: .userInitiated).async {
-            let fetchOptions = PHFetchOptions()
-
-            let allAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
-            let allSmartAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: fetchOptions)
-
-            let allAlbums = (allAlbumsFetchResult.objects(at: IndexSet(0..<allAlbumsFetchResult.count)) +
-                             allSmartAlbumsFetchResult.objects(at: IndexSet(0..<allSmartAlbumsFetchResult.count)))
-                .filter(self.albumContainsImagesAndVideos)
-
-            func latestAssetDate(in album: PHAssetCollection) -> Date? {
-                let assetsFetchOptions = PHFetchOptions()
-                assetsFetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-                assetsFetchOptions.fetchLimit = 1
-                let assets = PHAsset.fetchAssets(in: album, options: assetsFetchOptions)
-                return assets.firstObject?.creationDate
-            }
-
-            let sortedAlbums = allAlbums.sorted {
-                latestAssetDate(in: $0) ?? Date.distantPast > latestAssetDate(in: $1) ?? Date.distantPast
-            }
+            let (sortedAlbums, covers) = self.fetchAlbumsWithCovers()
 
             DispatchQueue.main.async {
                 let currentAlbumIdentifier = self.selectedAlbumIdentifier
                 self.albums = sortedAlbums
+                self.albumCoverAssets = covers
 
-                sortedAlbums.forEach { album in
-                    if self.albumSettings[album.localIdentifier] == nil {
-                        if let data = UserDefaults.standard.data(forKey: "albumSettings") {
-                            let jsonDecoder = JSONDecoder()
-                            if let decodedSettings = try? jsonDecoder.decode(AlbumSettings.self, from: data) {
-                                self.albumSettings[album.localIdentifier] = decodedSettings
-                            }
-                        } else {
-                            let dummyDecoder: Decoder? = nil
-                            self.albumSettings[album.localIdentifier] = AlbumSettings(from: dummyDecoder)
-                        }
-                    }
-                }
+                self.seedMissingAlbumSettings(for: sortedAlbums)
 
                 if let currentAlbumIdentifier = currentAlbumIdentifier,
                    self.albums.contains(where: { $0.localIdentifier == currentAlbumIdentifier }) {

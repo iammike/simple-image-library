@@ -30,6 +30,11 @@ struct DetailView: View {
 
     @State private var swipeDirection: SwipeDirection = .right // need to set an initial direction for the first asset loaded to work
 
+    /// A swipe past either end nudges the picture this far and springs it back, so
+    /// the end of the album reads as a bounce rather than as a swipe that failed.
+    @State private var edgeNudge: CGFloat = 0
+    private let edgeNudgeDistance: CGFloat = 60
+
     // Delay between cleanup and loading next asset to prevent race conditions
     // Ensures video player observers are fully removed before new asset loads
     private let transitionDelay: TimeInterval = 0.1
@@ -80,6 +85,7 @@ struct DetailView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .edgesIgnoringSafeArea(.all)
+        .offset(x: edgeNudge)
         .id(currentIndex)
         .transition(contentTransition)
     }
@@ -336,13 +342,25 @@ struct DetailView: View {
             }
     }
 
+    /// - Parameter direction: 1 nudges the picture to the right, -1 to the left.
+    private func bounce(towards direction: CGFloat) {
+        withAnimation(.easeOut(duration: 0.15)) {
+            edgeNudge = direction * edgeNudgeDistance
+        }
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.5).delay(0.15)) {
+            edgeNudge = 0
+        }
+    }
+
     private var swipeGesture: some Gesture {
         DragGesture()
             .onEnded { gesture in
                 guard !self.isAssetLoading && !self.isTransitioning && self.scale == 1.0 else { return }
                 if gesture.translation.width > 100 {
                     // logic for swiping right
-                    if self.currentIndex > 0 {
+                    if self.currentIndex == 0 {
+                        self.bounce(towards: 1)
+                    } else {
                         self.isTransitioning = true
                         self.stopAndReleasePlayer()
                         self.viewModel.cancelVideoLoading()
@@ -358,7 +376,9 @@ struct DetailView: View {
                     }
                 } else if gesture.translation.width < -100 {
                     // logic for swiping left
-                    if self.currentIndex < self.viewModel.images.count - 1 {
+                    if self.currentIndex >= self.viewModel.images.count - 1 {
+                        self.bounce(towards: -1)
+                    } else {
                         self.isTransitioning = true
                         self.stopAndReleasePlayer()
                         self.viewModel.cancelVideoLoading()

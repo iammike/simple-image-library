@@ -4,60 +4,190 @@ import UIKit
 struct InitialView: View {
     @Binding var isFirstLaunch: Bool
     @State private var currentPage = 0
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
-    var body: some View {
-        TabView(selection: $currentPage) {
-            welcomePage.tag(0)
-            setupPage.tag(1)
+    /// A phone in landscape has roughly half the height, so the welcome header shrinks
+    /// rather than the pages being split differently. Page count must not depend on
+    /// orientation: rotating would otherwise change what the current page index means,
+    /// moving the reader somewhere else mid-onboarding.
+    private var isShort: Bool { verticalSizeClass == .compact }
+
+    private struct Feature: Identifiable {
+        /// Stable across body evaluations, unlike a fresh UUID, so rows are not rebuilt.
+        var id: String { icon }
+        let icon: String
+        let title: String
+        let description: String
+    }
+
+    /// The rows fit one page at regular width and overflow on a phone, so compact width
+    /// spreads them across pages. The welcome header costs about a row's worth of
+    /// height, so the page carrying it holds one fewer than the rest. Pages still
+    /// scroll, which is what catches large Dynamic Type.
+    private var featurePages: [[Feature]] {
+        guard horizontalSizeClass == .compact else { return [features] }
+
+        let headerPageCount = 2
+        let rowsPerPage = 3
+        let remainder = Array(features.dropFirst(headerPageCount))
+
+        return [Array(features.prefix(headerPageCount))]
+            + stride(from: 0, to: remainder.count, by: rowsPerPage).map { start in
+                Array(remainder[start..<min(start + rowsPerPage, remainder.count)])
+            }
+    }
+
+    private var lastPageIndex: Int { featurePages.count }
+
+    /// Drawn in the layout rather than as the TabView's own overlay, which sat on top
+    /// of pages long enough to scroll underneath it.
+    private var pageDots: some View {
+        HStack(spacing: 9) {
+            ForEach(0...lastPageIndex, id: \.self) { index in
+                Circle()
+                    .fill(index == currentPage ? Color.accentColor : Color.secondary.opacity(0.3))
+                    .frame(width: 8, height: 8)
+            }
         }
-        .tabViewStyle(.page(indexDisplayMode: .always))
-        .indexViewStyle(.page(backgroundDisplayMode: .always))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Page \(currentPage + 1) of \(lastPageIndex + 1)")
+    }
+
+    /// Dots above a single prominent button, which is what iOS onboarding looks like.
+    /// Paging back is a swipe, as it is elsewhere on the platform. The chrome is
+    /// tighter on a short screen, where height rather than convention is the problem.
+    private var pageControls: some View {
+        VStack(spacing: isShort ? 6 : 10) {
+            pageDots
+            forwardButton
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, isShort ? 6 : 10)
+        .padding(.bottom, isShort ? 6 : 12)
+    }
+
+    private var forwardButton: some View {
+        Button {
+            if currentPage == lastPageIndex {
+                isFirstLaunch = false
+            } else {
+                withAnimation { currentPage += 1 }
+            }
+        } label: {
+            // The width belongs on the label: outside the button style it stretches
+            // the tap area while the filled pill keeps its intrinsic width.
+            Text(currentPage == lastPageIndex ? "Get Started" : "Next")
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+    }
+
+    /// The button sits below the TabView rather than inside a page. The page indicator
+    /// is drawn over the bottom of the TabView, and a button inside the scrolling
+    /// content ends up underneath it.
+    var body: some View {
+        VStack(spacing: 0) {
+            TabView(selection: $currentPage) {
+                ForEach(Array(featurePages.enumerated()), id: \.offset) { index, page in
+                    welcomePage(features: page, showsHeader: index == 0).tag(index)
+                }
+                setupPage.tag(featurePages.count)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+
+            pageControls
+        }
         .background(Color(UIColor.systemBackground).ignoresSafeArea())
+        // A large phone in landscape is regular width, where every row fits one page,
+        // so the page count can drop while the reader is past the new last page.
+        .onChange(of: featurePages.count) { _, _ in
+            currentPage = min(currentPage, lastPageIndex)
+        }
+    }
+
+
+    /// A page can run past the bottom of a short screen, and a card ending flush with
+    /// the screen edge reads as the end of the page. Fading the cut and keeping the
+    /// scroll indicator on say there is more.
+    private func scrollCue<Content: View>(_ content: Content) -> some View {
+        content
+            .scrollIndicators(.visible)
+            // Indicators are hidden while idle, so flash them on arrival: that is the
+            // system's own way of saying a view scrolls.
+            .scrollIndicatorsFlash(onAppear: true)
+            .overlay(alignment: .bottom) {
+                LinearGradient(
+                    colors: [
+                        Color(UIColor.systemBackground).opacity(0),
+                        Color(UIColor.systemBackground)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 26)
+                .allowsHitTesting(false)
+            }
     }
 
     // MARK: - Page 1: Welcome
 
-    private var welcomePage: some View {
+    private var features: [Feature] {
+        [
+            Feature(
+                icon: "checkmark.shield.fill",
+                title: "Safe & Read-Only",
+                description: "Nothing can be deleted, edited, or shared. Your photos and albums are completely protected."
+            ),
+            Feature(
+                icon: "photo.on.rectangle",
+                title: "Photos, Videos & Live Photos",
+                description: "Browse your entire library in a clean, distraction-free layout with no cluttered menus or extra buttons."
+            ),
+            Feature(
+                icon: "rectangle.stack",
+                title: "Album Control",
+                description: "Choose exactly which albums are visible. Setup lives inside the app, behind a child-proof gate."
+            ),
+            Feature(
+                icon: "accessibility",
+                title: "Accessibility Built In",
+                description: "Hear album and photo names read aloud, color-code albums for non-readers, resize album name text, and enlarge the close button to fit every ability."
+            ),
+            Feature(
+                icon: "lock.iphone",
+                title: "Guided Access Ready",
+                description: "Pair with iOS Guided Access to lock the device to this app, preventing access to anything else."
+            ),
+        ]
+    }
+
+    private func welcomePage(features pageFeatures: [Feature], showsHeader: Bool) -> some View {
         GeometryReader { geometry in
-            ScrollView {
+            scrollCue(ScrollView {
                 VStack(spacing: 0) {
-                    Spacer(minLength: 32)
-                    header
+                    Spacer(minLength: isShort ? 8 : 32)
+                    if showsHeader {
+                        header
+                    }
 
                     VStack(spacing: 0) {
-                        featureRow(
-                            icon: "checkmark.shield.fill",
-                            title: "Safe & Read-Only",
-                            description: "Nothing can be deleted, edited, or shared. Your photos and albums are completely protected."
-                        )
-                        featureRow(
-                            icon: "photo.on.rectangle",
-                            title: "Photos, Videos & Live Photos",
-                            description: "Browse your entire library in a clean, distraction-free layout — no cluttered menus or extra buttons."
-                        )
-                        featureRow(
-                            icon: "rectangle.stack",
-                            title: "Album Control",
-                            description: "Choose exactly which albums are visible. All settings are managed in the Settings app — never inside LE Viewer."
-                        )
-                        featureRow(
-                            icon: "accessibility",
-                            title: "Accessibility Built In",
-                            description: "Hear album and photo names read aloud, color-code albums for non-readers, and enlarge the close button to fit every ability."
-                        )
-                        featureRow(
-                            icon: "lock.iphone",
-                            title: "Guided Access Ready",
-                            description: "Pair with iOS Guided Access to lock the device to this app, preventing access to anything else."
-                        )
+                        ForEach(pageFeatures) { feature in
+                            featureRow(
+                                icon: feature.icon,
+                                title: feature.title,
+                                description: feature.description
+                            )
+                        }
                     }
                     .padding(.top, 8)
 
                     Spacer(minLength: 32)
-                    nextButton
                 }
                 .frame(minHeight: geometry.size.height)
-            }
+            })
         }
     }
 
@@ -65,33 +195,32 @@ struct InitialView: View {
 
     private var setupPage: some View {
         GeometryReader { geometry in
-            ScrollView {
+            scrollCue(ScrollView {
                 VStack(spacing: 0) {
                     Spacer(minLength: 32)
                     guidedAccessCard
                     accessibilityCard
                     Spacer(minLength: 32)
-                    ctaButton
                 }
                 .frame(maxWidth: 600)
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: geometry.size.height)
-            }
+            })
         }
     }
 
     // MARK: - Header
 
     private var header: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: isShort ? 6 : 12) {
             Image("Logo")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 80, height: 80)
+                .frame(width: isShort ? 44 : 80, height: isShort ? 44 : 80)
                 .shadow(color: Color(hex: "#FF8C42").opacity(0.25), radius: 12, x: 0, y: 6)
 
             Text("Welcome to LE Viewer")
-                .font(.title2)
+                .font(isShort ? .headline : .title2)
                 .bold()
 
             Text("A simplified photo viewer for children and people with special needs.")
@@ -101,8 +230,8 @@ struct InitialView: View {
                 .frame(maxWidth: 340)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 8)
-        .padding(.bottom, 28)
+        .padding(.top, isShort ? 2 : 8)
+        .padding(.bottom, isShort ? 12 : 28)
         .padding(.horizontal, 24)
     }
 
@@ -128,7 +257,7 @@ struct InitialView: View {
             Spacer()
         }
         .padding(.horizontal, 32)
-        .padding(.vertical, 12)
+        .padding(.vertical, isShort ? 7 : 12)
     }
 
     // MARK: - Guided Access Card
@@ -208,24 +337,20 @@ struct InitialView: View {
     }
 
     private var accessibilityCardHeader: some View {
-        Button {
-            openAppSettings()
-        } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Accessibility Options")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.tint)
-                    Text("Tap to open Settings.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Image(systemName: "arrow.up.right")
-                    .font(.caption)
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Setup Lives in the App")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
                     .foregroundStyle(.tint)
+                Text("Press and hold the gear, then answer a quick question to open Setup.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
+            Spacer()
+            Image(systemName: "gearshape")
+                .font(.caption)
+                .foregroundStyle(.tint)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 10)
@@ -244,12 +369,6 @@ struct InitialView: View {
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 16)
-    }
-
-    private func openAppSettings() {
-        if let url = URL(string: UIApplication.openSettingsURLString) {
-            UIApplication.shared.open(url)
-        }
     }
 
     private func stepRow(number: Int, text: Text) -> some View {
@@ -286,29 +405,5 @@ struct InitialView: View {
 
     // MARK: - Buttons
 
-    private var nextButton: some View {
-        Button("Next") {
-            withAnimation {
-                currentPage = 1
-            }
-        }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 72)
-    }
 
-    private var ctaButton: some View {
-        Button("Get Started") {
-            isFirstLaunch = false
-        }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 72)
-    }
 }
