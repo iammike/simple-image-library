@@ -1,0 +1,15 @@
+LE Viewer is a read-only photo viewer for children and people with special needs. It deliberately has almost no controls for the viewer; the caregiver's controls are hidden behind a parental gate so a child cannot reach them.
+
+TO REACH SETUP
+On the album list, press and hold the gear icon in the top-right corner for a full three seconds (a ring fills while you hold). A simple arithmetic question appears; enter the answer and tap Open Setup. Setup lets you hide albums, color them, change the album name size, and turn on read-aloud and the large close button. Tap Done to return to the viewer.
+
+A tap on the gear does nothing by design.
+
+FIRST LAUNCH
+After granting photo access, the app shows onboarding and then opens Setup directly so you can configure it before handing the device over. Tap Start Using LE Viewer at the end of the Setup form to go to the viewer.
+
+PHOTO ACCESS
+The app requests full photo library access because it lists the user's albums; it only reads. It never writes to, deletes from, or shares the library. There is no read-only access level in PhotoKit.
+
+WHAT CHANGED IN 2.0
+iPhone support (the app was iPad-only), Setup moved from the iOS Settings app into the app behind the gate above, album cover thumbnails. Existing users' settings migrate automatically.

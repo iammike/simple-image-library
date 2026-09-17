@@ -1,0 +1,9 @@
+LE Viewer now runs on iPhone as well as iPad.
+
+Setup has moved into the app. Press and hold the gear for three seconds, answer a simple sum, and you can hide albums, give them colors, choose the album name size, and turn on read-aloud and the large close button. The LE Viewer section in the iOS Settings app is gone; everything you had set there carries over.
+
+Each album now shows its cover photo, with its color as a ring around it.
+
+Also in this release: swiping past the end of an album bounces instead of doing nothing, an album that has been emptied says so, Live Photos display at the right size, and album names follow the system text size.
+
+LE Viewer 2.0 requires iOS 17.
