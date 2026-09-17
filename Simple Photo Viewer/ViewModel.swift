@@ -35,10 +35,15 @@ class ViewModel: ObservableObject {
     private let decoder = JSONDecoder()
     var videoRequestID: PHImageRequestID?
 
-    init() {
-        ViewModel.migrateSetupModeKey(in: .standard)
-        if UserDefaults.standard.object(forKey: "isSetupMode") != nil {
-            isSetupMode = UserDefaults.standard.bool(forKey: "isSetupMode")
+    /// Where settings persist. Tests pass their own suite so they never touch the
+    /// configuration of the app installed on the same simulator.
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        ViewModel.migrateSetupModeKey(in: defaults)
+        if defaults.object(forKey: "isSetupMode") != nil {
+            isSetupMode = defaults.bool(forKey: "isSetupMode")
         } else {
             isSetupMode = true
         }
@@ -48,7 +53,7 @@ class ViewModel: ObservableObject {
 
     func toggleIsSettingsComplete() {
         isSetupMode.toggle()
-        UserDefaults.standard.set(isSetupMode, forKey: "isSetupMode")
+        defaults.set(isSetupMode, forKey: "isSetupMode")
         // Tapping a name in setup also selects it; clearing keeps Done from pushing a grid.
         albumSelectionWasExplicit = false
 
@@ -98,7 +103,7 @@ class ViewModel: ObservableObject {
     /// Opens Setup after the parental gate succeeds.
     func enterSetup() {
         isSetupMode = true
-        UserDefaults.standard.set(true, forKey: "isSetupMode")
+        defaults.set(true, forKey: "isSetupMode")
     }
 
     /// One-time migration: rename the legacy `showAlbumViewSettings` key to `isSetupMode`.
@@ -129,7 +134,7 @@ class ViewModel: ObservableObject {
     }
 
     private func loadAlbumSettings() {
-        if let data = UserDefaults.standard.data(forKey: "albumSettings") {
+        if let data = defaults.data(forKey: "albumSettings") {
             let jsonDecoder = JSONDecoder()
             if let decodedSettings = try? jsonDecoder.decode([String: AlbumSettings].self, from: data) {
                 self.albumSettings = decodedSettings
@@ -141,7 +146,7 @@ class ViewModel: ObservableObject {
         do {
             let jsonEncoder = JSONEncoder()
             let data = try jsonEncoder.encode(albumSettings)
-            UserDefaults.standard.set(data, forKey: "albumSettings")
+            defaults.set(data, forKey: "albumSettings")
         } catch {
             print("Error saving album settings: \(error)")
         }

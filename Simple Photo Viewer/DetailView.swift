@@ -376,7 +376,7 @@ struct DetailView: View {
                     }
                 } else if gesture.translation.width < -100 {
                     // logic for swiping left
-                    if self.currentIndex == self.viewModel.images.count - 1 {
+                    if self.currentIndex >= self.viewModel.images.count - 1 {
                         self.bounce(towards: -1)
                     } else {
                         self.isTransitioning = true

@@ -114,8 +114,8 @@ struct AlbumView: View {
             }
         }
         // Entering setup replaces this navigation stack with Setup's. Doing that while
-        // the sheet is still dismissing leaves iOS 16 drawing the old bar and placing
-        // the new one below it, so Done cannot be hit. Wait for the dismissal.
+        // the sheet is still dismissing has left the old bar drawn over the new one,
+        // so Done could not be hit. Wait for the dismissal.
         .sheet(isPresented: $showingGate, onDismiss: {
             if gatePassed {
                 gatePassed = false

@@ -29,7 +29,6 @@ struct ThumbnailView: View {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
-                        .overlay(mediaOverlay)
                 } else {
                     Rectangle()
                         .overlay(
@@ -38,6 +37,9 @@ struct ThumbnailView: View {
                         )
                 }
             }
+            // On the sized cell, not the image: a non-square image overflows the cell
+            // before it is clipped, and a badge placed on it would be clipped too.
+            .overlay { if thumbnailImage != nil { mediaOverlay } }
             .clipShape(RoundedRectangle(cornerRadius: 6))
             .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray, lineWidth: 1))
             .accessibilityElement(children: .ignore)
