@@ -30,6 +30,16 @@ struct AlbumView: View {
     }
     @State private var holdProgress: CGFloat = 0
 
+    /// iOS 26 draws the system's own bar glyphs, the sidebar toggle included, in the
+    /// label colour rather than the tint; earlier releases tint them.
+    private var gearStyle: AnyShapeStyle {
+        if #available(iOS 26, *) {
+            return AnyShapeStyle(.primary)
+        } else {
+            return AnyShapeStyle(.tint)
+        }
+    }
+
     var body: some View {
         List {
             Text("Albums")
@@ -73,11 +83,12 @@ struct AlbumView: View {
                             .frame(width: ringDiameter, height: ringDiameter)
                             .rotationEffect(.degrees(-90))
                             .animation(.linear(duration: holdProgress == 0 ? 0.2 : 3), value: holdProgress)
-                        // Tinted rather than the default black, which is the highest
-                        // contrast thing on a light screen and drew more attention
-                        // than the one control a child is not meant to use should.
+                        // Drawn the way the sidebar toggle beside it is drawn: tinted
+                        // where the system tints its own bar glyphs, and monochrome on
+                        // iOS 26, where they are. Either way the one control a child is
+                        // not meant to use should not stand out from its neighbour.
                         Image(systemName: "gearshape")
-                            .foregroundStyle(.tint)
+                            .foregroundStyle(gearStyle)
                     }
                     // At rest the ring draws nothing, so an explicit shape is needed for
                     // a usable target. Width stays the ring's, or the glyph sits inside
