@@ -2,42 +2,35 @@
 //  DetailView.swift
 //  Simple Photo Viewer
 //
-//  Created by Michael Collins on 1/22/24.
+//  The full-screen photo/video/Live Photo viewer. Owns only what is shared across
+//  every media type -- which asset is current, the swipe gesture, the edge bounce,
+//  and the close button -- and delegates actually loading and showing one asset to
+//  PhotoDetailContentView, LivePhotoDetailContentView or VideoDetailContentView,
+//  one instance per asset. That split is what keeps a swipe from ever mixing up two
+//  assets' state: each one's image, player or zoom lives only as long as its own
+//  view does, so there is nothing left over for the next asset to inherit stale.
 //
 
 import SwiftUI
 import Photos
-import AVKit
 
 struct DetailView: View {
     @ObservedObject var viewModel: ViewModel
-    @Environment(\.colorScheme) var colorScheme
     @Binding var isPresented: Bool
 
-    @State private var currentIndex: Int = 0
-    @State private var image: UIImage? = nil
-    @State private var player: AVPlayer? = nil
-    @State private var playerItemStatusObserver: NSKeyValueObservation?
-    @State private var playerEndObserver: NSObjectProtocol?
-    @State private var isAssetLoading: Bool = false
-    @State private var isTransitioning: Bool = false
-
-    @State private var isZoomed: Bool = false
-    @State private var offset = CGSize.zero
-    @State private var scale: CGFloat = 1
-    @GestureState private var scaleState: CGFloat = 1.0
-    @GestureState private var offsetState = CGSize.zero
-
-    @State private var swipeDirection: SwipeDirection = .right // need to set an initial direction for the first asset loaded to work
+    @State private var currentIndex: Int
+    /// Set by whichever media view is showing (only photos and Live Photos ever
+    /// zoom); gates the swipe gesture below so swiping away does not lose your
+    /// place mid-zoom.
+    @State private var isZoomed = false
+    @State private var swipeDirection: SwipeDirection = .right // initial direction for the first asset loaded
 
     /// A swipe past either end nudges the picture this far and springs it back, so
     /// the end of the album reads as a bounce rather than as a swipe that failed.
     @State private var edgeNudge: CGFloat = 0
     private let edgeNudgeDistance: CGFloat = 60
 
-    // Delay between cleanup and loading next asset to prevent race conditions
-    // Ensures video player observers are fully removed before new asset loads
-    private let transitionDelay: TimeInterval = 0.1
+    @AppStorage("visionImpairedCloseButton") private var visionImpairedCloseButton = false
 
     enum SwipeDirection {
         case left, right, none
@@ -50,7 +43,7 @@ struct DetailView: View {
         viewModel.images.indices.contains(currentIndex)
     }
 
-    var currentAsset: PHAsset {
+    private var currentAsset: PHAsset {
         viewModel.images[currentIndex]
     }
 
@@ -75,17 +68,14 @@ struct DetailView: View {
                 isPresented = false
                 return
             }
-            loadAsset()
+            // Only for the asset this view opened on: read again on every swipe would
+            // talk over itself and over whatever the caregiver is doing.
             SpeechManager.shared.speak(ReadAloud.spokenDateString(for: currentAsset.creationDate) ?? "")
         }
         .onChange(of: viewModel.images.count) { _, _ in
             if !hasCurrentAsset {
-                stopAndReleasePlayer()
                 isPresented = false
             }
-        }
-        .onDisappear {
-            cleanup()
         }
         .background(.black)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -95,76 +85,32 @@ struct DetailView: View {
         )
     }
 
+    @ViewBuilder
     private var content: some View {
         Group {
             if currentAsset.mediaType == .video {
-                videoPlayerView
+                VideoDetailContentView(viewModel: viewModel, asset: currentAsset)
             } else if currentAsset.mediaSubtypes.contains(.photoLive) {
-                livePhotoView
+                LivePhotoDetailContentView(viewModel: viewModel, asset: currentAsset, isZoomed: $isZoomed)
             } else {
-                imageView
+                PhotoDetailContentView(viewModel: viewModel, asset: currentAsset, isZoomed: $isZoomed)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .edgesIgnoringSafeArea(.all)
         .offset(x: edgeNudge)
-        .id(currentIndex)
+        .id(currentAsset.localIdentifier)
         .transition(contentTransition)
     }
 
-    private var videoPlayerView: some View {
-        Group {
-            if let player = player {
-                VideoPlayer(player: player)
-            } else {
-                loadingView
-            }
-        }
-    }
-
-    private var imageView: some View {
-        Group {
-            if let image = image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .scaleEffect(self.scale * scaleState)
-                    .offset(x: offset.width + offsetState.width, y: offset.height + offsetState.height)
-                    .gesture(SimultaneousGesture(
-                        SimultaneousGesture(magnificationGestureToZoomImage, dragGestureToPanImage),
-                        doubleTapGestureToResetImage
-                    ))
-            } else {
-                loadingView
-            }
-        }
-    }
-
-    private var livePhotoView: some View {
-        Group {
-            if let livePhoto = viewModel.livePhoto {
-                LivePhotoView(livePhoto: livePhoto)
-                    .scaleEffect(self.scale * scaleState)
-                    .offset(x: offset.width + offsetState.width, y: offset.height + offsetState.height)
-                    .gesture(SimultaneousGesture(
-                        SimultaneousGesture(magnificationGestureToZoomImage, dragGestureToPanImage),
-                        doubleTapGestureToResetImage
-                    ))
-            } else {
-                loadingView
-            }
-        }
-    }
-
     private var closeButton: some View {
-        let isVisionImpaired = UserDefaults.standard.bool(forKey: "visionImpairedCloseButton")
-        let buttonSize: CGFloat = isVisionImpaired ? 1.5 : 1.0
-        let buttonOpacity: Double = isVisionImpaired ? 1.0 : 0.7
+        let buttonSize: CGFloat = visionImpairedCloseButton ? 1.5 : 1.0
+        let buttonOpacity: Double = visionImpairedCloseButton ? 1.0 : 0.7
 
-        return Button(action: {
-            stopAndReleasePlayer()
-            self.isPresented = false
-        }) {
+        // Closing removes `content`, which removes whichever media view was showing,
+        // which tears down its own player or cancels its own load in turn -- nothing
+        // further to release from here.
+        return Button(action: { isPresented = false }) {
             Image(systemName: "xmark")
                 .resizable()
                 .scaledToFit()
@@ -177,115 +123,6 @@ struct DetailView: View {
         .accessibilityLabel("Close")
         .padding(.top, 70)
         .padding(.trailing, 20)
-    }
-
-    private var loadingView: some View {
-        VStack {
-            Spacer()
-            ProgressView()
-                .scaleEffect(1.5)
-                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-            Spacer()
-        }
-    }
-
-    private func loadAsset() {
-        isAssetLoading = true
-        viewModel.cancelVideoLoading()
-
-        if currentAsset.mediaType == .video {
-            loadVideo()
-        } else if currentAsset.mediaSubtypes.contains(.photoLive) {
-            loadLivePhoto()
-        } else {
-            loadImage()
-            player = nil
-        }
-    }
-
-    private func loadImage() {
-        viewModel.getImage(for: currentAsset) { downloadedImage in
-            DispatchQueue.main.async {
-                self.image = downloadedImage
-                self.isAssetLoading = false
-                // Trigger prefetching right after the current image is loaded
-                self.viewModel.prefetchImageForNextIndex(currentIndex: self.currentIndex)
-            }
-        }
-    }
-
-    private func loadLivePhoto() {
-        viewModel.getLivePhoto(for: currentAsset) { livePhoto in
-            DispatchQueue.main.async {
-                self.viewModel.livePhoto = livePhoto
-                self.isAssetLoading = false
-                // Trigger prefetching right after the current image is loaded
-                self.viewModel.prefetchImageForNextIndex(currentIndex: self.currentIndex)
-            }
-        }
-    }
-
-    private func loadVideo() {
-        viewModel.getVideo(for: currentAsset) { playerItem in
-            guard let playerItem = playerItem else {
-                DispatchQueue.main.async {
-                    self.isAssetLoading = false
-                }
-                return
-            }
-            self.setupPlayer(with: playerItem)
-        }
-    }
-
-    private func setupPlayer(with playerItem: AVPlayerItem) {
-        // Clean up any existing observers first
-        cleanupPlayerObservers()
-
-        playerItemStatusObserver = playerItem.observe(\.status, options: [.new, .old]) { item, _ in
-            if item.status == .readyToPlay {
-                DispatchQueue.main.async {
-                    self.player?.play()
-                    self.isAssetLoading = false
-                }
-            }
-        }
-
-        playerEndObserver = NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemDidPlayToEndTime,
-            object: playerItem,
-            queue: .main
-        ) { _ in
-            self.player?.seek(to: CMTime.zero)
-        }
-
-        self.player = AVPlayer(playerItem: playerItem)
-    }
-
-    private func cleanupPlayerObservers() {
-        if let observer = playerItemStatusObserver {
-            observer.invalidate()
-            playerItemStatusObserver = nil
-        }
-
-        if let observer = playerEndObserver {
-            NotificationCenter.default.removeObserver(observer)
-            playerEndObserver = nil
-        }
-    }
-
-    private func stopAndReleasePlayer() {
-        DispatchQueue.main.async {
-            self.player?.pause()
-            self.player = nil
-            self.cleanupPlayerObservers()
-        }
-    }
-
-    private func cleanup() {
-        stopAndReleasePlayer()
-        self.image = nil
-        self.viewModel.livePhoto = nil
-        self.isAssetLoading = false
     }
 
     private var contentTransition: AnyTransition {
@@ -305,65 +142,6 @@ struct DetailView: View {
         }
     }
 
-    var magnificationGestureToZoomImage: some Gesture {
-        MagnificationGesture()
-            .updating($scaleState) { currentState, gestureState, _ in
-                gestureState = currentState
-            }
-            .onEnded { value in
-                let newScale = scale * value
-                let clampedScale = min(max(newScale, 1.0), 8.0)
-
-                if clampedScale < scale {
-                    let screenWidth = UIScreen.main.bounds.width
-                    let screenHeight = UIScreen.main.bounds.height
-                    let imageWidth = screenWidth * clampedScale
-                    let imageHeight = screenHeight * clampedScale
-
-                    let xOffset = min(max(offset.width + offsetState.width, -(imageWidth - screenWidth) / 2), (imageWidth - screenWidth) / 2)
-                    let yOffset = min(max(offset.height + offsetState.height, -(imageHeight - screenHeight) / 2), (imageHeight - screenHeight) / 2)
-
-                    offset = CGSize(width: xOffset, height: yOffset)
-                }
-
-                scale = clampedScale
-
-                if scale == 1.0 {
-                    isZoomed = false
-                } else {
-                    isZoomed = true
-                }
-            }
-    }
-
-    private var dragGestureToPanImage: some Gesture {
-        DragGesture()
-            .updating($offsetState) { currentState, gestureState, _ in
-                if isZoomed {
-                    gestureState = currentState.translation
-                } else {
-                    gestureState = CGSize.zero
-                }
-            }
-            .onEnded { value in
-                if isZoomed {
-                    offset.height += value.translation.height
-                    offset.width += value.translation.width
-                }
-            }
-    }
-
-    private var doubleTapGestureToResetImage: some Gesture {
-        TapGesture(count: 2)
-            .onEnded {
-                withAnimation {
-                    scale = 1.0
-                    offset = CGSize.zero
-                    isZoomed = false
-                }
-            }
-    }
-
     /// - Parameter direction: 1 nudges the picture to the right, -1 to the left.
     private func bounce(towards direction: CGFloat) {
         withAnimation(.easeOut(duration: 0.15)) {
@@ -375,43 +153,29 @@ struct DetailView: View {
     }
 
     private var swipeGesture: some Gesture {
+        // Zoom already gates this gesture entirely (see `.highPriorityGesture`
+        // above), and each asset's load is owned by its own view now, so nothing
+        // here needs to wait on the previous asset's cleanup before moving on.
         DragGesture()
             .onEnded { gesture in
-                guard !self.isAssetLoading && !self.isTransitioning && self.scale == 1.0 else { return }
                 if gesture.translation.width > 100 {
-                    // logic for swiping right
-                    if self.currentIndex == 0 {
-                        self.bounce(towards: 1)
+                    if currentIndex == 0 {
+                        bounce(towards: 1)
                     } else {
-                        self.isTransitioning = true
-                        self.stopAndReleasePlayer()
-                        self.viewModel.cancelVideoLoading()
-                        self.swipeDirection = .right
+                        swipeDirection = .right
                         withAnimation {
-                            self.currentIndex -= 1
-                        }
-                        // Delay loadAsset to ensure cleanup completes
-                        DispatchQueue.main.asyncAfter(deadline: .now() + transitionDelay) {
-                            self.loadAsset()
-                            self.isTransitioning = false
+                            currentIndex -= 1
+                            isZoomed = false
                         }
                     }
                 } else if gesture.translation.width < -100 {
-                    // logic for swiping left
-                    if self.currentIndex >= self.viewModel.images.count - 1 {
-                        self.bounce(towards: -1)
+                    if currentIndex >= viewModel.images.count - 1 {
+                        bounce(towards: -1)
                     } else {
-                        self.isTransitioning = true
-                        self.stopAndReleasePlayer()
-                        self.viewModel.cancelVideoLoading()
-                        self.swipeDirection = .left
+                        swipeDirection = .left
                         withAnimation {
-                            self.currentIndex += 1
-                        }
-                        // Delay loadAsset to ensure cleanup completes
-                        DispatchQueue.main.asyncAfter(deadline: .now() + transitionDelay) {
-                            self.loadAsset()
-                            self.isTransitioning = false
+                            currentIndex += 1
+                            isZoomed = false
                         }
                     }
                 }

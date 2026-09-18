@@ -17,6 +17,11 @@
 		C5D6E7F8A9B0C1D2E3F4A5B6 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6E7F8A9B0C1D2E3F4A5B6C7 /* SetupView.swift */; };
 		E7F8A9B0C1D2E3F4A5B6C7D8 /* AlbumCoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8A9B0C1D2E3F4A5B6C7D8E9 /* AlbumCoverView.swift */; };
 		E7F8A9B0C1D2E3F4A5B6C7D9 /* AlbumCoverPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8A9B0C1D2E3F4A5B6C7D8EA /* AlbumCoverPickerView.swift */; };
+		1A2B3C4D5E6F70011122334 /* ZoomableMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70021122335 /* ZoomableMedia.swift */; };
+		1A2B3C4D5E6F70031122336 /* DetailLoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70041122337 /* DetailLoadingView.swift */; };
+		1A2B3C4D5E6F70051122338 /* PhotoDetailContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70061122339 /* PhotoDetailContentView.swift */; };
+		1A2B3C4D5E6F7007112233A /* LivePhotoDetailContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7008112233B /* LivePhotoDetailContentView.swift */; };
+		1A2B3C4D5E6F7009112233C /* VideoDetailContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F700A112233D /* VideoDetailContentView.swift */; };
 		A9B0C1D2E3F4A5B6C7D8E9FA /* NoVisibleAlbumsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C1D2E3F4A5B6C7D8E9FAAB /* NoVisibleAlbumsView.swift */; };
 		A9B0C1D2E3F4A5B6C7D8E9FB /* EmptyAlbumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C1D2E3F4A5B6C7D8E9FAAC /* EmptyAlbumView.swift */; };
 		34177619FEB274287ECBD3CB /* PhotoLibraryFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7F261164D25CC312FB0B167 /* PhotoLibraryFixture.swift */; };
@@ -25,6 +30,7 @@
 		48F26168111664DAE64A936D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A55DADBF1823FAA3FF1E8532 /* Foundation.framework */; };
 		5813136D21AC8A683A93DA75 /* AlbumVisibilityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B27FDD41A650C75A6F86E352 /* AlbumVisibilityUITests.swift */; };
 		5813136D21AC8A683A93DA76 /* AlbumCoverPickerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B27FDD41A650C75A6F86E353 /* AlbumCoverPickerUITests.swift */; };
+		5813136D21AC8A683A93DA77 /* DetailViewUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B27FDD41A650C75A6F86E354 /* DetailViewUITests.swift */; };
 		59CC35C7E0EEB24ED0BD8D7B /* AlbumSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */; };
 		59CC35C7E0EEB24ED0BD8D7C /* AlbumColorMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D23E785E5D1DC60108960F72 /* AlbumColorMigrationTests.swift */; };
 		59CC35C7E0EEB24ED0BD8D7D /* AlbumCoverSelectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D23E785E5D1DC60108960F73 /* AlbumCoverSelectionTests.swift */; };
@@ -96,6 +102,11 @@
 		D6E7F8A9B0C1D2E3F4A5B6C7 /* SetupView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
 		F8A9B0C1D2E3F4A5B6C7D8E9 /* AlbumCoverView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumCoverView.swift; sourceTree = "<group>"; };
 		F8A9B0C1D2E3F4A5B6C7D8EA /* AlbumCoverPickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumCoverPickerView.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F70021122335 /* ZoomableMedia.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZoomableMedia.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F70041122337 /* DetailLoadingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DetailLoadingView.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F70061122339 /* PhotoDetailContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PhotoDetailContentView.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F7008112233B /* LivePhotoDetailContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LivePhotoDetailContentView.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F700A112233D /* VideoDetailContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VideoDetailContentView.swift; sourceTree = "<group>"; };
 		B0C1D2E3F4A5B6C7D8E9FAAB /* NoVisibleAlbumsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NoVisibleAlbumsView.swift; sourceTree = "<group>"; };
 		B0C1D2E3F4A5B6C7D8E9FAAC /* EmptyAlbumView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmptyAlbumView.swift; sourceTree = "<group>"; };
 		97C466BD70924FCAB1789194 /* AlbumNameTextSize.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumNameTextSize.swift; sourceTree = "<group>"; };
@@ -121,6 +132,7 @@
 		B0C1D2E3F4A5B6C7D8E9FAAB /* NoVisibleAlbumsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NoVisibleAlbumsView.swift; sourceTree = "<group>"; };
 		B27FDD41A650C75A6F86E352 /* AlbumVisibilityUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumVisibilityUITests.swift; sourceTree = "<group>"; };
 		B27FDD41A650C75A6F86E353 /* AlbumCoverPickerUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumCoverPickerUITests.swift; sourceTree = "<group>"; };
+		B27FDD41A650C75A6F86E354 /* DetailViewUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DetailViewUITests.swift; sourceTree = "<group>"; };
 		B3C4D5E6F7A8B9C0D1E2F3A4 /* ParentalGateView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ParentalGateView.swift; sourceTree = "<group>"; };
 		C21EA27E92C9CA86EE24267E /* LayoutUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LayoutUITests.swift; sourceTree = "<group>"; };
 		D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumSettingsTests.swift; sourceTree = "<group>"; };
@@ -204,6 +216,7 @@
 				28331CD5E78D6735664A5625 /* ViewerApp.swift */,
 				B27FDD41A650C75A6F86E352 /* AlbumVisibilityUITests.swift */,
 				B27FDD41A650C75A6F86E353 /* AlbumCoverPickerUITests.swift */,
+				B27FDD41A650C75A6F86E354 /* DetailViewUITests.swift */,
 				EC45ACF66899377928AF5286 /* ParentalGateUITests.swift */,
 				F4A5B6C7D8E9FAABBCCDDEEF /* AccessibilityUITests.swift */,
 				02C72FFBA06AE7BB47D2DE35 /* XCUIApplication+Viewer.swift */,
@@ -296,6 +309,11 @@
 				D6E7F8A9B0C1D2E3F4A5B6C7 /* SetupView.swift */,
 				F8A9B0C1D2E3F4A5B6C7D8E9 /* AlbumCoverView.swift */,
 				F8A9B0C1D2E3F4A5B6C7D8EA /* AlbumCoverPickerView.swift */,
+				1A2B3C4D5E6F70021122335 /* ZoomableMedia.swift */,
+				1A2B3C4D5E6F70041122337 /* DetailLoadingView.swift */,
+				1A2B3C4D5E6F70061122339 /* PhotoDetailContentView.swift */,
+				1A2B3C4D5E6F7008112233B /* LivePhotoDetailContentView.swift */,
+				1A2B3C4D5E6F700A112233D /* VideoDetailContentView.swift */,
 				B0C1D2E3F4A5B6C7D8E9FAAB /* NoVisibleAlbumsView.swift */,
 				B0C1D2E3F4A5B6C7D8E9FAAC /* EmptyAlbumView.swift */,
 			);
@@ -442,6 +460,7 @@
 				C20F8B3E0C0E18DA152074EB /* ViewerApp.swift in Sources */,
 				5813136D21AC8A683A93DA75 /* AlbumVisibilityUITests.swift in Sources */,
 				5813136D21AC8A683A93DA76 /* AlbumCoverPickerUITests.swift in Sources */,
+				5813136D21AC8A683A93DA77 /* DetailViewUITests.swift in Sources */,
 				30B850068B81E67BCD26D213 /* ParentalGateUITests.swift in Sources */,
 				E3F4A5B6C7D8E9FAABBCCDDE /* AccessibilityUITests.swift in Sources */,
 				A58E4542B53D880C1F1E6A09 /* XCUIApplication+Viewer.swift in Sources */,
@@ -499,6 +518,11 @@
 				C5D6E7F8A9B0C1D2E3F4A5B6 /* SetupView.swift in Sources */,
 				E7F8A9B0C1D2E3F4A5B6C7D8 /* AlbumCoverView.swift in Sources */,
 				E7F8A9B0C1D2E3F4A5B6C7D9 /* AlbumCoverPickerView.swift in Sources */,
+				1A2B3C4D5E6F70011122334 /* ZoomableMedia.swift in Sources */,
+				1A2B3C4D5E6F70031122336 /* DetailLoadingView.swift in Sources */,
+				1A2B3C4D5E6F70051122338 /* PhotoDetailContentView.swift in Sources */,
+				1A2B3C4D5E6F7007112233A /* LivePhotoDetailContentView.swift in Sources */,
+				1A2B3C4D5E6F7009112233C /* VideoDetailContentView.swift in Sources */,
 				A9B0C1D2E3F4A5B6C7D8E9FA /* NoVisibleAlbumsView.swift in Sources */,
 				A9B0C1D2E3F4A5B6C7D8E9FB /* EmptyAlbumView.swift in Sources */,
 			);

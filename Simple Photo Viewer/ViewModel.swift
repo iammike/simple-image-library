@@ -8,6 +8,54 @@
 import SwiftUI
 import Photos
 
+/// Shared plumbing for `ViewModel.requestingCancellably`. A nested type cannot itself
+/// be generic in Swift, so this lives at the top level instead of inside that
+/// function.
+///
+/// Coordinates two things that can complete a single Photos request -- its own
+/// result handler, and a `Task` cancellation -- which can race each other on
+/// different threads. Resuming is safe to attempt from either: exactly one attempt
+/// wins, under a lock, so the continuation can neither be resumed twice (a crash)
+/// nor left hanging forever unresumed (a leaked, permanently suspended `Task`).
+private final class CancellablePhotosRequestState<Value> {
+    private var continuation: CheckedContinuation<Value?, Never>?
+    private var requestID: PHImageRequestID?
+    private let lock = NSLock()
+
+    /// Recorded before the request is even started: its completion handler can in
+    /// principle fire synchronously, before the starting call returns, and that
+    /// result must not be dropped for having arrived before there was anywhere to
+    /// put it.
+    func setContinuation(_ continuation: CheckedContinuation<Value?, Never>) {
+        lock.lock()
+        self.continuation = continuation
+        lock.unlock()
+    }
+
+    func setRequestID(_ requestID: PHImageRequestID) {
+        lock.lock()
+        self.requestID = requestID
+        lock.unlock()
+    }
+
+    func resumeOnce(with value: Value?) {
+        lock.lock()
+        let pending = continuation
+        continuation = nil
+        lock.unlock()
+        pending?.resume(returning: value)
+    }
+
+    func cancelRequestIfKnown() {
+        lock.lock()
+        let requestID = self.requestID
+        lock.unlock()
+        if let requestID {
+            PHImageManager.default().cancelImageRequest(requestID)
+        }
+    }
+}
+
 class ViewModel: ObservableObject {
     @Published var images: [PHAsset] = []
     @Published var albums: [PHAssetCollection] = []
@@ -30,8 +78,6 @@ class ViewModel: ObservableObject {
     /// is also empty while the first page is still loading, which must not read as empty.
     @Published var currentAlbumIsEmpty = false
     @Published var isSetupMode: Bool = true
-    @Published var prefetchedImage: UIImage?
-    @Published var livePhoto: PHLivePhoto?
 
     private var fetchOffset = 0
     private let fetchLimit = 250
@@ -41,7 +87,6 @@ class ViewModel: ObservableObject {
     /// near the last row, not just once.
     private var isLoadingMorePhotos = false
     private let decoder = JSONDecoder()
-    var videoRequestID: PHImageRequestID?
 
     /// Where settings persist. Tests pass their own suite so they never touch the
     /// configuration of the app installed on the same simulator.
@@ -443,73 +488,99 @@ class ViewModel: ObservableObject {
         }
     }
 
-    func getImage(for asset: PHAsset, completion: @escaping (UIImage?) -> Void) {
-        let manager = PHImageManager.default()
-        let options = PHImageRequestOptions()
-        options.isSynchronous = false
-        options.isNetworkAccessAllowed = true
+    /// Full-screen delivery for one photo, as a stream rather than a single value: a
+    /// fast, lower-quality pass first (visible almost immediately, which matters most
+    /// for exactly the large panorama that is slow to reach full quality), then the
+    /// final pass, after which the stream ends. Cancelling the consuming `Task` -- as
+    /// `.task(id:)` does on its own when an asset's id changes -- cancels the
+    /// underlying Photos request too.
+    func imageUpdates(for asset: PHAsset) -> AsyncStream<UIImage?> {
+        AsyncStream { continuation in
+            let options = PHImageRequestOptions()
+            options.isSynchronous = false
+            options.isNetworkAccessAllowed = true
+            options.deliveryMode = .opportunistic
 
-        manager.requestImage(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { (result, _) in
-            DispatchQueue.main.async {
-                completion(result)
+            let requestID = PHImageManager.default().requestImage(
+                for: asset,
+                targetSize: PHImageManagerMaximumSize,
+                contentMode: .aspectFit,
+                options: options
+            ) { image, info in
+                continuation.yield(image)
+                let isDegraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
+                let isCancelled = (info?[PHImageCancelledKey] as? Bool) ?? false
+                if !isDegraded || isCancelled {
+                    continuation.finish()
+                }
+            }
+            continuation.onTermination = { _ in
+                PHImageManager.default().cancelImageRequest(requestID)
             }
         }
     }
 
-    func getLivePhoto(for asset: PHAsset, completion: @escaping (PHLivePhoto?) -> Void) {
-        let manager = PHImageManager.default()
+    /// A single asset's Live Photo. `nil` on failure or cancellation.
+    func livePhoto(for asset: PHAsset) async -> PHLivePhoto? {
         let options = PHLivePhotoRequestOptions()
         options.deliveryMode = .highQualityFormat
         options.isNetworkAccessAllowed = true
 
-        manager.requestLivePhoto(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { livePhoto, _ in
-            DispatchQueue.main.async {
-                completion(livePhoto)
-            }
+        return await requestingCancellably { handler in
+            PHImageManager.default().requestLivePhoto(
+                for: asset,
+                targetSize: PHImageManagerMaximumSize,
+                contentMode: .aspectFit,
+                options: options,
+                resultHandler: handler
+            )
         }
     }
 
-    func prefetchImageForNextIndex(currentIndex: Int) {
-        let nextIndex = currentIndex + 1
-        guard images.indices.contains(nextIndex) else { return }
-
-        let nextAsset = images[nextIndex]
-        getImage(for: nextAsset) { [weak self] downloadedImage in
-            DispatchQueue.main.async {
-                self?.prefetchedImage = downloadedImage
-            }
-        }
-    }
-
-    func getVideo(for asset: PHAsset, completion: @escaping (AVPlayerItem?) -> Void) {
+    /// A single asset's video, ready to hand to an `AVPlayer`. `nil` on failure or
+    /// cancellation.
+    func videoPlayerItem(for asset: PHAsset) async -> AVPlayerItem? {
         let options = PHVideoRequestOptions()
         options.version = .current
         options.isNetworkAccessAllowed = true
 
-        if let requestID = videoRequestID {
-            PHImageManager.default().cancelImageRequest(requestID)
-            videoRequestID = nil
-        }
-
-        videoRequestID = PHImageManager.default().requestAVAsset(forVideo: asset, options: options) { (avAsset, audioMix, info) in
-            DispatchQueue.main.async {
-                guard let avAsset = avAsset as? AVURLAsset else {
-                    self.videoRequestID = nil
-                    completion(nil)
-                    return
-                }
-
-                let playerItem = AVPlayerItem(url: avAsset.url)
-                self.videoRequestID = nil
-                completion(playerItem)
-            }
+        return await requestingCancellably { handler in
+            PHImageManager.default().requestPlayerItem(forVideo: asset, options: options, resultHandler: handler)
         }
     }
 
-    func cancelVideoLoading() {
-        if let requestID = videoRequestID {
-            PHImageManager.default().cancelImageRequest(requestID)
-            videoRequestID = nil
+    /// Bridges a `PHImageManager` request that delivers exactly once (a Live Photo or
+    /// a video's player item -- both a `(Value?, [AnyHashable: Any]?) -> Void` result
+    /// handler) into `async`, cancelling the underlying request if the awaiting
+    /// `Task` is cancelled first. `.task(id:)` cancels its `Task` this way on its own
+    /// when the asset it was loading for is no longer the one on screen, which is
+    /// what keeps a superseded load from ever applying its result.
+    ///
+    /// Cancellation and the result handler can race -- `onCancel` may run
+    /// concurrently with `start`'s own completion, on a different thread, and Photos
+    /// does not guarantee the handler fires at all once cancelled. `State` below
+    /// makes resuming the continuation safe to attempt from both places: exactly one
+    /// of them wins, under a lock, so this can neither resume twice (a crash) nor
+    /// leave the continuation -- and the `Task` awaiting it -- hanging forever.
+    private func requestingCancellably<Value>(
+        _ start: @escaping (@escaping (Value?, [AnyHashable: Any]?) -> Void) -> PHImageRequestID
+    ) async -> Value? {
+        let state = CancellablePhotosRequestState<Value>()
+
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Value?, Never>) in
+                state.setContinuation(continuation)
+                let requestID = start { value, _ in
+                    state.resumeOnce(with: value)
+                }
+                state.setRequestID(requestID)
+            }
+        } onCancel: {
+            state.cancelRequestIfKnown()
+            // Photos does not guarantee the result handler still fires after a
+            // cancellation; resuming here too (a no-op if it already did) prevents
+            // the awaiting Task from hanging forever if it does not.
+            state.resumeOnce(with: nil)
         }
     }
 
