@@ -20,6 +20,15 @@ struct SetupView: View {
     /// run and needs a clear way out; later visits are a return to a settings screen.
     @AppStorage("hasCompletedSetup") private var hasCompletedSetup = false
 
+    /// True for exactly one Setup visit on a device upgraded from 1.5, where this
+    /// screen did not exist and configuration lived in the iOS Settings app instead.
+    /// Set only by migrating a real legacy key, never on a fresh install.
+    @AppStorage("showsMovedFromSettingsNotice") private var showsMovedFromSettingsNotice = false
+    /// Drives the alert itself, kept apart from the stored flag above: binding
+    /// `.alert(isPresented:)` straight to a value that is already true on this
+    /// view's very first render does not reliably present it (see `onAppear` below).
+    @State private var isMovedNoticePresented = false
+
     /// A settings form stretched across an iPad reads as unfinished, so the content
     /// keeps a readable measure and the grouped background fills the rest.
     private let maximumContentWidth: CGFloat = 700
@@ -43,6 +52,21 @@ struct SetupView: View {
                     Button("Done", action: finishSetup)
                         .fontWeight(.semibold)
                 }
+            }
+            .onAppear {
+                guard showsMovedFromSettingsNotice else { return }
+                // Presenting synchronously from onAppear, the first time this view
+                // is inserted, can lose the race with the containing view still
+                // being installed and never actually present. Posting to the next
+                // run loop turn is the standard fix.
+                DispatchQueue.main.async {
+                    isMovedNoticePresented = true
+                }
+            }
+            .alert("Setup Has Moved", isPresented: $isMovedNoticePresented) {
+                Button("Got It") { showsMovedFromSettingsNotice = false }
+            } message: {
+                Text("Setup now lives here in the app instead of the iOS Settings app. Come back any time: press and hold the gear, then answer the question.")
             }
         }
     }

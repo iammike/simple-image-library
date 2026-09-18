@@ -119,13 +119,28 @@ class ViewModel: ObservableObject {
     }
 
     /// One-time migration: rename the legacy `showAlbumViewSettings` key to `isSetupMode`.
+    /// Only ever runs for a device that actually had the legacy key -- never for a
+    /// fresh install -- so the two things it sets alongside the rename are safe to
+    /// tie to "this device is a 1.5 upgrade", not just "this is a first launch".
     static func migrateSetupModeKey(in defaults: UserDefaults) {
         let legacyKey = "showAlbumViewSettings"
         let newKey = "isSetupMode"
         guard defaults.object(forKey: newKey) == nil,
               defaults.object(forKey: legacyKey) != nil else { return }
-        defaults.set(defaults.bool(forKey: legacyKey), forKey: newKey)
+        let legacyValue = defaults.bool(forKey: legacyKey)
+        defaults.set(legacyValue, forKey: newKey)
         defaults.removeObject(forKey: legacyKey)
+
+        // A caregiver who had already left setup in 1.5 has, by definition, used the
+        // app normally before; the first-run copy in Setup ("Start Using LE Viewer")
+        // would be telling them to start something they already have.
+        if !legacyValue {
+            defaults.set(true, forKey: "hasCompletedSetup")
+        }
+        // Setup moving out of the iOS Settings app is invisible until they go
+        // looking for it there and find nothing. Tell them once, the first time they
+        // open Setup on this device.
+        defaults.set(true, forKey: "showsMovedFromSettingsNotice")
     }
 
     func selectFirstVisibleAlbum() {
