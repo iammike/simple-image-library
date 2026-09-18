@@ -12,6 +12,11 @@ class ViewModel: ObservableObject {
     @Published var images: [PHAsset] = []
     @Published var albums: [PHAssetCollection] = []
     @Published var albumSettings: [String: AlbumSettings] = [:]
+    /// True when stored settings exist but could not be decoded. Visibility then fails
+    /// closed: an album without an entry is hidden, not shown, until an adult acts in
+    /// Setup. The alternative, showing everything an adult had hidden, is the one
+    /// failure this app must not have.
+    private(set) var albumSettingsFailedToDecode = false
     @Published var selectedAlbumIdentifier: String?
     /// Most recent asset in each album, keyed by album identifier, used as a cover.
     @Published var albumCoverAssets: [String: PHAsset] = [:]
@@ -31,7 +36,6 @@ class ViewModel: ObservableObject {
     private var fetchOffset = 0
     private let fetchLimit = 250
     private var currentAlbum: PHAssetCollection?
-    private var loadedAlbumSettingsData: Data?
     private let decoder = JSONDecoder()
     var videoRequestID: PHImageRequestID?
 
@@ -70,19 +74,20 @@ class ViewModel: ObservableObject {
     /// refresh must seed through here, or an album gets no entry and cannot be hidden.
     func seedMissingAlbumSettings(for albums: [PHAssetCollection]) {
         for album in albums where albumSettings[album.localIdentifier] == nil {
-            albumSettings[album.localIdentifier] = AlbumSettings()
+            albumSettings[album.localIdentifier] = AlbumSettings(isVisible: !albumSettingsFailedToDecode)
         }
     }
 
-    /// An album with no stored settings counts as visible. Every visibility check
-    /// goes through here so the default cannot diverge between call sites.
+    /// An album with no stored settings counts as visible, unless the stored settings
+    /// could not be read. Every visibility check goes through here so the default
+    /// cannot diverge between call sites.
     func isVisible(_ album: PHAssetCollection) -> Bool {
         isVisibleAlbum(identifiedBy: album.localIdentifier)
     }
 
     /// Keyed by identifier so the rule can be exercised without a Photos object.
     func isVisibleAlbum(identifiedBy identifier: String) -> Bool {
-        albumSettings[identifier]?.isVisible ?? true
+        albumSettings[identifier]?.isVisible ?? !albumSettingsFailedToDecode
     }
 
     /// False once an adult has hidden every album.
@@ -133,12 +138,21 @@ class ViewModel: ObservableObject {
         }
     }
 
+    /// Where an undecodable settings blob is kept. The next save overwrites the live
+    /// key, so one bad read would otherwise be made permanent; this copy is never
+    /// overwritten once written.
+    static let unreadableAlbumSettingsKey = "albumSettings.unreadable"
+
     private func loadAlbumSettings() {
-        if let data = defaults.data(forKey: "albumSettings") {
-            let jsonDecoder = JSONDecoder()
-            if let decodedSettings = try? jsonDecoder.decode([String: AlbumSettings].self, from: data) {
-                self.albumSettings = decodedSettings
+        guard let data = defaults.data(forKey: "albumSettings") else { return }
+        do {
+            albumSettings = try JSONDecoder().decode([String: AlbumSettings].self, from: data)
+        } catch {
+            albumSettingsFailedToDecode = true
+            if defaults.data(forKey: ViewModel.unreadableAlbumSettingsKey) == nil {
+                defaults.set(data, forKey: ViewModel.unreadableAlbumSettingsKey)
             }
+            print("Album settings could not be decoded; hiding every album until Setup is used: \(error)")
         }
     }
 
