@@ -29,4 +29,17 @@ final class AlbumColorTests: XCTestCase {
     func testCycleFromUnknownColorReturnsFirst() {
         XCTAssertEqual(AlbumColorPalette.next(after: "#NOTREAL"), AlbumColorPalette.colors.first)
     }
+
+    /// The retired orange collided with the app's own accent; it must never come
+    /// back through the cycle, only through migrating an already-stored value.
+    func testLegacyOrangeIsNotInThePalette() {
+        XCTAssertFalse(AlbumColorPalette.colors.contains(AlbumColorPalette.legacyOrange))
+    }
+
+    func testCycleFromLegacyOrangeIsTreatedAsUnknown() {
+        XCTAssertEqual(
+            AlbumColorPalette.next(after: AlbumColorPalette.legacyOrange),
+            AlbumColorPalette.colors.first
+        )
+    }
 }

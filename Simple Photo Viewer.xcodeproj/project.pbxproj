@@ -24,6 +24,7 @@
 		48F26168111664DAE64A936D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A55DADBF1823FAA3FF1E8532 /* Foundation.framework */; };
 		5813136D21AC8A683A93DA75 /* AlbumVisibilityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B27FDD41A650C75A6F86E352 /* AlbumVisibilityUITests.swift */; };
 		59CC35C7E0EEB24ED0BD8D7B /* AlbumSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */; };
+		59CC35C7E0EEB24ED0BD8D7C /* AlbumColorMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D23E785E5D1DC60108960F72 /* AlbumColorMigrationTests.swift */; };
 		6799FC78D1E6C16B4DA9057E /* AccessibilityTreeDumps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A6E3798D501119A2EEF4C3 /* AccessibilityTreeDumps.swift */; };
 		6B59339B22BBED375F4321D2 /* ViewerUITestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25786D7F643361CB6D6BC97F /* ViewerUITestCase.swift */; };
 		71BF64B063C7006B17D0AFCD /* LayoutUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21EA27E92C9CA86EE24267E /* LayoutUITests.swift */; };
@@ -117,6 +118,7 @@
 		B3C4D5E6F7A8B9C0D1E2F3A4 /* ParentalGateView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ParentalGateView.swift; sourceTree = "<group>"; };
 		C21EA27E92C9CA86EE24267E /* LayoutUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LayoutUITests.swift; sourceTree = "<group>"; };
 		D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumSettingsTests.swift; sourceTree = "<group>"; };
+		D23E785E5D1DC60108960F72 /* AlbumColorMigrationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumColorMigrationTests.swift; sourceTree = "<group>"; };
 		D2E3F4A5B6C7D8E9FAABBCCD /* AlbumVisibilityTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlbumVisibilityTests.swift; sourceTree = "<group>"; };
 		D3AB0AA3C5DE76B928B04A9C /* ReadAloudTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReadAloudTests.swift; sourceTree = "<group>"; };
 		D6E7F8A9B0C1D2E3F4A5B6C7 /* SetupView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
@@ -222,6 +224,7 @@
 				56EAA2D0CEB59DC2E9696385 /* AlbumColorTests.swift */,
 				337446C61AE148BC996CCA9C /* AlbumNameTextSizeTests.swift */,
 				D23E785E5D1DC60108960F71 /* AlbumSettingsTests.swift */,
+				D23E785E5D1DC60108960F72 /* AlbumColorMigrationTests.swift */,
 				7058A1C60C894C7E864E6D97 /* SetupModeMigrationTests.swift */,
 				D2E3F4A5B6C7D8E9FAABBCCD /* AlbumVisibilityTests.swift */,
 				D3AB0AA3C5DE76B928B04A9C /* ReadAloudTests.swift */,
@@ -447,6 +450,7 @@
 				269B77DB8F473850A2AA75B2 /* AlbumColorTests.swift in Sources */,
 				2E44B6E971174926B0318C93 /* AlbumNameTextSizeTests.swift in Sources */,
 				59CC35C7E0EEB24ED0BD8D7B /* AlbumSettingsTests.swift in Sources */,
+				59CC35C7E0EEB24ED0BD8D7C /* AlbumColorMigrationTests.swift in Sources */,
 				7C2ABDF954EF4B6A88ED8386 /* SetupModeMigrationTests.swift in Sources */,
 				C1D2E3F4A5B6C7D8E9FAABBC /* AlbumVisibilityTests.swift in Sources */,
 				76EB7D2C7268BAF4E71FF5B7 /* ReadAloudTests.swift in Sources */,

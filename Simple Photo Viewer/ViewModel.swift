@@ -168,7 +168,13 @@ class ViewModel: ObservableObject {
     private func loadAlbumSettings() {
         guard let data = defaults.data(forKey: "albumSettings") else { return }
         do {
-            albumSettings = try JSONDecoder().decode([String: AlbumSettings].self, from: data)
+            var decoded = try JSONDecoder().decode([String: AlbumSettings].self, from: data)
+            if migrateLegacyOrange(in: &decoded) {
+                albumSettings = decoded
+                saveAlbumSettings()
+            } else {
+                albumSettings = decoded
+            }
         } catch {
             albumSettingsFailedToDecode = true
             if defaults.data(forKey: ViewModel.unreadableAlbumSettingsKey) == nil {
@@ -176,6 +182,22 @@ class ViewModel: ObservableObject {
             }
             print("Album settings could not be decoded; hiding every album until Setup is used: \(error)")
         }
+    }
+
+    /// An album already colored with the palette's retired orange (see
+    /// `AlbumColorPalette.legacyOrange`) is remapped to what replaced it, so the ring
+    /// goes back to meaning only that album instead of reading as app chrome.
+    /// Returns whether anything changed, so the caller knows to persist the result.
+    private func migrateLegacyOrange(in settings: inout [String: AlbumSettings]) -> Bool {
+        var didMigrate = false
+        for (identifier, setting) in settings where setting.colorHex == AlbumColorPalette.legacyOrange {
+            settings[identifier] = AlbumSettings(
+                isVisible: setting.isVisible,
+                colorHex: AlbumColorPalette.replacementForLegacyOrange
+            )
+            didMigrate = true
+        }
+        return didMigrate
     }
 
     private func saveAlbumSettings() {
