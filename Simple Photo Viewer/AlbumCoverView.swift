@@ -17,6 +17,8 @@ struct AlbumCoverView: View {
     @State private var image: UIImage?
     @State private var imageRequestID: PHImageRequestID?
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     private var ringWidth: CGFloat { max(3, (size * 0.08).rounded()) }
 
     var body: some View {
@@ -25,6 +27,7 @@ struct AlbumCoverView: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
+                    .transition(.opacity)
             } else {
                 Rectangle()
                     .fill(Color(UIColor.tertiarySystemFill))
@@ -32,8 +35,12 @@ struct AlbumCoverView: View {
                         Image(systemName: "photo.fill")
                             .foregroundStyle(Color.gray)
                     )
+                    .transition(.opacity)
             }
         }
+        // Matches ThumbnailView's crossfade: a cover popping in reads as a jolt for
+        // an audience more sensitive to it than most. Off under Reduce Motion.
+        .animation(reduceMotion ? nil : .easeIn(duration: 0.2), value: image != nil)
         .frame(width: size, height: size)
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay(

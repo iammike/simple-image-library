@@ -13,6 +13,7 @@ struct ThumbnailView: View {
     let asset: PHAsset
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// iPad cells are a fixed 200pt, which its grid columns never fall below. A phone
     /// column is narrower than that, so there the cell takes the column's width instead.
@@ -29,17 +30,23 @@ struct ThumbnailView: View {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
+                        .transition(.opacity)
                 } else {
                     Rectangle()
                         .overlay(
                             Image(systemName: "icloud.slash")
                                 .foregroundStyle(Color.gray)
                         )
+                        .transition(.opacity)
                 }
             }
             // On the sized cell, not the image: a non-square image overflows the cell
             // before it is clipped, and a badge placed on it would be clipped too.
             .overlay { if thumbnailImage != nil { mediaOverlay } }
+            // A photo popping straight from placeholder to image reads as a jolt for
+            // an audience that is more sensitive to it than most; a short crossfade
+            // reads as calmer. Off entirely under Reduce Motion.
+            .animation(reduceMotion ? nil : .easeIn(duration: 0.2), value: thumbnailImage != nil)
             .clipShape(RoundedRectangle(cornerRadius: 6))
             .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray, lineWidth: 1))
             .accessibilityElement(children: .ignore)
