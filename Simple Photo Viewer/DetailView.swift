@@ -43,6 +43,13 @@ struct DetailView: View {
         case left, right, none
     }
 
+    /// True while `currentIndex` points at a photo. The list can shrink under an open
+    /// view, since hiding albums clears it, and the view must close rather than
+    /// subscript past the end.
+    private var hasCurrentAsset: Bool {
+        viewModel.images.indices.contains(currentIndex)
+    }
+
     var currentAsset: PHAsset {
         viewModel.images[currentIndex]
     }
@@ -55,12 +62,27 @@ struct DetailView: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            content
-            closeButton
+            if hasCurrentAsset {
+                content
+                closeButton
+            }
         }
+        // Siblings in the ZStack below stay exposed to VoiceOver otherwise, and the
+        // gear under an open photo must not be reachable.
+        .accessibilityAddTraits(.isModal)
         .onAppear {
+            guard hasCurrentAsset else {
+                isPresented = false
+                return
+            }
             loadAsset()
             SpeechManager.shared.speak(ReadAloud.spokenDateString(for: currentAsset.creationDate) ?? "")
+        }
+        .onChange(of: viewModel.images.count) { _, _ in
+            if !hasCurrentAsset {
+                stopAndReleasePlayer()
+                isPresented = false
+            }
         }
         .onDisappear {
             cleanup()
