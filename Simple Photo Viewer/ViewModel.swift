@@ -259,7 +259,14 @@ class ViewModel: ObservableObject {
 
     /// Every album holding media, newest first, with each album's newest asset, which
     /// also serves as its cover. Fetch once per album here, never in the sort comparator.
-    private func fetchAlbumsWithCovers() -> (albums: [PHAssetCollection], covers: [String: PHAsset]) {
+    ///
+    /// - Parameter albumSettings: A snapshot taken on the caller's thread before
+    ///   dispatching here, not read live from `self`: this runs off the main thread,
+    ///   and `self.albumSettings` can be mutated from main (a color or cover change)
+    ///   at any moment, which reading it directly from here would race against.
+    private func fetchAlbumsWithCovers(
+        albumSettings: [String: AlbumSettings]
+    ) -> (albums: [PHAssetCollection], covers: [String: PHAsset]) {
         let fetchOptions = PHFetchOptions()
 
         let allAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
@@ -269,27 +276,66 @@ class ViewModel: ObservableObject {
                          allSmartAlbumsFetchResult.objects(at: IndexSet(0..<allSmartAlbumsFetchResult.count)))
             .filter(albumContainsImagesAndVideos)
 
-        var covers: [String: PHAsset] = [:]
+        // The newest asset in each album. Used to order the album list by recent
+        // activity, and as the cover for any album with no chosen one of its own.
+        var newestAssets: [String: PHAsset] = [:]
         for album in allAlbums {
             let assetsFetchOptions = PHFetchOptions()
             assetsFetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
             assetsFetchOptions.fetchLimit = 1
             if let asset = PHAsset.fetchAssets(in: album, options: assetsFetchOptions).firstObject {
-                covers[album.localIdentifier] = asset
+                newestAssets[album.localIdentifier] = asset
             }
         }
 
         let sortedAlbums = allAlbums.sorted {
-            (covers[$0.localIdentifier]?.creationDate ?? Date.distantPast)
-                > (covers[$1.localIdentifier]?.creationDate ?? Date.distantPast)
+            (newestAssets[$0.localIdentifier]?.creationDate ?? Date.distantPast)
+                > (newestAssets[$1.localIdentifier]?.creationDate ?? Date.distantPast)
         }
 
-        return (sortedAlbums, covers)
+        // List order always follows recent activity above, independent of what is
+        // actually shown as each cover: a caregiver's choice, or the newest asset
+        // otherwise. A chosen asset that no longer exists (deleted from the library)
+        // resolves to nothing here and is left at the newest-asset fallback already
+        // in the dictionary, rather than treated as an error.
+        var displayedCovers = newestAssets
+        for album in allAlbums {
+            guard let chosenIdentifier = albumSettings[album.localIdentifier]?.coverAssetIdentifier else {
+                continue
+            }
+            if let chosen = PHAsset.fetchAssets(withLocalIdentifiers: [chosenIdentifier], options: nil).firstObject {
+                displayedCovers[album.localIdentifier] = chosen
+            }
+        }
+
+        return (sortedAlbums, displayedCovers)
+    }
+
+    /// Every one of an album's own photos and videos, newest first -- used only by
+    /// the cover picker, which needs every candidate rather than a paged window.
+    /// Runs off the main thread like the picker's other Photos calls.
+    func fetchAssets(in album: PHAssetCollection) async -> [PHAsset] {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let options = PHFetchOptions()
+                options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+                options.predicate = NSPredicate(
+                    format: "mediaType == %d OR mediaType == %d",
+                    PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue
+                )
+                let result = PHAsset.fetchAssets(in: album, options: options)
+                var assets: [PHAsset] = []
+                assets.reserveCapacity(result.count)
+                result.enumerateObjects { asset, _, _ in assets.append(asset) }
+                continuation.resume(returning: assets)
+            }
+        }
     }
 
     func fetchAlbums() {
+        let albumSettingsSnapshot = albumSettings
         DispatchQueue.global(qos: .userInitiated).async {
-            let (sortedAlbums, covers) = self.fetchAlbumsWithCovers()
+            let (sortedAlbums, covers) = self.fetchAlbumsWithCovers(albumSettings: albumSettingsSnapshot)
 
             DispatchQueue.main.async {
                 self.albums = sortedAlbums
@@ -322,6 +368,22 @@ class ViewModel: ObservableObject {
             print("Album didn't exist")
         }
         saveAlbumSettings()
+    }
+
+    /// Sets which of an album's own photos stands for it in the list, or clears the
+    /// choice (`assetIdentifier == nil`) to go back to following its newest photo.
+    func setAlbumCover(_ albumIdentifier: String, to assetIdentifier: String?) {
+        if var settings = albumSettings[albumIdentifier] {
+            settings.coverAssetIdentifier = assetIdentifier
+            albumSettings[albumIdentifier] = settings
+            objectWillChange.send()
+        } else {
+            print("Album didn't exist")
+        }
+        saveAlbumSettings()
+        // The choice needs resolving into `albumCoverAssets` before it is visible;
+        // refreshing keeps that resolution logic in the one place that already does it.
+        refreshAlbums()
     }
 
     /// Fetches and enumerates off the main thread -- this runs synchronously from a
@@ -491,8 +553,9 @@ class ViewModel: ObservableObject {
     }
 
     func refreshAlbums() {
+        let albumSettingsSnapshot = albumSettings
         DispatchQueue.global(qos: .userInitiated).async {
-            let (sortedAlbums, covers) = self.fetchAlbumsWithCovers()
+            let (sortedAlbums, covers) = self.fetchAlbumsWithCovers(albumSettings: albumSettingsSnapshot)
 
             DispatchQueue.main.async {
                 let currentAlbumIdentifier = self.selectedAlbumIdentifier
@@ -521,19 +584,28 @@ struct AlbumSettings: Codable {
     /// Optional color (hex string) assigned to the album, or `nil` for no color.
     var colorHex: String?
 
+    /// The local identifier of the photo the caregiver chose to represent this album,
+    /// or `nil` to fall back to its newest photo -- the original default, which
+    /// changes identity every time a photo is added and is what this field exists to
+    /// let a caregiver opt out of.
+    var coverAssetIdentifier: String?
+
     /// Coding keys for encoding and decoding.
     enum CodingKeys: String, CodingKey {
         case isVisible
         case colorHex
+        case coverAssetIdentifier
     }
 
     /// Initializes a new instance of `AlbumSettings`.
     /// - Parameters:
     ///   - isVisible: Whether the album is visible. Defaults to `true`.
     ///   - colorHex: Optional assigned color as a hex string. Defaults to `nil`.
-    init(isVisible: Bool = true, colorHex: String? = nil) {
+    ///   - coverAssetIdentifier: Optional chosen cover photo. Defaults to `nil`.
+    init(isVisible: Bool = true, colorHex: String? = nil, coverAssetIdentifier: String? = nil) {
         self.isVisible = isVisible
         self.colorHex = colorHex
+        self.coverAssetIdentifier = coverAssetIdentifier
     }
 
     /// Initializes a new instance of `AlbumSettings` from a decoder.
@@ -542,12 +614,14 @@ struct AlbumSettings: Codable {
     init(from decoder: Decoder?) {
         isVisible = true
         colorHex = nil
+        coverAssetIdentifier = nil
 
         if let decoder = decoder {
             do {
                 let container = try decoder.container(keyedBy: CodingKeys.self)
                 isVisible = try container.decodeIfPresent(Bool.self, forKey: .isVisible) ?? true
                 colorHex = try container.decodeIfPresent(String.self, forKey: .colorHex)
+                coverAssetIdentifier = try container.decodeIfPresent(String.self, forKey: .coverAssetIdentifier)
             } catch {
                 print("Error decoding AlbumSettings: \(error)")
             }
@@ -561,5 +635,6 @@ struct AlbumSettings: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(isVisible, forKey: .isVisible)
         try container.encodeIfPresent(colorHex, forKey: .colorHex)
+        try container.encodeIfPresent(coverAssetIdentifier, forKey: .coverAssetIdentifier)
     }
 }
