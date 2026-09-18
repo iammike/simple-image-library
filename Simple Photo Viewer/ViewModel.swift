@@ -36,6 +36,10 @@ class ViewModel: ObservableObject {
     private var fetchOffset = 0
     private let fetchLimit = 250
     private var currentAlbum: PHAssetCollection?
+    /// Guards against a second fetch starting while one for the same album and offset
+    /// is still in flight -- the grid retriggers 'load more' on every layout pass
+    /// near the last row, not just once.
+    private var isLoadingMorePhotos = false
     private let decoder = JSONDecoder()
     var videoRequestID: PHImageRequestID?
 
@@ -103,6 +107,9 @@ class ViewModel: ObservableObject {
         fetchOffset = 0
         images = []
         currentAlbumIsEmpty = false
+        // Any fetch still in flight for the album just left is now stale; do not let
+        // it block a fetch for whatever album is selected next.
+        isLoadingMorePhotos = false
     }
 
     /// Opens Setup after the parental gate succeeds.
@@ -280,29 +287,55 @@ class ViewModel: ObservableObject {
         saveAlbumSettings()
     }
 
+    /// Fetches and enumerates off the main thread -- this runs synchronously from a
+    /// tap on iPhone (album row -> push) -- and applies the whole page in one mutation
+    /// rather than one dispatch per asset, which used to mean up to 250 separate
+    /// published changes, each triggering a re-render of every row observing this
+    /// object.
     private func loadMorePhotosFromAlbum(_ album: PHAssetCollection) {
-        let options = PHFetchOptions()
-        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        options.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
+        guard !isLoadingMorePhotos else { return }
+        isLoadingMorePhotos = true
 
-        let assets = PHAsset.fetchAssets(in: album, options: options)
-        let count = assets.count
-        // Only a fresh load decides emptiness: a paging fetch under thumbnails that are
-        // still on screen must not put an empty note above them.
-        if fetchOffset == 0 {
-            currentAlbumIsEmpty = count == 0
-        }
-        guard fetchOffset < count else {
-            return // No more photos to fetch
-        }
+        let albumIdentifier = album.localIdentifier
+        let offset = fetchOffset
+        let limit = fetchLimit
 
-        let upperBound = min(fetchOffset + fetchLimit, count)
-        assets.enumerateObjects(at: IndexSet(fetchOffset..<upperBound)) { asset, _, _ in
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let options = PHFetchOptions()
+            options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+            options.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
+
+            let assets = PHAsset.fetchAssets(in: album, options: options)
+            let count = assets.count
+
+            var newAssets: [PHAsset] = []
+            if offset < count {
+                let upperBound = min(offset + limit, count)
+                newAssets.reserveCapacity(upperBound - offset)
+                assets.enumerateObjects(at: IndexSet(offset..<upperBound)) { asset, _, _ in
+                    newAssets.append(asset)
+                }
+            }
+
             DispatchQueue.main.async {
-                self.images.append(asset)
+                guard let self else { return }
+                self.isLoadingMorePhotos = false
+
+                // The selected album (or a fresh load of the same one) may have moved
+                // on while this was in flight; a stale page must not be applied.
+                guard self.currentAlbum?.localIdentifier == albumIdentifier,
+                      self.fetchOffset == offset else { return }
+
+                // Only a fresh load decides emptiness: a paging fetch under thumbnails
+                // that are still on screen must not put an empty note above them.
+                if offset == 0 {
+                    self.currentAlbumIsEmpty = count == 0
+                }
+                guard !newAssets.isEmpty else { return }
+                self.images.append(contentsOf: newAssets)
+                self.fetchOffset += newAssets.count
             }
         }
-        fetchOffset += min(fetchLimit, count - fetchOffset)
     }
 
     func loadMorePhotos() {
@@ -407,6 +440,8 @@ class ViewModel: ObservableObject {
         fetchOffset = 0
         images = []
         currentAlbumIsEmpty = false
+        // The previous album's fetch, if still in flight, must not block this one.
+        isLoadingMorePhotos = false
         loadMorePhotosFromAlbum(album)
     }
 

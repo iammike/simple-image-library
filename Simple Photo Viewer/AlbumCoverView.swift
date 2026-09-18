@@ -15,6 +15,7 @@ struct AlbumCoverView: View {
     var accentColor: Color?
 
     @State private var image: UIImage?
+    @State private var imageRequestID: PHImageRequestID?
 
     private var ringWidth: CGFloat { max(3, (size * 0.08).rounded()) }
 
@@ -41,20 +42,38 @@ struct AlbumCoverView: View {
         )
         .accessibilityHidden(true)
         .onAppear(perform: loadCover)
+        // A refresh can hand this row a different asset (a newer photo). The image on
+        // screen must follow it rather than freeze on whichever asset appeared first.
+        .onChange(of: asset?.localIdentifier) { _, _ in
+            cancelPendingRequest()
+            image = nil
+            loadCover()
+        }
+        .onDisappear(perform: cancelPendingRequest)
+    }
+
+    private func cancelPendingRequest() {
+        if let imageRequestID {
+            PHImageManager.default().cancelImageRequest(imageRequestID)
+        }
+        imageRequestID = nil
     }
 
     private func loadCover() {
         guard image == nil, let asset else { return }
 
         let options = PHImageRequestOptions()
-        options.isNetworkAccessAllowed = true
+        // This is a list thumbnail that can scroll past quickly; allowing network
+        // access here would mean an iCloud download per row on a large library, for
+        // what is only a decorative cover.
+        options.isNetworkAccessAllowed = false
         options.deliveryMode = .opportunistic
         options.resizeMode = .fast
 
         let scale = UIScreen.main.scale
         let target = CGSize(width: size * scale, height: size * scale)
 
-        PHImageManager.default().requestImage(
+        imageRequestID = PHImageManager.default().requestImage(
             for: asset,
             targetSize: target,
             contentMode: .aspectFill,
