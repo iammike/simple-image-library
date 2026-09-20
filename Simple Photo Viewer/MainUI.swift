@@ -33,6 +33,8 @@ struct MainUI: View {
         // screen rather than living inside the album list.
         if viewModel.isSetupMode {
             SetupView(viewModel: viewModel)
+                // A photo open when Setup was entered must not come back when it is left.
+                .onAppear { isDetailViewPresented.wrappedValue = false }
         } else if horizontalSizeClass == .compact {
             NavigationStack {
                 AlbumView(viewModel: viewModel, showsSelection: false)
@@ -47,7 +49,8 @@ struct MainUI: View {
             }
         }
 
-        if isDetailViewPresented.wrappedValue, let selectedAsset = selectedAsset.wrappedValue {
+        // Never over Setup: the gear would sit underneath, reachable by VoiceOver.
+        if !viewModel.isSetupMode, isDetailViewPresented.wrappedValue, let selectedAsset = selectedAsset.wrappedValue {
             DetailView(viewModel: viewModel, isPresented: isDetailViewPresented, asset: selectedAsset)
         }
     }

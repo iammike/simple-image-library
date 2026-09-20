@@ -15,11 +15,14 @@ final class AlbumVisibilityTests: XCTestCase {
     /// album configuration of whatever copy of the app shares this simulator.
     private let suite = "AlbumVisibilityTests"
 
-    private func makeViewModel() -> ViewModel {
+    private func makeViewModel(storing stored: Data? = nil) -> ViewModel {
         let defaults = UserDefaults(suiteName: suite)!
         defaults.removePersistentDomain(forName: suite)
+        if let stored { defaults.set(stored, forKey: "albumSettings") }
         return ViewModel(defaults: defaults)
     }
+
+    private var defaults: UserDefaults { UserDefaults(suiteName: suite)! }
 
     override func tearDown() {
         UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite)
@@ -71,6 +74,53 @@ final class AlbumVisibilityTests: XCTestCase {
         viewModel.albumSettings = ["a": AlbumSettings(isVisible: false)]
 
         XCTAssertFalse(viewModel.isVisibleAlbum(identifiedBy: "a"))
+    }
+
+    // MARK: - Undecodable stored settings
+
+    private let garbage = Data("not json".utf8)
+
+    /// Visibility is the mechanism that decides what a child may see, so a blob that
+    /// will not decode must not fall back to "everything visible".
+    func testUndecodableSettingsHideAlbumsWithoutAnEntry() {
+        let viewModel = makeViewModel(storing: garbage)
+
+        XCTAssertTrue(viewModel.albumSettingsFailedToDecode)
+        XCTAssertFalse(viewModel.isVisibleAlbum(identifiedBy: "any-album"))
+    }
+
+    /// A clean read keeps the usual default, so the fail-closed rule cannot leak into
+    /// normal operation.
+    func testReadableSettingsKeepTheVisibleDefault() throws {
+        let stored = try JSONEncoder().encode(["a": AlbumSettings(isVisible: false)])
+        let viewModel = makeViewModel(storing: stored)
+
+        XCTAssertFalse(viewModel.albumSettingsFailedToDecode)
+        XCTAssertTrue(viewModel.isVisibleAlbum(identifiedBy: "unseen-album"))
+        XCTAssertFalse(viewModel.isVisibleAlbum(identifiedBy: "a"))
+    }
+
+    /// One tap on the eye in Setup must bring an album back and write settings that
+    /// decode next time, or the adult is stuck.
+    func testShowingAnAlbumAfterAnUndecodableReadSavesReadableSettings() throws {
+        let viewModel = makeViewModel(storing: garbage)
+        viewModel.albumSettings["a"] = AlbumSettings(isVisible: false)
+
+        viewModel.toggleAlbumVisibility("a")
+
+        XCTAssertTrue(viewModel.isVisibleAlbum(identifiedBy: "a"))
+        let saved = try XCTUnwrap(defaults.data(forKey: "albumSettings"))
+        let decoded = try JSONDecoder().decode([String: AlbumSettings].self, from: saved)
+        XCTAssertEqual(decoded["a"]?.isVisible, true)
+    }
+
+    /// The bad blob is kept aside rather than silently replaced by the next save.
+    func testUndecodableSettingsAreKeptAside() {
+        let viewModel = makeViewModel(storing: garbage)
+        viewModel.albumSettings["a"] = AlbumSettings(isVisible: false)
+        viewModel.toggleAlbumVisibility("a")
+
+        XCTAssertEqual(defaults.data(forKey: ViewModel.unreadableAlbumSettingsKey), garbage)
     }
 
     /// The settings dictionary is persisted as [String: AlbumSettings]. A previous

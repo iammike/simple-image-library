@@ -8,10 +8,63 @@
 import SwiftUI
 import Photos
 
+/// Shared plumbing for `ViewModel.requestingCancellably`. A nested type cannot itself
+/// be generic in Swift, so this lives at the top level instead of inside that
+/// function.
+///
+/// Coordinates two things that can complete a single Photos request -- its own
+/// result handler, and a `Task` cancellation -- which can race each other on
+/// different threads. Resuming is safe to attempt from either: exactly one attempt
+/// wins, under a lock, so the continuation can neither be resumed twice (a crash)
+/// nor left hanging forever unresumed (a leaked, permanently suspended `Task`).
+private final class CancellablePhotosRequestState<Value> {
+    private var continuation: CheckedContinuation<Value?, Never>?
+    private var requestID: PHImageRequestID?
+    private let lock = NSLock()
+
+    /// Recorded before the request is even started: its completion handler can in
+    /// principle fire synchronously, before the starting call returns, and that
+    /// result must not be dropped for having arrived before there was anywhere to
+    /// put it.
+    func setContinuation(_ continuation: CheckedContinuation<Value?, Never>) {
+        lock.lock()
+        self.continuation = continuation
+        lock.unlock()
+    }
+
+    func setRequestID(_ requestID: PHImageRequestID) {
+        lock.lock()
+        self.requestID = requestID
+        lock.unlock()
+    }
+
+    func resumeOnce(with value: Value?) {
+        lock.lock()
+        let pending = continuation
+        continuation = nil
+        lock.unlock()
+        pending?.resume(returning: value)
+    }
+
+    func cancelRequestIfKnown() {
+        lock.lock()
+        let requestID = self.requestID
+        lock.unlock()
+        if let requestID {
+            PHImageManager.default().cancelImageRequest(requestID)
+        }
+    }
+}
+
 class ViewModel: ObservableObject {
     @Published var images: [PHAsset] = []
     @Published var albums: [PHAssetCollection] = []
     @Published var albumSettings: [String: AlbumSettings] = [:]
+    /// True when stored settings exist but could not be decoded. Visibility then fails
+    /// closed: an album without an entry is hidden, not shown, until an adult acts in
+    /// Setup. The alternative, showing everything an adult had hidden, is the one
+    /// failure this app must not have.
+    private(set) var albumSettingsFailedToDecode = false
     @Published var selectedAlbumIdentifier: String?
     /// Most recent asset in each album, keyed by album identifier, used as a cover.
     @Published var albumCoverAssets: [String: PHAsset] = [:]
@@ -25,15 +78,15 @@ class ViewModel: ObservableObject {
     /// is also empty while the first page is still loading, which must not read as empty.
     @Published var currentAlbumIsEmpty = false
     @Published var isSetupMode: Bool = true
-    @Published var prefetchedImage: UIImage?
-    @Published var livePhoto: PHLivePhoto?
 
     private var fetchOffset = 0
     private let fetchLimit = 250
     private var currentAlbum: PHAssetCollection?
-    private var loadedAlbumSettingsData: Data?
+    /// Guards against a second fetch starting while one for the same album and offset
+    /// is still in flight -- the grid retriggers 'load more' on every layout pass
+    /// near the last row, not just once.
+    private var isLoadingMorePhotos = false
     private let decoder = JSONDecoder()
-    var videoRequestID: PHImageRequestID?
 
     /// Where settings persist. Tests pass their own suite so they never touch the
     /// configuration of the app installed on the same simulator.
@@ -70,19 +123,20 @@ class ViewModel: ObservableObject {
     /// refresh must seed through here, or an album gets no entry and cannot be hidden.
     func seedMissingAlbumSettings(for albums: [PHAssetCollection]) {
         for album in albums where albumSettings[album.localIdentifier] == nil {
-            albumSettings[album.localIdentifier] = AlbumSettings()
+            albumSettings[album.localIdentifier] = AlbumSettings(isVisible: !albumSettingsFailedToDecode)
         }
     }
 
-    /// An album with no stored settings counts as visible. Every visibility check
-    /// goes through here so the default cannot diverge between call sites.
+    /// An album with no stored settings counts as visible, unless the stored settings
+    /// could not be read. Every visibility check goes through here so the default
+    /// cannot diverge between call sites.
     func isVisible(_ album: PHAssetCollection) -> Bool {
         isVisibleAlbum(identifiedBy: album.localIdentifier)
     }
 
     /// Keyed by identifier so the rule can be exercised without a Photos object.
     func isVisibleAlbum(identifiedBy identifier: String) -> Bool {
-        albumSettings[identifier]?.isVisible ?? true
+        albumSettings[identifier]?.isVisible ?? !albumSettingsFailedToDecode
     }
 
     /// False once an adult has hidden every album.
@@ -98,6 +152,9 @@ class ViewModel: ObservableObject {
         fetchOffset = 0
         images = []
         currentAlbumIsEmpty = false
+        // Any fetch still in flight for the album just left is now stale; do not let
+        // it block a fetch for whatever album is selected next.
+        isLoadingMorePhotos = false
     }
 
     /// Opens Setup after the parental gate succeeds.
@@ -107,13 +164,28 @@ class ViewModel: ObservableObject {
     }
 
     /// One-time migration: rename the legacy `showAlbumViewSettings` key to `isSetupMode`.
+    /// Only ever runs for a device that actually had the legacy key -- never for a
+    /// fresh install -- so the two things it sets alongside the rename are safe to
+    /// tie to "this device is a 1.5 upgrade", not just "this is a first launch".
     static func migrateSetupModeKey(in defaults: UserDefaults) {
         let legacyKey = "showAlbumViewSettings"
         let newKey = "isSetupMode"
         guard defaults.object(forKey: newKey) == nil,
               defaults.object(forKey: legacyKey) != nil else { return }
-        defaults.set(defaults.bool(forKey: legacyKey), forKey: newKey)
+        let legacyValue = defaults.bool(forKey: legacyKey)
+        defaults.set(legacyValue, forKey: newKey)
         defaults.removeObject(forKey: legacyKey)
+
+        // A caregiver who had already left setup in 1.5 has, by definition, used the
+        // app normally before; the first-run copy in Setup ("Start Using LE Viewer")
+        // would be telling them to start something they already have.
+        if !legacyValue {
+            defaults.set(true, forKey: "hasCompletedSetup")
+        }
+        // Setup moving out of the iOS Settings app is invisible until they go
+        // looking for it there and find nothing. Tell them once, the first time they
+        // open Setup on this device.
+        defaults.set(true, forKey: "showsMovedFromSettingsNotice")
     }
 
     func selectFirstVisibleAlbum() {
@@ -133,13 +205,44 @@ class ViewModel: ObservableObject {
         }
     }
 
+    /// Where an undecodable settings blob is kept. The next save overwrites the live
+    /// key, so one bad read would otherwise be made permanent; this copy is never
+    /// overwritten once written.
+    static let unreadableAlbumSettingsKey = "albumSettings.unreadable"
+
     private func loadAlbumSettings() {
-        if let data = defaults.data(forKey: "albumSettings") {
-            let jsonDecoder = JSONDecoder()
-            if let decodedSettings = try? jsonDecoder.decode([String: AlbumSettings].self, from: data) {
-                self.albumSettings = decodedSettings
+        guard let data = defaults.data(forKey: "albumSettings") else { return }
+        do {
+            var decoded = try JSONDecoder().decode([String: AlbumSettings].self, from: data)
+            if migrateLegacyOrange(in: &decoded) {
+                albumSettings = decoded
+                saveAlbumSettings()
+            } else {
+                albumSettings = decoded
             }
+        } catch {
+            albumSettingsFailedToDecode = true
+            if defaults.data(forKey: ViewModel.unreadableAlbumSettingsKey) == nil {
+                defaults.set(data, forKey: ViewModel.unreadableAlbumSettingsKey)
+            }
+            print("Album settings could not be decoded; hiding every album until Setup is used: \(error)")
         }
+    }
+
+    /// An album already colored with the palette's retired orange (see
+    /// `AlbumColorPalette.legacyOrange`) is remapped to what replaced it, so the ring
+    /// goes back to meaning only that album instead of reading as app chrome.
+    /// Returns whether anything changed, so the caller knows to persist the result.
+    private func migrateLegacyOrange(in settings: inout [String: AlbumSettings]) -> Bool {
+        var didMigrate = false
+        for (identifier, setting) in settings where setting.colorHex == AlbumColorPalette.legacyOrange {
+            settings[identifier] = AlbumSettings(
+                isVisible: setting.isVisible,
+                colorHex: AlbumColorPalette.replacementForLegacyOrange
+            )
+            didMigrate = true
+        }
+        return didMigrate
     }
 
     private func saveAlbumSettings() {
@@ -201,7 +304,14 @@ class ViewModel: ObservableObject {
 
     /// Every album holding media, newest first, with each album's newest asset, which
     /// also serves as its cover. Fetch once per album here, never in the sort comparator.
-    private func fetchAlbumsWithCovers() -> (albums: [PHAssetCollection], covers: [String: PHAsset]) {
+    ///
+    /// - Parameter albumSettings: A snapshot taken on the caller's thread before
+    ///   dispatching here, not read live from `self`: this runs off the main thread,
+    ///   and `self.albumSettings` can be mutated from main (a color or cover change)
+    ///   at any moment, which reading it directly from here would race against.
+    private func fetchAlbumsWithCovers(
+        albumSettings: [String: AlbumSettings]
+    ) -> (albums: [PHAssetCollection], covers: [String: PHAsset]) {
         let fetchOptions = PHFetchOptions()
 
         let allAlbumsFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .any, options: fetchOptions)
@@ -211,27 +321,66 @@ class ViewModel: ObservableObject {
                          allSmartAlbumsFetchResult.objects(at: IndexSet(0..<allSmartAlbumsFetchResult.count)))
             .filter(albumContainsImagesAndVideos)
 
-        var covers: [String: PHAsset] = [:]
+        // The newest asset in each album. Used to order the album list by recent
+        // activity, and as the cover for any album with no chosen one of its own.
+        var newestAssets: [String: PHAsset] = [:]
         for album in allAlbums {
             let assetsFetchOptions = PHFetchOptions()
             assetsFetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
             assetsFetchOptions.fetchLimit = 1
             if let asset = PHAsset.fetchAssets(in: album, options: assetsFetchOptions).firstObject {
-                covers[album.localIdentifier] = asset
+                newestAssets[album.localIdentifier] = asset
             }
         }
 
         let sortedAlbums = allAlbums.sorted {
-            (covers[$0.localIdentifier]?.creationDate ?? Date.distantPast)
-                > (covers[$1.localIdentifier]?.creationDate ?? Date.distantPast)
+            (newestAssets[$0.localIdentifier]?.creationDate ?? Date.distantPast)
+                > (newestAssets[$1.localIdentifier]?.creationDate ?? Date.distantPast)
         }
 
-        return (sortedAlbums, covers)
+        // List order always follows recent activity above, independent of what is
+        // actually shown as each cover: a caregiver's choice, or the newest asset
+        // otherwise. A chosen asset that no longer exists (deleted from the library)
+        // resolves to nothing here and is left at the newest-asset fallback already
+        // in the dictionary, rather than treated as an error.
+        var displayedCovers = newestAssets
+        for album in allAlbums {
+            guard let chosenIdentifier = albumSettings[album.localIdentifier]?.coverAssetIdentifier else {
+                continue
+            }
+            if let chosen = PHAsset.fetchAssets(withLocalIdentifiers: [chosenIdentifier], options: nil).firstObject {
+                displayedCovers[album.localIdentifier] = chosen
+            }
+        }
+
+        return (sortedAlbums, displayedCovers)
+    }
+
+    /// Every one of an album's own photos and videos, newest first -- used only by
+    /// the cover picker, which needs every candidate rather than a paged window.
+    /// Runs off the main thread like the picker's other Photos calls.
+    func fetchAssets(in album: PHAssetCollection) async -> [PHAsset] {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let options = PHFetchOptions()
+                options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+                options.predicate = NSPredicate(
+                    format: "mediaType == %d OR mediaType == %d",
+                    PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue
+                )
+                let result = PHAsset.fetchAssets(in: album, options: options)
+                var assets: [PHAsset] = []
+                assets.reserveCapacity(result.count)
+                result.enumerateObjects { asset, _, _ in assets.append(asset) }
+                continuation.resume(returning: assets)
+            }
+        }
     }
 
     func fetchAlbums() {
+        let albumSettingsSnapshot = albumSettings
         DispatchQueue.global(qos: .userInitiated).async {
-            let (sortedAlbums, covers) = self.fetchAlbumsWithCovers()
+            let (sortedAlbums, covers) = self.fetchAlbumsWithCovers(albumSettings: albumSettingsSnapshot)
 
             DispatchQueue.main.async {
                 self.albums = sortedAlbums
@@ -266,29 +415,71 @@ class ViewModel: ObservableObject {
         saveAlbumSettings()
     }
 
+    /// Sets which of an album's own photos stands for it in the list, or clears the
+    /// choice (`assetIdentifier == nil`) to go back to following its newest photo.
+    func setAlbumCover(_ albumIdentifier: String, to assetIdentifier: String?) {
+        if var settings = albumSettings[albumIdentifier] {
+            settings.coverAssetIdentifier = assetIdentifier
+            albumSettings[albumIdentifier] = settings
+            objectWillChange.send()
+        } else {
+            print("Album didn't exist")
+        }
+        saveAlbumSettings()
+        // The choice needs resolving into `albumCoverAssets` before it is visible;
+        // refreshing keeps that resolution logic in the one place that already does it.
+        refreshAlbums()
+    }
+
+    /// Fetches and enumerates off the main thread -- this runs synchronously from a
+    /// tap on iPhone (album row -> push) -- and applies the whole page in one mutation
+    /// rather than one dispatch per asset, which used to mean up to 250 separate
+    /// published changes, each triggering a re-render of every row observing this
+    /// object.
     private func loadMorePhotosFromAlbum(_ album: PHAssetCollection) {
-        let options = PHFetchOptions()
-        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        options.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
+        guard !isLoadingMorePhotos else { return }
+        isLoadingMorePhotos = true
 
-        let assets = PHAsset.fetchAssets(in: album, options: options)
-        let count = assets.count
-        // Only a fresh load decides emptiness: a paging fetch under thumbnails that are
-        // still on screen must not put an empty note above them.
-        if fetchOffset == 0 {
-            currentAlbumIsEmpty = count == 0
-        }
-        guard fetchOffset < count else {
-            return // No more photos to fetch
-        }
+        let albumIdentifier = album.localIdentifier
+        let offset = fetchOffset
+        let limit = fetchLimit
 
-        let upperBound = min(fetchOffset + fetchLimit, count)
-        assets.enumerateObjects(at: IndexSet(fetchOffset..<upperBound)) { asset, _, _ in
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let options = PHFetchOptions()
+            options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+            options.predicate = NSPredicate(format: "mediaType == %d OR mediaType == %d", PHAssetMediaType.image.rawValue, PHAssetMediaType.video.rawValue)
+
+            let assets = PHAsset.fetchAssets(in: album, options: options)
+            let count = assets.count
+
+            var newAssets: [PHAsset] = []
+            if offset < count {
+                let upperBound = min(offset + limit, count)
+                newAssets.reserveCapacity(upperBound - offset)
+                assets.enumerateObjects(at: IndexSet(offset..<upperBound)) { asset, _, _ in
+                    newAssets.append(asset)
+                }
+            }
+
             DispatchQueue.main.async {
-                self.images.append(asset)
+                guard let self else { return }
+                self.isLoadingMorePhotos = false
+
+                // The selected album (or a fresh load of the same one) may have moved
+                // on while this was in flight; a stale page must not be applied.
+                guard self.currentAlbum?.localIdentifier == albumIdentifier,
+                      self.fetchOffset == offset else { return }
+
+                // Only a fresh load decides emptiness: a paging fetch under thumbnails
+                // that are still on screen must not put an empty note above them.
+                if offset == 0 {
+                    self.currentAlbumIsEmpty = count == 0
+                }
+                guard !newAssets.isEmpty else { return }
+                self.images.append(contentsOf: newAssets)
+                self.fetchOffset += newAssets.count
             }
         }
-        fetchOffset += min(fetchLimit, count - fetchOffset)
     }
 
     func loadMorePhotos() {
@@ -297,73 +488,99 @@ class ViewModel: ObservableObject {
         }
     }
 
-    func getImage(for asset: PHAsset, completion: @escaping (UIImage?) -> Void) {
-        let manager = PHImageManager.default()
-        let options = PHImageRequestOptions()
-        options.isSynchronous = false
-        options.isNetworkAccessAllowed = true
+    /// Full-screen delivery for one photo, as a stream rather than a single value: a
+    /// fast, lower-quality pass first (visible almost immediately, which matters most
+    /// for exactly the large panorama that is slow to reach full quality), then the
+    /// final pass, after which the stream ends. Cancelling the consuming `Task` -- as
+    /// `.task(id:)` does on its own when an asset's id changes -- cancels the
+    /// underlying Photos request too.
+    func imageUpdates(for asset: PHAsset) -> AsyncStream<UIImage?> {
+        AsyncStream { continuation in
+            let options = PHImageRequestOptions()
+            options.isSynchronous = false
+            options.isNetworkAccessAllowed = true
+            options.deliveryMode = .opportunistic
 
-        manager.requestImage(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { (result, _) in
-            DispatchQueue.main.async {
-                completion(result)
+            let requestID = PHImageManager.default().requestImage(
+                for: asset,
+                targetSize: PHImageManagerMaximumSize,
+                contentMode: .aspectFit,
+                options: options
+            ) { image, info in
+                continuation.yield(image)
+                let isDegraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
+                let isCancelled = (info?[PHImageCancelledKey] as? Bool) ?? false
+                if !isDegraded || isCancelled {
+                    continuation.finish()
+                }
+            }
+            continuation.onTermination = { _ in
+                PHImageManager.default().cancelImageRequest(requestID)
             }
         }
     }
 
-    func getLivePhoto(for asset: PHAsset, completion: @escaping (PHLivePhoto?) -> Void) {
-        let manager = PHImageManager.default()
+    /// A single asset's Live Photo. `nil` on failure or cancellation.
+    func livePhoto(for asset: PHAsset) async -> PHLivePhoto? {
         let options = PHLivePhotoRequestOptions()
         options.deliveryMode = .highQualityFormat
         options.isNetworkAccessAllowed = true
 
-        manager.requestLivePhoto(for: asset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: options) { livePhoto, _ in
-            DispatchQueue.main.async {
-                completion(livePhoto)
-            }
+        return await requestingCancellably { handler in
+            PHImageManager.default().requestLivePhoto(
+                for: asset,
+                targetSize: PHImageManagerMaximumSize,
+                contentMode: .aspectFit,
+                options: options,
+                resultHandler: handler
+            )
         }
     }
 
-    func prefetchImageForNextIndex(currentIndex: Int) {
-        let nextIndex = currentIndex + 1
-        guard images.indices.contains(nextIndex) else { return }
-
-        let nextAsset = images[nextIndex]
-        getImage(for: nextAsset) { [weak self] downloadedImage in
-            DispatchQueue.main.async {
-                self?.prefetchedImage = downloadedImage
-            }
-        }
-    }
-
-    func getVideo(for asset: PHAsset, completion: @escaping (AVPlayerItem?) -> Void) {
+    /// A single asset's video, ready to hand to an `AVPlayer`. `nil` on failure or
+    /// cancellation.
+    func videoPlayerItem(for asset: PHAsset) async -> AVPlayerItem? {
         let options = PHVideoRequestOptions()
         options.version = .current
         options.isNetworkAccessAllowed = true
 
-        if let requestID = videoRequestID {
-            PHImageManager.default().cancelImageRequest(requestID)
-            videoRequestID = nil
-        }
-
-        videoRequestID = PHImageManager.default().requestAVAsset(forVideo: asset, options: options) { (avAsset, audioMix, info) in
-            DispatchQueue.main.async {
-                guard let avAsset = avAsset as? AVURLAsset else {
-                    self.videoRequestID = nil
-                    completion(nil)
-                    return
-                }
-
-                let playerItem = AVPlayerItem(url: avAsset.url)
-                self.videoRequestID = nil
-                completion(playerItem)
-            }
+        return await requestingCancellably { handler in
+            PHImageManager.default().requestPlayerItem(forVideo: asset, options: options, resultHandler: handler)
         }
     }
 
-    func cancelVideoLoading() {
-        if let requestID = videoRequestID {
-            PHImageManager.default().cancelImageRequest(requestID)
-            videoRequestID = nil
+    /// Bridges a `PHImageManager` request that delivers exactly once (a Live Photo or
+    /// a video's player item -- both a `(Value?, [AnyHashable: Any]?) -> Void` result
+    /// handler) into `async`, cancelling the underlying request if the awaiting
+    /// `Task` is cancelled first. `.task(id:)` cancels its `Task` this way on its own
+    /// when the asset it was loading for is no longer the one on screen, which is
+    /// what keeps a superseded load from ever applying its result.
+    ///
+    /// Cancellation and the result handler can race -- `onCancel` may run
+    /// concurrently with `start`'s own completion, on a different thread, and Photos
+    /// does not guarantee the handler fires at all once cancelled. `State` below
+    /// makes resuming the continuation safe to attempt from both places: exactly one
+    /// of them wins, under a lock, so this can neither resume twice (a crash) nor
+    /// leave the continuation -- and the `Task` awaiting it -- hanging forever.
+    private func requestingCancellably<Value>(
+        _ start: @escaping (@escaping (Value?, [AnyHashable: Any]?) -> Void) -> PHImageRequestID
+    ) async -> Value? {
+        let state = CancellablePhotosRequestState<Value>()
+
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Value?, Never>) in
+                state.setContinuation(continuation)
+                let requestID = start { value, _ in
+                    state.resumeOnce(with: value)
+                }
+                state.setRequestID(requestID)
+            }
+        } onCancel: {
+            state.cancelRequestIfKnown()
+            // Photos does not guarantee the result handler still fires after a
+            // cancellation; resuming here too (a no-op if it already did) prevents
+            // the awaiting Task from hanging forever if it does not.
+            state.resumeOnce(with: nil)
         }
     }
 
@@ -393,6 +610,8 @@ class ViewModel: ObservableObject {
         fetchOffset = 0
         images = []
         currentAlbumIsEmpty = false
+        // The previous album's fetch, if still in flight, must not block this one.
+        isLoadingMorePhotos = false
         loadMorePhotosFromAlbum(album)
     }
 
@@ -405,8 +624,9 @@ class ViewModel: ObservableObject {
     }
 
     func refreshAlbums() {
+        let albumSettingsSnapshot = albumSettings
         DispatchQueue.global(qos: .userInitiated).async {
-            let (sortedAlbums, covers) = self.fetchAlbumsWithCovers()
+            let (sortedAlbums, covers) = self.fetchAlbumsWithCovers(albumSettings: albumSettingsSnapshot)
 
             DispatchQueue.main.async {
                 let currentAlbumIdentifier = self.selectedAlbumIdentifier
@@ -435,19 +655,28 @@ struct AlbumSettings: Codable {
     /// Optional color (hex string) assigned to the album, or `nil` for no color.
     var colorHex: String?
 
+    /// The local identifier of the photo the caregiver chose to represent this album,
+    /// or `nil` to fall back to its newest photo -- the original default, which
+    /// changes identity every time a photo is added and is what this field exists to
+    /// let a caregiver opt out of.
+    var coverAssetIdentifier: String?
+
     /// Coding keys for encoding and decoding.
     enum CodingKeys: String, CodingKey {
         case isVisible
         case colorHex
+        case coverAssetIdentifier
     }
 
     /// Initializes a new instance of `AlbumSettings`.
     /// - Parameters:
     ///   - isVisible: Whether the album is visible. Defaults to `true`.
     ///   - colorHex: Optional assigned color as a hex string. Defaults to `nil`.
-    init(isVisible: Bool = true, colorHex: String? = nil) {
+    ///   - coverAssetIdentifier: Optional chosen cover photo. Defaults to `nil`.
+    init(isVisible: Bool = true, colorHex: String? = nil, coverAssetIdentifier: String? = nil) {
         self.isVisible = isVisible
         self.colorHex = colorHex
+        self.coverAssetIdentifier = coverAssetIdentifier
     }
 
     /// Initializes a new instance of `AlbumSettings` from a decoder.
@@ -456,12 +685,14 @@ struct AlbumSettings: Codable {
     init(from decoder: Decoder?) {
         isVisible = true
         colorHex = nil
+        coverAssetIdentifier = nil
 
         if let decoder = decoder {
             do {
                 let container = try decoder.container(keyedBy: CodingKeys.self)
                 isVisible = try container.decodeIfPresent(Bool.self, forKey: .isVisible) ?? true
                 colorHex = try container.decodeIfPresent(String.self, forKey: .colorHex)
+                coverAssetIdentifier = try container.decodeIfPresent(String.self, forKey: .coverAssetIdentifier)
             } catch {
                 print("Error decoding AlbumSettings: \(error)")
             }
@@ -475,5 +706,6 @@ struct AlbumSettings: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(isVisible, forKey: .isVisible)
         try container.encodeIfPresent(colorHex, forKey: .colorHex)
+        try container.encodeIfPresent(coverAssetIdentifier, forKey: .coverAssetIdentifier)
     }
 }

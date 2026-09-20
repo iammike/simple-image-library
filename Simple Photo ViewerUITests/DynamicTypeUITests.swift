@@ -12,12 +12,19 @@
 //  argument. It is a defaults key UIKit reads at launch, so it needs no app change and
 //  no Settings-app automation.
 //
+//  A cold launch at the largest accessibility category costs real time -- UIKit is
+//  laying out much bigger text -- and this method makes two such launches back to
+//  back. Measured at 14-16s for one launch alone (see #107); 20s left too thin a
+//  margin for the second, so this waits longer rather than asserting sooner than a
+//  real launch can finish.
+//
 
 import XCTest
 
 final class DynamicTypeUITests: ViewerUITestCase {
 
     private let measuredAlbum = "Fixture Charlie"
+    private let launchTimeout: TimeInterval = 40
 
     private func albumNameHeight(
         extraDefaults: [String],
@@ -26,7 +33,7 @@ final class DynamicTypeUITests: ViewerUITestCase {
     ) -> CGFloat {
         let app = ViewerApp.launch(screen: .viewer, extraDefaults: extraDefaults)
         let label = app.staticTexts[measuredAlbum]
-        XCTAssertTrue(label.waitForExistence(timeout: 20), file: file, line: line)
+        XCTAssertTrue(label.waitForExistence(timeout: launchTimeout), file: file, line: line)
         let height = label.frame.height
         app.terminate()
         return height
